@@ -764,7 +764,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '1.0.9';
+  const APP_VERSION = '1.1.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -781,8 +781,7 @@
 
   const AVAILABLE_LANGS = [
     { code: 'de', label: 'Deutsch' },
-    { code: 'en', label: 'English' },
-    { code: 'pl', label: 'Polski' }
+    { code: 'en', label: 'English' }
   ];
 
   // 10 Farbpaletten, inspiriert von der visuellen Identität bekannter HTML5 UP
@@ -1090,24 +1089,24 @@
       waiting_meta: "{days} {daysUnit} · {tasks} {tasksUnit}",
       unit_day_singular: "Tag", unit_day_plural: "Tage",
       unit_task_singular: "Tagesziel & Challenge", unit_task_plural: "Tagesziele & Challenges",
-      abort_btn: "Challenge abbrechen",
-      abort_future_title: "Challenge abbrechen?",
+      abort_btn: "Challenge vorzeitig beenden",
+      abort_future_title: "Challenge vorzeitig beenden?",
       abort_future_text: "Diese Challenge wurde noch nicht begonnen. Sie wird in die Historie verschoben und beendet.",
       day_label: "Tag {current} von {total}",
       stat_streak: "Serie", stat_rate: "Fortschritt", stat_best_streak: "Beste Serie",
       today_tasks_title: "Heutige Tagesziele & Challenges",
-      abort_active_title: "Challenge abbrechen?",
+      abort_active_title: "Challenge vorzeitig beenden?",
       abort_active_text: "Dein bisheriger Fortschritt wird in die Historie verschoben, die Challenge endet vorzeitig.",
       completion_title: "Geschafft: {title}",
       completion_lead: "Du hast diese Challenge über {days} {daysUnit} durchgezogen.",
       stat_days_done: "Tage geschafft",
       history_title: "Vergangene Challenges", history_empty: "Noch keine abgeschlossenen Challenges.",
       history_meta: "{date} · {days} {daysUnit} · {done}/{total} geschafft",
-      history_meta_aborted: "{date} · abgebrochen nach {done} von {total} Tagen",
+      history_meta_aborted: "{date} · vorzeitig beendet nach {done} von {total} Tagen",
       history_detail_path: "Verlauf",
       collapse_toggle: "Ein-/Ausklappen",
       use_as_template_btn: "Als Vorlage verwenden",
-      history_aborted: "(abgebrochen)", history_delete: "Löschen",
+      history_aborted: "(vorzeitig beendet)", history_delete: "Löschen",
       history_delete_title: "Eintrag löschen?", history_delete_text: "„{title}“ wird endgültig aus der Historie entfernt.",
       quote_modal_badge: "Tag geschafft", quote_modal_btn: "Weiter so",
       completion_modal_badge: "Challenge komplett",
@@ -1350,6 +1349,10 @@
     state.settings.fontSize = LEGACY_FONT_SIZES[state.settings.fontSize] || 18;
   }
 
+  if (!AVAILABLE_LANGS.some(l => l.code === state.settings.lang)) {
+    state.settings.lang = 'de';
+  }
+
   let setupMode = false;
   let collapsedCards = {};
   let setupPrefill = null;
@@ -1451,7 +1454,7 @@
   }
 
   function applyBranding() {
-    const name = state.settings.appName || 'Challenge';
+    const name = state.settings.appName || 'Challenge App';
     document.title = name;
     const brandEl = document.getElementById('brand-title');
     if (brandEl) brandEl.textContent = name;

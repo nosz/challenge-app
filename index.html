@@ -764,7 +764,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '1.1.1';
+  const APP_VERSION = '1.1.4';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1093,6 +1093,7 @@
       abort_future_title: "Challenge vorzeitig beenden?",
       abort_future_text: "Diese Challenge wurde noch nicht begonnen. Sie wird in die Historie verschoben und beendet.",
       day_label: "Tag {current} von {total}",
+      day_label_done: "Tag {current} von {total}, gemeistert! 🎉",
       stat_streak: "Serie", stat_rate: "Fortschritt", stat_best_streak: "Beste Serie",
       today_tasks_title: "Heutige Tagesziele & Challenges",
       abort_active_title: "Challenge vorzeitig beenden?",
@@ -1189,6 +1190,7 @@
       abort_future_title: "Cancel this challenge?",
       abort_future_text: "This challenge hasn't started yet. It will be moved to your history and ended.",
       day_label: "Day {current} of {total}",
+      day_label_done: "Day {current} of {total}, done! 🎉",
       stat_streak: "Streak", stat_rate: "Progress", stat_best_streak: "Best streak",
       today_tasks_title: "Today's tasks",
       abort_active_title: "Cancel this challenge?",
@@ -1285,6 +1287,7 @@
       abort_future_title: "Przerwać wyzwanie?",
       abort_future_text: "To wyzwanie jeszcze się nie rozpoczęło. Zostanie przeniesione do historii i zakończone.",
       day_label: "Dzień {current} z {total}",
+      day_label_done: "Dzień {current} z {total}, gotowe! 🎉",
       stat_streak: "Seria", stat_rate: "Postęp", stat_best_streak: "Najlepsza seria",
       today_tasks_title: "Dzisiejsze zadania",
       abort_active_title: "Przerwać wyzwanie?",
@@ -1454,7 +1457,7 @@
   }
 
   function applyBranding() {
-    const name = state.settings.appName || 'Challenge App';
+    const name = state.settings.appName || 'Challenge';
     document.title = name;
     const brandEl = document.getElementById('brand-title');
     if (brandEl) brandEl.textContent = name;
@@ -1932,7 +1935,7 @@
           <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
         </button>
         ${!isCollapsed ? `
-          <div class="meta-line">${t('day_label', { current: dayIndex, total: c.days })}</div>
+          <div class="meta-line">${doneToday === c.tasks.length && c.tasks.length > 0 ? t('day_label_done', { current: dayIndex, total: c.days }) : t('day_label', { current: dayIndex, total: c.days })}</div>
           <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
           <div class="path">${pathHtml}</div>
           ${showRangeNote ? `<div class="path-note">${t('chunk_range', { start: weekList[0].dayNum, end: weekList[weekList.length - 1].dayNum })}</div>` : ''}

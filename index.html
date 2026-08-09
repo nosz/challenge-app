@@ -4,10 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Challenge  App</title>
-<link rel="icon" type="image/png" sizes="32x32" href="img/search-heart.svg">
-<link rel="icon" type="image/png" sizes="512x512" href="img/search-heart.svg">
-<link rel="apple-touch-icon" sizes="180x180" href="img/search-heart.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0e1319">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Challenge">
 <style>
   :root {
     --ink: #10161c;
@@ -767,7 +772,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '2.0.0';
+  const APP_VERSION = '2.1.0';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2694,6 +2699,14 @@
   render();
   if (state.settings.showWelcomeOnStart) showWelcomeModal();
 })();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch((err) => {
+      console.warn('Service Worker Registrierung fehlgeschlagen:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

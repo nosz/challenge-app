@@ -1,7 +1,7 @@
 // Service Worker für Challenge App
 // Cache-Name bei jeder neuen Version hochzählen (z.B. wenn sich index.html ändert),
 // damit Nutzer die neue Version bekommen statt einer alten aus dem Cache.
-const CACHE_VERSION = '3.0.10';
+const CACHE_VERSION = '3.0.11';
 const CACHE_NAME = 'challenge-app-' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [
@@ -59,6 +59,14 @@ self.addEventListener('activate', (event) => {
 //    verwirft.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // Requests mit Schema wie z.B. "chrome-extension://" (von Browser-Erweiterungen)
+  // werden von der Cache API nicht unterstützt ("Failed to execute 'put' on
+  // 'Cache': Request scheme ... is unsupported"). Solche Requests einfach
+  // unangetastet ans Netzwerk durchreichen, ohne sie zu cachen.
+  if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) {
+    return;
+  }
 
   const isHtmlNavigation = event.request.mode === 'navigate' ||
     event.request.destination === 'document' ||

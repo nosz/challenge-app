@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.6';
+  const APP_VERSION = '3.0.7';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2364,30 +2364,20 @@
       const forced = list.find(q => q.id === forcedId);
       if (forced) return forced.text;
     }
-    const customs = list.filter(q => !q.isDefault);
-    const defaults = list.filter(q => q.isDefault);
-    let pool;
-    if (customs.length && defaults.length) {
-      // Eigene Sprüche bekommen die Hälfte der Chance, unabhängig davon,
-      // wie viele Standardsprüche es gibt.
-      pool = Math.random() < 0.5 ? customs : defaults;
-    } else {
-      pool = list;
-    }
-    return pool[Math.floor(Math.random() * pool.length)].text;
+    // Alle Sprüche (eigene + Standard) bilden einen gemeinsamen Pool mit
+    // Gleichgewichtung pro Spruch. Vorher bekamen "eigene" Sprüche pauschal
+    // 50% der Chance, egal wie viele es gibt — bei nur einem eigenen Spruch
+    // gegenüber z.B. 30 Standardsprüchen erschien dieser eine dadurch bei
+    // fast jedem zweiten Tagesabschluss, was sich wie ein Fehler ("immer die
+    // gleiche Meldung") anfühlte.
+    return list[Math.floor(Math.random() * list.length)].text;
   }
 
   function pickRandomCompletionMessage(lang) {
     const list = getCompletionMessages(lang);
-    const customs = list.filter(q => !q.isDefault);
-    const defaults = list.filter(q => q.isDefault);
-    let pool;
-    if (customs.length && defaults.length) {
-      pool = Math.random() < 0.5 ? customs : defaults;
-    } else {
-      pool = list;
-    }
-    return pool[Math.floor(Math.random() * pool.length)].text;
+    // Gleiches Prinzip wie bei pickRandomQuote(): ein gemeinsamer, gleich
+    // gewichteter Pool statt 50/50-Split zwischen eigenen und Standardtexten.
+    return list[Math.floor(Math.random() * list.length)].text;
   }
 
   function personalBadge(genericKey, personalKey) {

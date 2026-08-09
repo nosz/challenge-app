@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.11';
+  const APP_VERSION = '3.0.12';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -815,6 +815,7 @@
     quotes: 'motiv_customQuotes',
     quotesByLang: 'motiv_quotesByLang',
     completionMessagesByLang: 'motiv_completionMessagesByLang',
+    seededQuoteTexts: 'motiv_seededQuoteTexts',
     settings: 'motiv_settings'
   };
 
@@ -1406,6 +1407,7 @@
     customQuotes: load(KEYS.quotes, []),
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
+    seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
     settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 1, fontSize: 18, showWelcomeOnStart: true, forcedDayQuoteId: null })
   };
 
@@ -1442,21 +1444,35 @@
     if (!state.quotesByLang[lang]) {
       const seeded = defaults.map(text => ({ id: uid(), text, isDefault: true }));
       state.quotesByLang[lang] = seeded;
+      state.seededQuoteTexts[lang] = defaults.slice();
       return true;
     }
-    // Bereits vorhanden (z.B. aus einer älteren App-Version mit weniger/anderen
-    // Standardsätzen) — Standardeinträge mit dem aktuellen Pool abgleichen.
-    // Eigene, selbst angelegte Einträge bleiben dabei unangetastet.
-    const list = state.quotesByLang[lang];
-    const customEntries = list.filter(q => !q.isDefault);
-    const currentDefaultTexts = list.filter(q => q.isDefault).map(q => q.text);
-    const isUpToDate = currentDefaultTexts.length === defaults.length && defaults.every(txt => currentDefaultTexts.includes(txt));
-    if (!isUpToDate) {
-      const refreshedDefaults = defaults.map(text => ({ id: uid(), text, isDefault: true }));
-      state.quotesByLang[lang] = customEntries.concat(refreshedDefaults);
-      return true;
+    // Migration: seededQuoteTexts gab es früher nicht. Für Sprachen ohne
+    // Eintrag wird der aktuelle Standard-Pool einmalig als "bereits bekannt"
+    // markiert, damit vorhandene Standardsprüche beim ersten Aufruf nach
+    // diesem Update nicht fälschlich als "neu" erkannt und dadurch
+    // dupliziert werden.
+    let changed = false;
+    if (!state.seededQuoteTexts[lang]) {
+      state.seededQuoteTexts[lang] = defaults.slice();
+      changed = true;
     }
-    return false;
+    const seededSet = state.seededQuoteTexts[lang];
+    // Nur Standardsprüche ergänzen, die dieser Sprache noch NIE hinzugefügt
+    // wurden (z.B. weil ein künftiges Update neue Standardsprüche einführt).
+    // Bearbeitet der Nutzer einen Standardspruch und macht ihn dadurch zu
+    // einem eigenen Eintrag, bleibt dessen Originaltext trotzdem als
+    // "bereits bekannt" markiert und wird NICHT erneut als Standardspruch
+    // nachgezogen — das war der ursprüngliche Fehler (Duplikat oben in der
+    // Liste nach dem Bearbeiten).
+    const newDefaultTexts = defaults.filter(txt => !seededSet.includes(txt));
+    if (newDefaultTexts.length) {
+      const newEntries = newDefaultTexts.map(text => ({ id: uid(), text, isDefault: true }));
+      state.quotesByLang[lang] = newEntries.concat(state.quotesByLang[lang]);
+      state.seededQuoteTexts[lang] = seededSet.concat(newDefaultTexts);
+      changed = true;
+    }
+    return changed;
   }
 
   function ensureCompletionMessagesForLang(lang) {
@@ -1492,7 +1508,10 @@
   // aktuellen Standardpool abgleichen, statt erst beim nächsten Tagesabschluss.
   (function preloadQuotes() {
     const changed = ensureQuotesForLang(state.settings.lang);
-    if (changed) save(KEYS.quotesByLang, state.quotesByLang);
+    if (changed) {
+      save(KEYS.quotesByLang, state.quotesByLang);
+      save(KEYS.seededQuoteTexts, state.seededQuoteTexts);
+    }
   })();
 
   // Einmalige Migration alter, sprachunabhängiger eigener Sprüche in das neue Modell
@@ -1527,6 +1546,7 @@
     save(KEYS.quotes, state.customQuotes);
     save(KEYS.quotesByLang, state.quotesByLang);
     save(KEYS.completionMessagesByLang, state.completionMessagesByLang);
+    save(KEYS.seededQuoteTexts, state.seededQuoteTexts);
     save(KEYS.settings, state.settings);
   }
 

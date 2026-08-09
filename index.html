@@ -786,7 +786,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '2.2.1';
+  const APP_VERSION = '2.2.3';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -882,18 +882,28 @@
       "Du wirst nicht jeden Tag Lust haben — heute hattest du trotzdem den Mut.",
       "Was du heute übst, wirst du morgen können.",
       "Ein Tag mehr, ein Beweis mehr, dass du es ernst meinst.",
-      "Motivation bringt dich in Gang, Gewohnheit bringt dich ans Ziel.",
-      "Du bist genau der Mensch, der das durchzieht.",
-      "Fortschritt ist leiser als Perfektion, aber er zählt mehr.",
+      "Du musst gar nicht jeden Tag motiviert sein — merkst du, wie die Gewohnheit dich einfach mitträgt?",
+      "Du merkst es vielleicht noch nicht, aber du bist genau der Mensch, der das durchzieht.",
+      "Je öfter du das machst, desto mehr zählt es — auch wenn es sich leise anfühlt.",
       "Jeder abgehakte Tag ist ein Ziegelstein für dein neues Fundament.",
       "Du investierst heute in den Menschen, der du morgen sein willst.",
       "Konsequenz schlägt Talent, wenn Talent nicht konsequent ist.",
-      "Das Gefühl danach war es wert — das weißt du bereits.",
+      "Das Gefühl danach war es wert. Du weißt das längst, auch wenn du gerade nicht drüber nachdenkst.",
       "Niemand sieht die stillen Tage, aber sie summieren sich zu allem.",
-      "Du hast heute nicht aufgeschoben. Das ist die ganze Kunst.",
+      "Du hast heute nicht aufgeschoben. Merk dir das — genau das ist die ganze Kunst.",
       "Ruhe kommt nicht vom Nichtstun, sondern vom getan haben.",
-      "Ein weiterer Beweis: Du hältst durch, was du dir vornimmst.",
-      "Ganz gleich wie klein der Schritt war — er zählt zur Strecke."
+      "Noch ein Beweis mehr, und wahrscheinlich fällt dir das gar nicht mehr auf: Du hältst durch, was du dir vornimmst.",
+      "Ganz gleich wie klein der Schritt war — er zählt zur Strecke.",
+      "Vielleicht fällt es dir noch nicht auf, aber jeder Tag wie heute macht dich sicherer.",
+      "Je öfter du das machst, desto normaler wird es — und desto mehr kannst du dir selbst vertrauen.",
+      "Du wirst morgen wieder hier sein. So läuft das mittlerweile bei dir.",
+      "Kurz innehalten lohnt sich: Das hier war heute keine Selbstverständlichkeit — und du hast es trotzdem gemacht.",
+      "Nicht jeder Tag fühlt sich wichtig an. Dieser hier zählt trotzdem mit.",
+      "Du bist wahrscheinlich weiter, als es sich gerade anfühlt.",
+      "Ob's dir bewusst ist oder nicht: Dein Selbstvertrauen wächst mit jedem Tag wie diesem mit.",
+      "Du musst nichts mehr beweisen. Du machst es einfach. Genau das ist die Stärke.",
+      "Dranbleiben fühlt sich heute schon ein bisschen leichter an als am Anfang, oder?",
+      "Ein Teil der Arbeit für morgen hast du im Grunde heute schon erledigt."
     ],
     en: [
       "You don't have to be perfect, you just have to keep going.",
@@ -947,18 +957,18 @@
   // entfernt). Nicht mehr über die Einstellungen editierbar — reine Zufallsauswahl.
   const DEFAULT_COMPLETION_MESSAGES = {
     de: [
-      "{name}, du hast durchgezogen, was du dir vorgenommen hast. Das ist keine Kleinigkeit.",
+      "{name}, du hast durchgezogen, was du dir vorgenommen hast. Lass das kurz sacken — das ist keine Kleinigkeit.",
       "{name}, aus einer Idee ist eine abgeschlossene Challenge geworden — dein Verdienst, jeden einzelnen Tag.",
       "{name}, das war nicht Glück, das war Konsequenz. Nimm dir einen Moment, das anzuerkennen.",
-      "{name}, du bist nicht mehr dieselbe Person wie am ersten Tag dieser Challenge.",
+      "{name}, wahrscheinlich merkst du es noch nicht ganz, aber du bist nicht mehr dieselbe Person wie am ersten Tag.",
       "{name}, Ziel erreicht. Was auch immer als Nächstes kommt — du hast bewiesen, dass du es kannst.",
       "{name}, du hast dir selbst ein Versprechen gegeben und es gehalten. ❤️",
       "{name}, jeder einzelne Tag war eine Entscheidung für dich — und du hast sie immer wieder getroffen.",
       "{name}, das Gefühl gerade ist verdient. Genieß es.",
       "{name}, du hast bewiesen, dass Durchhaltevermögen keine Ausnahme, sondern deine Stärke ist.",
       "{name}, was mit einem einzigen Tag begann, ist jetzt eine ganze Geschichte deines Durchhaltens.",
-      "{name}, du kannst stolz auf dich sein — wirklich stolz. ❤️",
-      "{name}, du hast dir selbst gezeigt, wozu du fähig bist, wenn du dranbleibst.",
+      "{name}, egal ob du dir das schon eingestehst oder nicht: Du kannst stolz auf dich sein. Wirklich. ❤️",
+      "{name}, je öfter du das schaffst, desto klarer wird dir, wozu du fähig bist, wenn du dranbleibst.",
       "{name}, diese Challenge war eine Investition in dich — und sie hat sich gelohnt.",
       "{name}, niemand hat diese Tage für dich gemeistert. Du warst es. Ganz allein.",
       "{name}, aus kleinen Schritten ist etwas Großes geworden.",
@@ -966,17 +976,27 @@
       "{name}, Konsequenz war heute stärker als jede Ausrede.",
       "{name}, du bist den Weg bis zum Ende gegangen — das schaffen die wenigsten.",
       "{name}, du hast gezeigt: Wenn du dir etwas vornimmst, ziehst du es durch. ❤️",
-      "{name}, dieser Abschluss ist der Beweis, dass du dir selbst vertrauen kannst.",
+      "{name}, du hast dir gerade selbst den Beweis geliefert, dass du dir vertrauen kannst. Der bleibt dir.",
       "{name}, du hast nicht aufgegeben, als es unbequem wurde — genau das macht den Unterschied.",
       "{name}, was du geschafft hast, bleibt. Niemand kann dir das nehmen.",
       "{name}, du hast dir selbst bewiesen, dass Durchhalten stärker ist als Motivation.",
-      "{name}, du darfst jetzt einen Moment innehalten und stolz sein. ❤️",
+      "{name}, gönn dir kurz einen Moment stolz zu sein — und beim nächsten Mal fällt dir der Anfang leichter, weil du weißt, dass du es kannst. ❤️",
       "{name}, diese Challenge war dein Weg — und du bist ihn bis zum Ende gegangen.",
       "{name}, du hast gezeigt, dass aus Gewohnheit echte Stärke wird.",
       "{name}, du hast dir selbst etwas geschenkt, das bleibt: die Gewissheit, dass du durchhältst.",
       "{name}, jeder Tag, den du drangeblieben bist, war eine kleine Entscheidung für dein größeres Ich.",
       "{name}, du hast heute Grund zu feiern — du hast es wirklich geschafft. ❤️",
-      "{name}, was auch immer als Nächstes kommt: Du hast bewiesen, dass du es kannst, wenn du es willst."
+      "{name}, was auch immer als Nächstes kommt: Du hast bewiesen, dass du es kannst, wenn du es willst.",
+      "{name}, irgendwas hat sich in diesen Tagen verändert — und das bleibt, auch wenn die Challenge jetzt vorbei ist.",
+      "{name}, du weißt das jetzt nicht mehr nur in der Theorie, sondern aus Erfahrung: Du hältst durch. Das nimmst du mit.",
+      "{name}, je öfter du dir das beweist, desto leichter fällt dir beim nächsten Mal der Anfang.",
+      "{name}, ob dir das schon klar ist oder erst morgen — du bist inzwischen jemand, der zu Ende bringt, was er anfängt.",
+      "{name}, nimm dir kurz eine Minute, bevor du weitermachst. Das hier darf ankommen.",
+      "{name}, wenn du auf diese Tage zurückblickst, merkst du vielleicht, wie normal Durchhalten für dich geworden ist.",
+      "{name}, das war kein Zufall. Das war eine Fähigkeit, die du dir gerade selbst bewiesen hast — und die vergisst man nicht so schnell.",
+      "{name}, die nächste Challenge wird sich wahrscheinlich ein bisschen leichter anfühlen — einfach weil du jetzt weißt, dass du das kannst.",
+      "{name}, manche reden über Veränderung. Du hast sie einfach gemacht, Tag für Tag.",
+      "{name}, dieses Gefühl gerade ist dein Selbstvertrauen, das ein Stück gewachsen ist. Merk's dir für den nächsten Moment, in dem du zweifelst. ❤️"
     ],
     en: [
       "{name}, you followed through on what you set out to do. That's no small thing.",
@@ -1384,10 +1404,25 @@
   let pendingCompletionModals = [];
 
   function ensureQuotesForLang(lang) {
+    const defaults = DEFAULT_QUOTES[lang] || DEFAULT_QUOTES.de;
     if (!state.quotesByLang[lang]) {
-      const seeded = (DEFAULT_QUOTES[lang] || DEFAULT_QUOTES.de).map(text => ({ id: uid(), text, isDefault: true }));
+      const seeded = defaults.map(text => ({ id: uid(), text, isDefault: true }));
       state.quotesByLang[lang] = seeded;
+      return true;
     }
+    // Bereits vorhanden (z.B. aus einer älteren App-Version mit weniger/anderen
+    // Standardsätzen) — Standardeinträge mit dem aktuellen Pool abgleichen.
+    // Eigene, selbst angelegte Einträge bleiben dabei unangetastet.
+    const list = state.quotesByLang[lang];
+    const customEntries = list.filter(q => !q.isDefault);
+    const currentDefaultTexts = list.filter(q => q.isDefault).map(q => q.text);
+    const isUpToDate = currentDefaultTexts.length === defaults.length && defaults.every(txt => currentDefaultTexts.includes(txt));
+    if (!isUpToDate) {
+      const refreshedDefaults = defaults.map(text => ({ id: uid(), text, isDefault: true }));
+      state.quotesByLang[lang] = customEntries.concat(refreshedDefaults);
+      return true;
+    }
+    return false;
   }
 
   function ensureCompletionMessagesForLang(lang) {
@@ -1417,6 +1452,13 @@
   (function preloadCompletionMessages() {
     const changed = ensureCompletionMessagesForLang(state.settings.lang);
     if (changed) save(KEYS.completionMessagesByLang, state.completionMessagesByLang);
+  })();
+
+  // Gleiches Prinzip für die Tagesmeldungen: sofort beim Start mit dem
+  // aktuellen Standardpool abgleichen, statt erst beim nächsten Tagesabschluss.
+  (function preloadQuotes() {
+    const changed = ensureQuotesForLang(state.settings.lang);
+    if (changed) save(KEYS.quotesByLang, state.quotesByLang);
   })();
 
   // Einmalige Migration alter, sprachunabhängiger eigener Sprüche in das neue Modell

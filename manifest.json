@@ -1,7 +1,7 @@
 {
   "name": "Challenge App",
   "short_name": "Challenge",
-  "description": "Challenge App is a web application that allows users to participate in various challenges and track their progress.",
+  "description": "Persönliches Motivations- und Habit-Tracking",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

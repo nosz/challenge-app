@@ -429,8 +429,11 @@
   @media (hover: hover) and (pointer: fine) {
     .text-link-btn:hover { color: var(--rust); }
   }
-  .card-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
-  .card-footer-links .text-link-btn { margin-top: 16px; }
+  .card-footer-links {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+  }
+  .card-footer-links .text-link-btn { margin-top: 0; }
 
   .back-link {
     background: none; border: none; color: var(--text-muted); font-size: 0.8rem;
@@ -764,7 +767,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '1.1.4';
+  const APP_VERSION = '1.1.5';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 

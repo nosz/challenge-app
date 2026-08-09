@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.7';
+  const APP_VERSION = '3.0.8';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2119,11 +2119,15 @@
 
 
   function renderHistory() {
+    const historyCard = document.getElementById('history-card');
     historyList.innerHTML = '';
     if (state.history.length === 0) {
-      historyList.appendChild(el(`<div class="empty-note">${t('history_empty')}</div>`));
+      // Keine vergangenen Challenges vorhanden: Button samt Bereich komplett
+      // ausblenden statt eines leeren "Vergangene Challenges"-Buttons.
+      if (historyCard) historyCard.style.display = 'none';
       return;
     }
+    if (historyCard) historyCard.style.display = '';
     state.history.forEach(h => {
       const daysUnit = h.days === 1 ? t('unit_day_singular') : t('unit_day_plural');
       const metaKey = h.aborted ? 'history_meta_aborted' : 'history_meta';
@@ -2152,10 +2156,38 @@
           state.history = state.history.filter(x => x.id !== h.id);
           persist();
           render();
+          focusAfterHistoryDelete();
         });
       });
       historyList.appendChild(item);
     });
+  }
+
+  // Nach dem Löschen eines Historien-Eintrags den Cursor/Fokus gezielt setzen:
+  // Gibt es noch weitere vergangene Challenges, geht es zur Überschrift
+  // "Vergangene Challenges". Ist die Historie jetzt leer (und der Bereich
+  // damit ausgeblendet), geht es stattdessen ganz nach oben zu
+  // "Neue Challenge starten" (bzw. wo immer die Seite dann beginnt).
+  function focusAfterHistoryDelete() {
+    if (state.history.length > 0) {
+      const heading = document.getElementById('history-title');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.style.outline = 'none';
+        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        heading.focus({ preventScroll: true });
+      }
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const target = document.querySelector('#app-root h1') || document.querySelector('.add-challenge-card');
+    if (target) {
+      if (target.tagName === 'H1') {
+        target.setAttribute('tabindex', '-1');
+        target.style.outline = 'none';
+      }
+      target.focus({ preventScroll: true });
+    }
   }
 
   // ---------- Modale ----------

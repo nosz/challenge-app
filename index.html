@@ -190,9 +190,7 @@
   }
   .card-toggle-icon img, .history-toggle-icon img {
     width: 18px; height: 18px; object-fit: contain;
-    transition: transform var(--transition-fast);
   }
-  .card-toggle-icon img.is-expanded, .history-toggle-icon img.is-expanded { transform: rotate(180deg); }
   @media (hover: hover) and (pointer: fine) {
     .card-toggle:hover .card-toggle-icon { filter: brightness(1.1); transform: translateY(-1px); }
   }
@@ -768,7 +766,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '1.0.4';
+  const APP_VERSION = '1.0.7';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1038,7 +1036,7 @@
       card_progress_count: "{done} von {total} Tagesziele & Challenges geschafft!",
       settings_theme_label: "Farbschema", settings_lang_label: "Sprache",
       settings_lang_note: "Die Sprache wirkt sich auf alle Texte und Standard-Sprüche aus.",
-      settings_done: "Fertig", settings_nav_general: "Allgemein", settings_nav_theme: "Darstellung",
+      settings_done: "Fertig", settings_nav_general: "Allgemein", settings_nav_theme: "Farben & Schriftgröße",
       theme1: "Massively", theme2: "Dimension", theme3: "Glut",
       theme4: "Editorial", theme5: "Stellar", theme6: "Phantom",
       theme7: "Hyperspace", theme8: "Solid State", theme9: "Wiese", theme10: "Himmel",
@@ -1873,7 +1871,7 @@
   const WEEK_SIZE = 7;
 
   // Wählt den 7-Tage-Block (Kalenderwoche der Challenge), der den übergebenen
-  // Tag enthält — z.B. Tag search-heartliegt im Block Tag 15–21. So werden auf der
+  // Tag enthält — z.B. Tag 15 liegt im Block Tag 15–21. So werden auf der
   // Oberfläche immer nur die aktuellen 7 Tage als einzelne Punkte angezeigt,
   // ohne mehrere Tage zu einem Punkt zusammenzufassen.
   function getCurrentWeekSlice(list, dayIndex) {
@@ -1930,7 +1928,7 @@
       <div class="card">
         <button type="button" class="card-toggle" id="btn-collapse">
           <h1>${escapeHtml(c.title)}</h1>
-          <span class="card-toggle-icon"><img src="img/info-circle.svg" alt="" class="${isCollapsed ? '' : 'is-expanded'}"></span>
+          <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
         </button>
         ${!isCollapsed ? `
           <div class="meta-line">${t('day_label', { current: dayIndex, total: c.days })}</div>
@@ -2370,7 +2368,7 @@
         <div class="card settings-section">
           <button type="button" class="card-toggle" data-section="${key}">
             <h2 style="margin:0;">${title}</h2>
-            <span class="card-toggle-icon"><img src="img/info-circle.svg" alt="" class="${expanded ? 'is-expanded' : ''}"></span>
+            <span class="card-toggle-icon"><img src="${expanded ? 'img/info-circle-fill.svg' : 'img/info-circle.svg'}" alt=""></span>
           </button>
           ${expanded ? `<div class="settings-section-body">${bodyHtml}</div>` : ''}
         </div>
@@ -2403,8 +2401,8 @@
 
       <label style="margin-top:24px;">${t('settings_fontsize_label')}</label>
       <div class="fontsize-row">
-        <span class="fontsize-sample" style="font-size:15px;">A</span>
-        <input type="range" id="s-fontsize" min="15" max="24" step="1" value="${state.settings.fontSize}" />
+        <span class="fontsize-sample" style="font-size:17px;">A</span>
+        <input type="range" id="s-fontsize" min="17" max="24" step="1" value="${state.settings.fontSize}" />
         <span class="fontsize-sample" style="font-size:24px;">A</span>
       </div>
       <div class="lang-note" id="s-fontsize-value">${t('settings_fontsize_current', { px: state.settings.fontSize })}</div>
@@ -2457,6 +2455,7 @@
           <button type="button" class="btn-primary share-cta-btn btn-with-icon" id="s-share-btn">
             <img src="img/search-heart.svg" alt="" class="share-icon">
             <span>${t('share_btn')}</span>
+            <img src="img/person-hearts.svg" alt="" class="share-icon">
           </button>
         </div>
       </div>
@@ -2657,7 +2656,7 @@
     const iconImgEl = document.getElementById('history-toggle-icon-img');
     listEl.classList.toggle('hidden', !historyExpanded);
     toggleEl.classList.toggle('expanded', historyExpanded);
-    if (iconImgEl) iconImgEl.classList.toggle('is-expanded', historyExpanded);
+    if (iconImgEl) iconImgEl.src = historyExpanded ? 'img/info-circle-fill.svg' : 'img/info-circle.svg';
   });
 
   applyTheme(state.settings.themeKey);

@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.9';
+  const APP_VERSION = '3.0.10';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2174,7 +2174,14 @@
       if (heading) {
         heading.setAttribute('tabindex', '-1');
         heading.style.outline = 'none';
-        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Der sticky Header oben überdeckt sonst einen Teil der Überschrift,
+        // wenn direkt mit scrollIntoView(block:'start') dorthin gesprungen
+        // wird. Deshalb wird hier manuell gescrollt und die aktuelle
+        // Header-Höhe plus etwas Extra-Abstand als Puffer abgezogen.
+        const stickyHeader = document.querySelector('header.top');
+        const headerOffset = (stickyHeader ? stickyHeader.offsetHeight : 0) + 16;
+        const targetY = heading.getBoundingClientRect().top + window.scrollY - headerOffset;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
         heading.focus({ preventScroll: true });
       }
       return;

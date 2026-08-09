@@ -107,6 +107,18 @@
     transition: background-color var(--transition-theme), border-color var(--transition-theme);
   }
 
+  header.top .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  header.top .brand-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
   header.top .brand {
     font-family: var(--font-display);
     font-size: clamp(1.35rem, 1.15rem + 1vw, 1.7rem);
@@ -396,6 +408,7 @@
   .task-check.checked .name { color: var(--text-muted); text-decoration: line-through; }
 
   .meta-line { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; line-height: 1.5; }
+  .day-done-icon { width: 15px; height: 15px; border-radius: 3px; vertical-align: -2px; margin-left: 2px; }
   .path-note { color: var(--text-faint); font-size: 0.72rem; margin: 2px 0 4px; }
 
   .detail-task-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -755,7 +768,10 @@
 
 <div class="wrap">
   <header class="top">
-    <div class="brand" id="brand-title">Challenge App</div>
+    <div class="brand-group">
+      <img src="icon-192.png" alt="" class="brand-icon">
+      <div class="brand" id="brand-title">Challenge App</div>
+    </div>
     <div class="toprow-actions">
       <a class="icon-only-btn" id="link-energietankstelle" href="https://nosz.github.io/energietankstelle/" target="energie" rel="noopener" title="Energietankstelle" aria-label="Energietankstelle">
         <img src="img/search-heart.svg" alt="">
@@ -787,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '2.3.3';
+  const APP_VERSION = '2.4.0';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1233,7 +1249,7 @@
       abort_future_title: "Cancel this challenge?",
       abort_future_text: "This challenge hasn't started yet. It will be moved to your history and ended.",
       day_label: "Day {current} of {total}",
-      day_label_done: "Day {current} of {total}, done! 🎉",
+      day_label_done: "Day {current} of {total}, done! {emoji}",
       stat_streak: "Streak", stat_rate: "Progress", stat_best_streak: "Best streak",
       today_tasks_title: "Today's tasks",
       abort_active_title: "Cancel this challenge?",
@@ -1330,7 +1346,7 @@
       abort_future_title: "Przerwać wyzwanie?",
       abort_future_text: "To wyzwanie jeszcze się nie rozpoczęło. Zostanie przeniesione do historii i zakończone.",
       day_label: "Dzień {current} z {total}",
-      day_label_done: "Dzień {current} z {total}, gotowe! 🎉",
+      day_label_done: "Dzień {current} z {total}, gotowe! {emoji}",
       stat_streak: "Seria", stat_rate: "Postęp", stat_best_streak: "Najlepsza seria",
       today_tasks_title: "Dzisiejsze zadania",
       abort_active_title: "Przerwać wyzwanie?",
@@ -1507,7 +1523,7 @@
   const DAY_DONE_WORDS = {
     de: ['gemeistert', 'geschafft', 'erledigt', 'durchgezogen', 'im Sack', 'erobert', 'abgehakt', 'gerockt', 'gepackt']
   };
-  const DAY_DONE_EMOJIS = ['🎉', '🔥', '💪', '✅', '⭐', '🚀', '👏', '🏆', '✨', '🙌'];
+  const DAY_DONE_ICON = '<img src="icon-192.png" alt="" class="day-done-icon">';
 
   function simpleHash(str) {
     let h = 0;
@@ -1520,10 +1536,8 @@
   function dayDoneLabel(challengeId, dayIndex, current, total) {
     const words = DAY_DONE_WORDS[state.settings.lang] || DAY_DONE_WORDS.de;
     const wordHash = simpleHash(challengeId + ':' + dayIndex + ':word');
-    const emojiHash = simpleHash(challengeId + ':' + dayIndex + ':emoji');
     const word = words[wordHash % words.length];
-    const emoji = DAY_DONE_EMOJIS[emojiHash % DAY_DONE_EMOJIS.length];
-    return t('day_label_done', { current, total, word, emoji });
+    return t('day_label_done', { current, total, word, emoji: DAY_DONE_ICON });
   }
 
   function daysPhrase(n) {

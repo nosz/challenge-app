@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.5';
+  const APP_VERSION = '3.0.6';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2669,7 +2669,12 @@
       const val = ta.value.trim();
       if (!val) return;
       ensureQuotesForLang(state.settings.lang);
-      state.quotesByLang[state.settings.lang].unshift({ id: uid(), text: val, isDefault: false });
+      const newQuote = { id: uid(), text: val, isDefault: false };
+      state.quotesByLang[state.settings.lang].unshift(newQuote);
+      // Wie beim Bearbeiten: auch eine ganz neu erstellte Meldung muss beim
+      // nächsten Tagesabschluss garantiert als erste Meldung erscheinen,
+      // danach greift wieder das normale Zufallsprinzip (siehe pickRandomQuote()).
+      state.settings.forcedDayQuoteId = newQuote.id;
       persist();
       showSettingsPanel();
     });

@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<meta name="theme-color" content="#0e1319">
+<meta name="theme-color" content="#f7f1e4">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -614,7 +614,8 @@
   .quote-edit-actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
   .quote-edit-actions .btn-primary, .quote-edit-actions .btn-secondary { margin-top: 0; }
 
-  .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 10px; margin-top: 8px; }
+  .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+  .theme-swatch-gap { visibility: hidden; }
   .theme-swatch {
     border: 2px solid var(--border);
     border-radius: 12px;
@@ -739,7 +740,6 @@
     :root { --wrap-max: 720px; }
     body { padding-top: 56px; }
     .card:hover { box-shadow: 0 24px 60px -22px rgba(0,0,0,0.65); }
-    .theme-grid { grid-template-columns: repeat(6, 1fr); }
   }
 
   /* --- Sehr schmale Displays --- */
@@ -828,12 +828,26 @@
   // abgeleiteten Zwischentöne (Ränder, gedämpfte Texte usw.) werden automatisch
   // über deriveThemeVars() berechnet, damit überall guter Kontrast entsteht.
   const THEMES = [
+    { key: 'chahell', labelKey: 'theme_chahell', base: { ink:'#f7f1e4', surface:'#ffffff', gold:'#c98a2e', sage:'#8a9a4f', rust:'#c15a3f', text:'#3a2f22' } },
+    { key: 'chadunk', labelKey: 'theme_chadunk', base: { ink:'#17130c', surface:'#221b12', gold:'#e3a93e', sage:'#9db56a', rust:'#d9704f', text:'#f2e9d8' } },
     { key: 'daylight', labelKey: 'theme_daylight', base: { ink:'#f5f6f4', surface:'#ffffff', gold:'#4f8f8a', sage:'#6a9c6f', rust:'#c1614f', text:'#232a28' } },
     { key: 'ember', labelKey: 'theme3', base: { ink:'#f5f1e8', surface:'#ffffff', gold:'#da7756', sage:'#7c9560', rust:'#b8493f', text:'#3d3929' } },
     { key: 'skylight', labelKey: 'theme10', base: { ink:'#f2f5fa', surface:'#ffffff', gold:'#2f7fd1', sage:'#4fae7c', rust:'#d1544f', text:'#1c2733' } },
     { key: 'dimension', labelKey: 'theme2', base: { ink:'#0a0d12', surface:'#151b24', gold:'#4a9eff', sage:'#52c785', rust:'#d1544f', text:'#e9eef3' } },
     { key: 'phantom', labelKey: 'theme6', base: { ink:'#15130f', surface:'#211d17', gold:'#e0793c', sage:'#7c9e5f', rust:'#b3503f', text:'#f1ece2' } },
     { key: 'solid-state', labelKey: 'theme8', base: { ink:'#17121c', surface:'#221b2b', gold:'#b355d6', sage:'#4fae9e', rust:'#c9527a', text:'#f0e9f5' } }
+  ];
+
+  // Reihenfolge für die Farbübersicht in den Einstellungen: immer 3 pro Zeile.
+  // Zeile 1: die neuen (chahell, chadunk) + Lücke
+  // Zeile 2: die 3 bestehenden hellen Themes
+  // Zeile 3: Lücke (leere Trennzeile)
+  // Zeile 4: die 3 bestehenden dunklen Themes
+  const THEME_GRID_ORDER = [
+    'chahell', 'chadunk', null,
+    'daylight', 'ember', 'skylight',
+    null, null, null,
+    'dimension', 'phantom', 'solid-state'
   ];
 
   // --- Farb-Hilfsfunktionen für individuell einstellbare Themes ---
@@ -1099,6 +1113,7 @@
       theme11: "Lavender Aroma", theme12: "Serene Skies", theme13: "Contrasting Citrus",
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Tageslicht",
+      theme_chahell: "chahell", theme_chadunk: "chadunk",
       active_dates: "Start: {start}<br>Ende: {end}",
       quotes_title: "Meldungen", messages_day_title: "Tagesmeldungen", messages_completion_title: "Abschlussmeldungen",
       quotes_new_label: "Neue Tagesmeldung hinzufügen", completion_new_label: "Neue Abschlussmeldung hinzufügen",
@@ -1196,6 +1211,7 @@
       theme11: "Lavender Aroma", theme12: "Serene Skies", theme13: "Contrasting Citrus",
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Daylight",
+      theme_chahell: "chahell", theme_chadunk: "chadunk",
       active_dates: "Started: {start}<br>Ends: {end}",
       quotes_title: "Messages", messages_day_title: "Daily messages", messages_completion_title: "Completion messages",
       quotes_new_label: "Add a new daily message", completion_new_label: "Add a new completion message",
@@ -1293,6 +1309,7 @@
       theme11: "Lavender Aroma", theme12: "Serene Skies", theme13: "Contrasting Citrus",
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Światło dnia",
+      theme_chahell: "chahell", theme_chadunk: "chadunk",
       active_dates: "Rozpoczęto: {start}<br>Koniec: {end}",
       quotes_title: "Wiadomości", messages_day_title: "Wiadomości dnia", messages_completion_title: "Wiadomości ukończenia",
       quotes_new_label: "Dodaj nową wiadomość dnia", completion_new_label: "Dodaj nową wiadomość ukończenia",
@@ -1389,7 +1406,7 @@
     customQuotes: load(KEYS.quotes, []),
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'dimension', lang: 'de', userName: '', maxChallenges: 1, fontSize: 18, showWelcomeOnStart: true })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 1, fontSize: 18, showWelcomeOnStart: true })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -2442,12 +2459,17 @@
       settingsExpanded[openSection] = true;
     }
 
-    const themeSwatches = THEMES.map(th => `
+    const themeSwatches = THEME_GRID_ORDER.map(key => {
+      if (!key) return `<div class="theme-swatch-gap" aria-hidden="true"></div>`;
+      const th = THEMES.find(x => x.key === key);
+      if (!th) return '';
+      return `
       <div class="theme-swatch ${state.settings.themeKey === th.key ? 'active' : ''}" data-theme="${th.key}">
         ${themeMockupHtml(th.base)}
         <div class="tname">${escapeHtml(t(th.labelKey))}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     const langOptions = AVAILABLE_LANGS.map(l =>
       `<option value="${l.code}" ${state.settings.lang === l.code ? 'selected' : ''}>${escapeHtml(l.label)}</option>`

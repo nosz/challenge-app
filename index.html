@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.8';
+  const APP_VERSION = '3.0.9';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2862,6 +2862,17 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch((err) => {
       console.warn('Service Worker Registrierung fehlgeschlagen:', err);
     });
+  });
+
+  // Übernimmt ein neuer Service Worker (z.B. nach einem Update im Hintergrund)
+  // die Kontrolle, wird die Seite einmalig automatisch neu geladen, damit
+  // garantiert die neueste Version angezeigt wird, statt dass man die App
+  // manuell schließen und erneut öffnen muss.
+  let hasReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hasReloaded) return;
+    hasReloaded = true;
+    window.location.reload();
   });
 }
 </script>

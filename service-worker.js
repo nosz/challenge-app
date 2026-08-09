@@ -1,7 +1,7 @@
 // Service Worker für Challenge App
 // Cache-Name bei jeder neuen Version hochzählen (z.B. wenn sich index.html ändert),
 // damit Nutzer die neue Version bekommen statt einer alten aus dem Cache.
-const CACHE_VERSION = '3.0.8';
+const CACHE_VERSION = '3.0.9';
 const CACHE_NAME = 'challenge-app-' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [
@@ -44,10 +44,40 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Cache-first, damit die App garantiert offline funktioniert.
-// Im Hintergrund wird versucht, den Cache aktuell zu halten (stale-while-revalidate).
+// Fetch: Zwei unterschiedliche Strategien.
+//
+// 1) HTML-Seite (Navigation, also das eigentliche Öffnen der App über das
+//    Icon) -> Network-first: Es wird IMMER zuerst versucht, die aktuelle
+//    Version aus dem Netz zu laden. Nur wenn kein Netz verfügbar ist, greift
+//    der Cache als Offline-Fallback. So wird garantiert, dass beim Klick auf
+//    das Icon (bei vorhandenem Netz) sofort die neueste Version erscheint,
+//    statt erst beim übernächsten Start.
+//
+// 2) Alle anderen Dateien (Icons, Bilder, Manifest) -> Cache-first mit
+//    Hintergrund-Aktualisierung, da sich diese kaum ändern und ein
+//    CACHE_VERSION-Bump beim Release ohnehin den kompletten alten Cache
+//    verwirft.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const isHtmlNavigation = event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    (event.request.headers.get('accept') || '').includes('text/html');
+
+  if (isHtmlNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.ok) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

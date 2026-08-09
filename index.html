@@ -170,9 +170,8 @@
     opacity: 0.85;
   }
 
-  h1 { font-family: var(--font-display); font-size: clamp(1.45rem, 1.3rem + .7vw, 1.8rem); font-weight: normal; margin: 0 0 14px; color: var(--text); position: relative; padding-bottom: 12px; line-height: 1.25; }
+  h1 { font-family: var(--font-display); font-size: clamp(1.45rem, 1.3rem + .7vw, 1.8rem); font-weight: normal; margin: 0 0 14px; color: var(--text); line-height: 1.25; }
   h1[tabindex="-1"]:focus { outline: none; }
-  h1::after { content: ""; position: absolute; left: 0; bottom: 0; width: 42px; height: 3px; border-radius: 2px; background: var(--gold); }
   h2 { font-family: var(--font-display); font-size: clamp(1.1rem, 1rem + .5vw, 1.3rem); font-weight: normal; margin: 0 0 14px; color: var(--gold-soft); line-height: 1.3; }
   p.lead { color: var(--text-muted); margin: 0 0 22px; line-height: 1.55; }
 
@@ -423,7 +422,7 @@
   .task-list.compact .task-check { padding: 10px 4px; }
 
   .text-link-btn {
-    background: none; border: none; color: var(--text-faint); font-size: 0.8rem;
+    background: none; border: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600;
     cursor: pointer; text-decoration: underline; padding: 6px 0; margin-top: 16px; display: block;
     transition: color var(--transition-fast);
   }
@@ -628,7 +627,6 @@
     background: var(--ink);
   }
   .settings-top-bar h1 { color: var(--text); }
-  .settings-top-bar h1::after { display: none; }
 
   .settings-section { margin-bottom: 14px; }
   .settings-subsection { border: 1px solid var(--border); border-radius: 10px; padding: 4px 12px; margin-bottom: 12px; }
@@ -766,7 +764,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '1.0.7';
+  const APP_VERSION = '1.0.9';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1043,7 +1041,7 @@
       theme11: "Lavender Aroma", theme12: "Serene Skies", theme13: "Contrasting Citrus",
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Tageslicht",
-      active_dates: "Start {start}<br>Ende {end}",
+      active_dates: "Start: {start}<br>Ende: {end}",
       quotes_title: "Meldungen", messages_day_title: "Tagesmeldungen", messages_completion_title: "Abschlussmeldungen",
       quotes_new_label: "Neue Tagesmeldung hinzufügen", completion_new_label: "Neue Abschlussmeldung hinzufügen",
       quotes_add_btn: "Hinzufügen", quotes_edit_btn: "Bearbeiten", quotes_delete_btn: "Löschen",
@@ -1139,7 +1137,7 @@
       theme11: "Lavender Aroma", theme12: "Serene Skies", theme13: "Contrasting Citrus",
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Daylight",
-      active_dates: "Started {start}<br>Ends {end}",
+      active_dates: "Started: {start}<br>Ends: {end}",
       quotes_title: "Messages", messages_day_title: "Daily messages", messages_completion_title: "Completion messages",
       quotes_new_label: "Add a new daily message", completion_new_label: "Add a new completion message",
       quotes_add_btn: "Add", quotes_edit_btn: "Edit", quotes_delete_btn: "Delete",
@@ -1235,7 +1233,7 @@
       theme11: "Lavender Aroma", theme12: "Serene Skies", theme13: "Contrasting Citrus",
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Światło dnia",
-      active_dates: "Rozpoczęto {start}<br>Koniec {end}",
+      active_dates: "Rozpoczęto: {start}<br>Koniec: {end}",
       quotes_title: "Wiadomości", messages_day_title: "Wiadomości dnia", messages_completion_title: "Wiadomości ukończenia",
       quotes_new_label: "Dodaj nową wiadomość dnia", completion_new_label: "Dodaj nową wiadomość ukończenia",
       quotes_add_btn: "Dodaj", quotes_edit_btn: "Edytuj", quotes_delete_btn: "Usuń",

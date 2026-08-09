@@ -29,7 +29,7 @@ A motivating app that helps you set, track, and achieve your daily goals and per
 - 📈 **Progress overview** — see your streak and history at a glance
 - 💬 **Motivating messages** — encouraging quotes and completion messages, fully customizable
 - 🎨 **Color themes** — several light and dark themes to choose from
-- 🌍 **Multi-language** — available in German, English and Polish
+- 🌍 **Multi-language** — available in German, English
 - 📱 **Installable PWA** — add it to your home screen and use it like a native app
 - 🔌 **Works offline** — no internet connection required once installed
 - 🔒 **No login, no tracking** — your data stays completely private, stored locally on your phone or PC only
@@ -62,7 +62,7 @@ Dein täglicher Begleiter, um persönliche Herausforderungen zu meistern und neu
 - 📈 **Fortschrittsübersicht** — behalte deine Serie und den Verlauf im Blick
 - 💬 **Motivierende Meldungen** — aufmunternde Sprüche und Abschlussmeldungen, frei anpassbar
 - 🎨 **Farbthemes** — mehrere helle und dunkle Themes zur Auswahl
-- 🌍 **Mehrsprachig** — verfügbar auf Deutsch, Englisch und Polnisch
+- 🌍 **Mehrsprachig** — verfügbar auf Deutsch, Englisch
 - 📱 **Installierbare PWA** — zum Home-Bildschirm hinzufügen und wie eine native App nutzen
 - 🔌 **Offlinefähig** — nach der Installation ohne Internetverbindung nutzbar
 - 🔒 **Keine Anmeldung, kein Tracking** — deine Daten bleiben komplett privat und werden nur lokal auf deinem Gerät gespeichert

@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.0';
+  const APP_VERSION = '3.0.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2691,7 +2691,13 @@
         ta.setSelectionRange(ta.value.length, ta.value.length);
         viewDiv.querySelector('[data-save]').addEventListener('click', () => {
           const newVal = viewDiv.querySelector('textarea').value.trim();
-          if (newVal) { q.text = newVal; persist(); }
+          // Ein bearbeiteter Eintrag weicht vom Original-Standardtext ab und muss
+          // deshalb als eigener (isDefault:false) Eintrag markiert werden. Sonst
+          // erkennt ensureQuotesForLang() den geänderten Text als "veraltet" und
+          // ersetzt beim nächsten Aufruf (z.B. showSettingsPanel() gleich danach)
+          // den kompletten Default-Satz wieder durch die Originaltexte — die
+          // Änderung wäre dadurch sofort wieder verloren.
+          if (newVal) { q.text = newVal; q.isDefault = false; persist(); }
           showSettingsPanel();
         });
         viewDiv.querySelector('[data-cancel]').addEventListener('click', () => {

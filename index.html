@@ -689,7 +689,8 @@
   .switch input:focus-visible + .slider { outline: 2px solid var(--gold); outline-offset: 2px; }
 
   .welcome-modal { max-width: 420px; text-align: center; }
-  .welcome-modal .welcome-text { text-align: left; line-height: 1.6; margin: 4px 0 22px; }
+  .welcome-icon { width: 64px; height: 64px; border-radius: var(--radius); margin: 0 auto 16px; display: block; }
+  .welcome-modal .welcome-text { text-align: center; line-height: 1.6; margin: 4px 0 22px; white-space: pre-line; }
   .info-signoff { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); margin-bottom: 0; }
   .info-signoff a { color: var(--gold); }
   .share-cta-btn {
@@ -786,7 +787,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '2.2.3';
+  const APP_VERSION = '2.3.3';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1092,7 +1093,7 @@
       data_desc: "Deine Daten liegen nur in diesem Browser. Exportiere sie regelmäßig, um sie zu sichern oder auf ein anderes Gerät zu übertragen.",
       settings_nav_info: "Info zur App",
       welcome_title: "Willkommen!",
-      welcome_text: "Willkommen bei der Challenge-App. Die Challenge-App hilft dir, deine täglichen Ziele zu erreichen und neue Gewohnheiten zu etablieren.\nDeine Daten bleiben dabei komplett privat – alles wird nur lokal gespeichert.",
+      welcome_text: "Challenge App\nDein täglicher Begleiter, um Ziele durchzuziehen und neue Gewohnheiten aufzubauen, mit Erfolgsmeldungen, die richtig guttun.\n✓ Kostenlos   ✓ Keine Anmeldung   ✓ Daten nur lokal auf deinem Gerät",
       welcome_start_btn: "Los geht's!",
       welcome_toggle_label: "Meldung beim Start anzeigen",
       share_btn: "App weiterempfehlen", share_text: "Find ich gut diese App. Die Challenge-App hilft dir, deine täglichen Ziele zu erreichen und neue Gewohnheiten zu etablieren.",
@@ -1188,7 +1189,7 @@
       data_title: "Back up your data",
       settings_nav_info: "About the app",
       welcome_title: "Welcome!",
-      welcome_text: "Welcome to the Challenge App 💪 – your daily companion for new challenges! Here you'll master your goals step by step and grow beyond yourself. Your data stays completely private — everything is stored locally on your phone only.",
+      welcome_text: "Your daily companion to follow through on goals and build new habits.\n✓ Free   ✓ No sign-up   ✓ Data stored locally only",
       welcome_start_btn: "Let's go!",
       welcome_toggle_label: "Show this message on start",
       share_btn: "Recommend this app", share_text: "Check out this app:",
@@ -2166,6 +2167,7 @@
     const overlay = el(`
       <div class="overlay">
         <div class="modal welcome-modal">
+          <img src="icon-192.png" alt="" class="welcome-icon">
           <h2>${escapeHtml(t('welcome_title'))}</h2>
           <p class="welcome-text">${escapeHtml(t('welcome_text'))}</p>
           <button class="btn-primary" style="margin-top:0;" id="welcome-ok">${t('welcome_start_btn')}</button>
@@ -2514,6 +2516,7 @@
     `;
 
     const infoBody = `
+      <img src="icon-192.png" alt="" class="welcome-icon">
       <p class="info-readonly-text">${escapeHtml(t('welcome_text'))}</p>
       <div class="toggle-row">
         <label for="s-welcome-toggle">${t('welcome_toggle_label')}</label>
@@ -2543,7 +2546,7 @@
           ${sectionCard('info', t('settings_nav_info'), infoBody)}
 
           <button type="button" class="btn-primary share-cta-btn btn-with-icon" id="s-share-btn">
-            <img src="img/search-heart.svg" alt="" class="share-icon">
+            <img src="icon-192.png" alt="" class="share-icon" style="border-radius:4px;">
             <span>${t('share_btn')}</span>
             <img src="img/person-hearts.svg" alt="" class="share-icon">
           </button>

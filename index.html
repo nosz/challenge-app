@@ -17,14 +17,14 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://nosz.github.io/challenge-app/">
 <meta property="og:title" content="Challenge App">
-<meta property="og:description" content="Die Challenge-App hilft dir, deine täglichen Ziele zu erreichen und neue Gewohnheiten zu etablieren.">
+<meta property="og:description" content="Dein täglicher Begleiter, um persönliche Herausforderungen zu meistern und neue Gewohnheiten aufzubauen. Mit Erfolgsmeldungen, die wirklich guttun. ✓ Kostenlos ✓ Keine Anmeldung ✓ Daten nur lokal auf deinem Gerät">
 <meta property="og:image" content="https://nosz.github.io/challenge-app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Challenge App">
-<meta name="twitter:description" content="Die Challenge-App hilft dir, deine täglichen Ziele zu erreichen und neue Gewohnheiten zu etablieren.">
+<meta name="twitter:description" content="Dein täglicher Begleiter, um persönliche Herausforderungen zu meistern und neue Gewohnheiten aufzubauen. Mit Erfolgsmeldungen, die wirklich guttun. ✓ Kostenlos ✓ Keine Anmeldung ✓ Daten nur lokal auf deinem Gerät">
 <meta name="twitter:image" content="https://nosz.github.io/challenge-app/og-image.png">
 
 <style>
@@ -803,7 +803,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.1';
+  const APP_VERSION = '3.0.4';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1224,7 +1224,7 @@
       welcome_text: "Your daily companion to follow through on goals and build new habits.\n✓ Free   ✓ No sign-up   ✓ Data stored locally only",
       welcome_start_btn: "Let's go!",
       welcome_toggle_label: "Show this message on start",
-      share_btn: "Recommend this app", share_text: "Check out this app:",
+      share_btn: "Recommend this app", share_text: "Challenge App\nYour daily companion for mastering personal challenges and building new habits. With success messages that truly feel good.\n✓ Free   ✓ No sign-up   ✓ Data stays local on your device",
       energie_btn: "Go to Energietankstelle",
       share_copied: "Link copied!",
       info_signoff: "Enjoy this app and have great success with it.\nIf you have ideas to make the app even better, feel free to reach out.\n{email}\n\nBest regards\nNorbert",
@@ -2697,7 +2697,21 @@
           // ersetzt beim nächsten Aufruf (z.B. showSettingsPanel() gleich danach)
           // den kompletten Default-Satz wieder durch die Originaltexte — die
           // Änderung wäre dadurch sofort wieder verloren.
-          if (newVal) { q.text = newVal; q.isDefault = false; persist(); }
+          if (newVal) {
+            q.text = newVal;
+            q.isDefault = false;
+            // Bearbeiteten Eintrag an den Anfang der Liste verschieben, damit die
+            // Reihenfolge (auch dauerhaft, nicht nur in der Anzeige) den zuletzt
+            // geänderten Text zuerst zeigt — genauso wie bei neu hinzugefügten
+            // Einträgen (unshift beim Hinzufügen).
+            const list = state.quotesByLang[state.settings.lang];
+            const idx = list.findIndex(x => x.id === id);
+            if (idx > -1) {
+              list.splice(idx, 1);
+              list.unshift(q);
+            }
+            persist();
+          }
           showSettingsPanel();
         });
         viewDiv.querySelector('[data-cancel]').addEventListener('click', () => {

@@ -224,6 +224,7 @@
   @media (hover: hover) and (pointer: fine) {
     .card-toggle:hover .card-toggle-icon { filter: brightness(1.1); transform: translateY(-1px); }
   }
+  .card-collapsed-clickable { cursor: pointer; }
   .card-collapsed-status {
     margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.3;
     display: flex; align-items: center; gap: 8px;
@@ -845,7 +846,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.4.6';
+  const APP_VERSION = '4.0.0';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2345,7 +2346,7 @@
       </div>
     `);
 
-    card.querySelector('#btn-collapse').addEventListener('click', () => {
+    const toggleCollapse = () => {
       const willExpand = isCollapsed;
       // Akkordeon-Modus: Beim Aufklappen einer Karte werden alle anderen eingeklappt.
       if (willExpand && state.settings.accordionChallengeCards) {
@@ -2355,7 +2356,24 @@
       }
       collapsedCards[c.id] = !isCollapsed;
       render();
+    };
+
+    // Im eingeklappten Zustand ist die komplette Karte klickbar (nicht nur der
+    // Header-Button), damit das Aufklappen auch beim Tippen auf den unteren
+    // Kartenbereich funktioniert. Im aufgeklappten Zustand bleibt nur der
+    // Header-Button für das Einklappen zuständig, da sonst Klicks auf
+    // interaktive Elemente (Bearbeiten/Abbrechen) versehentlich die Karte
+    // schließen würden.
+    card.addEventListener('click', (e) => {
+      if (isCollapsed) {
+        toggleCollapse();
+        return;
+      }
+      if (e.target.closest('#btn-collapse')) {
+        toggleCollapse();
+      }
     });
+    if (isCollapsed) card.classList.add('card-collapsed-clickable');
 
     const editBtn = card.querySelector('#btn-edit');
     if (editBtn) editBtn.addEventListener('click', () => showEditChallengeModal(c));
@@ -2470,7 +2488,7 @@
       </div>
     `);
 
-    card.querySelector('#btn-collapse').addEventListener('click', () => {
+    const toggleCollapse = () => {
       const willExpand = isCollapsed;
       // Akkordeon-Modus: Beim Aufklappen einer Karte werden alle anderen eingeklappt.
       if (willExpand && state.settings.accordionChallengeCards) {
@@ -2480,7 +2498,24 @@
       }
       collapsedCards[c.id] = !isCollapsed;
       render();
+    };
+
+    // Im eingeklappten Zustand ist die komplette Karte klickbar (nicht nur der
+    // Header-Button), damit das Aufklappen auch beim Tippen auf den unteren
+    // Kartenbereich funktioniert. Im aufgeklappten Zustand bleibt nur der
+    // Header-Button für das Einklappen zuständig, da sonst Klicks auf
+    // interaktive Elemente (Aufgaben, Bearbeiten/Abbrechen) versehentlich die
+    // Karte schließen würden.
+    card.addEventListener('click', (e) => {
+      if (isCollapsed) {
+        toggleCollapse();
+        return;
+      }
+      if (e.target.closest('#btn-collapse')) {
+        toggleCollapse();
+      }
     });
+    if (isCollapsed) card.classList.add('card-collapsed-clickable');
 
     const editBtn = card.querySelector('#btn-edit');
     if (editBtn) editBtn.addEventListener('click', () => showEditChallengeModal(c));

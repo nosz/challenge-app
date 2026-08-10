@@ -224,6 +224,13 @@
   @media (hover: hover) and (pointer: fine) {
     .card-toggle:hover .card-toggle-icon { filter: brightness(1.1); transform: translateY(-1px); }
   }
+  .card-collapsed-status {
+    margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.3;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-collapsed-icon {
+    width: 22px; height: 22px; object-fit: contain; border-radius: 6px; flex-shrink: 0;
+  }
 
   label { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; margin-top: 18px; }
   label:first-of-type { margin-top: 0; }
@@ -462,10 +469,22 @@
     .text-link-btn:hover { color: var(--rust); }
   }
   .card-footer-links {
-    display: flex; gap: 20px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
     margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
   }
   .card-footer-links .text-link-btn { margin-top: 0; }
+  .reorder-btns { display: flex; gap: 8px; }
+  .reorder-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-muted);
+    cursor: pointer; width: 32px; height: 32px; border-radius: 8px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .reorder-btn svg { width: 16px; height: 16px; display: block; }
+  @media (hover: hover) and (pointer: fine) {
+    .reorder-btn:hover { color: var(--rust); border-color: var(--rust); }
+  }
+  .reorder-btn:active { transform: translateY(1px); }
 
   .back-link {
     background: none; border: none; color: var(--text-muted); font-size: 0.8rem;
@@ -630,7 +649,29 @@
     .theme-swatch:hover { transform: translateY(-2px); }
   }
   .theme-swatch.active { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(227,168,59,0.16); }
-  .theme-swatch .tname { font-size: 0.65rem; color: var(--text-muted); margin-top: 6px; }
+  .theme-swatch .tname { font-size: 0.58rem; color: var(--text-muted); margin-top: 6px; text-transform: lowercase; }
+  .theme-swatch-custom.unset { border-style: dashed; }
+  .theme-swatch-custom .tname {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.03em; color: var(--gold-soft);
+  }
+
+  .custom-theme-editor { margin-top: 14px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--ink-2); }
+  .custom-theme-editor > label:first-child { margin-top: 0; }
+  .custom-color-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 14px; }
+  .custom-color-field { display: flex; flex-direction: column; gap: 6px; }
+  .custom-color-field label { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+  .custom-color-field input[type="color"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 44px; padding: 0;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer;
+  }
+  .custom-color-field input[type="color"]::-webkit-color-swatch-wrapper { padding: 4px; }
+  .custom-color-field input[type="color"]::-webkit-color-swatch { border: none; border-radius: 7px; }
+  .custom-color-field input[type="color"]::-moz-color-swatch { border: none; border-radius: 7px; }
+  .custom-theme-reset-link { margin-top: 16px; }
+  .custom-theme-saved-note { margin-top: 6px; }
+  .custom-theme-bookmark-row { margin-top: 20px; }
+  .custom-theme-bookmark-row .btn-secondary { margin-top: 0; }
 
   /* Vorschau: Farben liegen als einzelne Blöcke nebeneinander (kein Verlauf) */
   .preview {
@@ -686,9 +727,10 @@
   .toggle-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding-top: 12px; border-top: 1px solid var(--border);
+    cursor: pointer; user-select: none;
   }
-  .toggle-row label { margin: 0; }
-  .switch { position: relative; display: inline-block; width: 44px; height: 26px; flex-shrink: 0; }
+  .toggle-row span.toggle-row-text { margin: 0; }
+  .switch { position: relative; display: inline-block; width: 44px; height: 26px; flex-shrink: 0; pointer-events: none; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .switch .slider {
     position: absolute; cursor: pointer; inset: 0;
@@ -803,7 +845,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '3.0.12';
+  const APP_VERSION = '3.4.5';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -845,7 +887,7 @@
   // Zeile 3: Lücke (leere Trennzeile)
   // Zeile 4: die 3 bestehenden dunklen Themes
   const THEME_GRID_ORDER = [
-    'chahell', 'chadunk', null,
+    'custom', 'chahell', 'chadunk',
     'daylight', 'ember', 'skylight',
     null, null, null,
     'dimension', 'phantom', 'solid-state'
@@ -886,7 +928,38 @@
     };
   }
 
+  // "Fläche" (surface) und "Text" werden beim eigenen Theme nicht einzeln
+  // abgefragt, sondern automatisch aus der Hintergrundfarbe abgeleitet – genau
+  // nach dem Muster, das die 8 mitgelieferten Themes bereits verwenden (helle
+  // Hintergründe -> fast weiße Fläche, fast schwarzer Text; dunkle
+  // Hintergründe -> etwas hellere Fläche, fast weißer Text).
+  function deriveSurfaceText(ink) {
+    const light = relLuminanceHex(ink) > 0.55;
+    return {
+      surface: light ? '#ffffff' : lightenColor(ink, 0.06),
+      text: light ? darkenColor(ink, 0.75) : lightenColor(ink, 0.92)
+    };
+  }
+
+  const CUSTOM_THEME_FIELDS = ['ink', 'gold', 'sage', 'rust'];
+
+  // Baut die vollständige 6-Farben-Basis für das "Eigene Farben"-Theme aus
+  // state.settings.customTheme (nur 4 Werte: Hintergrund + 3 Akzente).
+  // Solange der Nutzer noch nichts eingestellt hat, dient das erste
+  // mitgelieferte Theme als Startpunkt, damit die Kachel trotzdem eine
+  // sinnvolle Vorschau zeigt.
+  function getCustomBase() {
+    const c = state.settings.customTheme;
+    const src = c || {
+      ink: THEMES[0].base.ink, gold: THEMES[0].base.gold,
+      sage: THEMES[0].base.sage, rust: THEMES[0].base.rust
+    };
+    const derived = deriveSurfaceText(src.ink);
+    return { ink: src.ink, gold: src.gold, sage: src.sage, rust: src.rust, surface: derived.surface, text: derived.text };
+  }
+
   function themeBase(themeKey) {
+    if (themeKey === 'custom') return getCustomBase();
     const theme = THEMES.find(x => x.key === themeKey);
     return theme ? theme.base : THEMES[0].base;
   }
@@ -984,6 +1057,162 @@
     en: ["Great!", "Awesome!", "Nice!", "Keep going!", "Well done!"],
     pl: ["Super!", "Świetnie!", "Brawo!", "Tak trzymaj!", "Dobra robota!"]
   };
+
+  // Kurztexte für die eingeklappte Challenge-Karte (immer mit App-Icon).
+  // Variante 1: noch nicht alles erledigt ({done} > 0 && {done} < {total})
+  const COLLAPSED_PROGRESS_MSGS = {
+    de: [
+      "{done} von {total} – dranbleiben!",
+      "{done} von {total} – weiter geht's!",
+      "{done} von {total} – auf Kurs!",
+      "{done} von {total} – nur noch {remaining}!",
+      "{done} von {total} – gleich geschafft!",
+      "{done} von {total} – bleib am Ball!",
+      "{done} von {total} – du machst das!",
+      "{done} von {total} – Schritt für Schritt!",
+      "{done} von {total} geschafft – weiter so!",
+      "Schon {done} von {total}",
+      "{done}/{total} erledigt – stark!"
+    ],
+    en: [
+      "{done} of {total} – keep going!",
+      "{done} of {total} – onwards!",
+      "{done} of {total} – on track!",
+      "{done} of {total} – just {remaining} left!",
+      "{done} of {total} – almost there!",
+      "{done} of {total} – stay with it!",
+      "{done} of {total} – you've got this!",
+      "{done} of {total} – step by step!",
+      "{done} of {total} done – keep it up!",
+      "Already {done} of {total}",
+      "{done}/{total} done – nice!"
+    ],
+    pl: [
+      "{done} z {total} – tak trzymaj!",
+      "{done} z {total} – idziesz dalej!",
+      "{done} z {total} – na dobrej drodze!",
+      "{done} z {total} – zostało tylko {remaining}!",
+      "{done} z {total} – prawie gotowe!",
+      "{done} z {total} – nie odpuszczaj!",
+      "{done} z {total} – dasz radę!",
+      "{done} z {total} – krok po kroku!",
+      "{done} z {total} zrobione – tak dalej!",
+      "Już {done} z {total}",
+      "{done}/{total} zrobione – super!"
+    ]
+  };
+
+  // Variante 2: alles erledigt ({done} === {total} && {total} > 0)
+  const COLLAPSED_COMPLETE_MSGS = {
+    de: [
+      "{done} von {total} – stark gemacht!",
+      "Alles erledigt – du hast geliefert!",
+      "{done} von {total} – Tag gerockt!",
+      "Geschafft – auf dich ist Verlass!",
+      "{done} von {total} – sauber durchgezogen!",
+      "Alle Punkte abgehakt – weiter so!",
+      "{done} von {total} – Bestleistung!",
+      "Tag komplett – gönn dir das!",
+      "{done} von {total} – richtig stark!",
+      "{done} von {total} – das sitzt!",
+      "Tag abgehakt – gut gemacht!",
+      "{done} von {total} – so geht das!"
+    ],
+    en: [
+      "{done} of {total} – well played!",
+      "All done – you delivered!",
+      "{done} of {total} – day nailed!",
+      "Done – you can count on yourself!",
+      "{done} of {total} – cleanly pulled off!",
+      "Every box checked – keep it up!",
+      "{done} of {total} – personal best!",
+      "Day complete – treat yourself!",
+      "{done} of {total} – really strong!",
+      "{done} of {total} – that's the spirit!",
+      "Day checked off – well done!",
+      "{done} of {total} – that's how it's done!"
+    ],
+    pl: [
+      "{done} z {total} – mocna robota!",
+      "Wszystko zrobione – dowiozłeś!",
+      "{done} z {total} – dzień zaliczony!",
+      "Zrobione – można na tobie polegać!",
+      "{done} z {total} – czysto wykonane!",
+      "Wszystkie punkty odhaczone – tak dalej!",
+      "{done} z {total} – najlepszy wynik!",
+      "Dzień kompletny – zafunduj sobie coś!",
+      "{done} z {total} – naprawdę mocno!",
+      "{done} z {total} – to jest to!",
+      "Dzień odhaczony – dobra robota!",
+      "{done} z {total} – tak to się robi!"
+    ]
+  };
+
+  // Variante 3: noch nichts erledigt ({done} === 0)
+  const COLLAPSED_START_MSGS = {
+    de: [
+      "Jetzt starten",
+      "Heute ist ein guter Tag zum Anfangen",
+      "Leg los!",
+      "Der erste Schritt zählt",
+      "Auf geht's!",
+      "Bereit? Starte jetzt",
+      "Fang einfach an",
+      "Dein Tag wartet",
+      "Zeit loszulegen",
+      "Ein Klick, und du bist dabei",
+      "Los geht's – du schaffst das"
+    ],
+    en: [
+      "Start now",
+      "Today's a good day to begin",
+      "Get going!",
+      "The first step counts",
+      "Let's go!",
+      "Ready? Start now",
+      "Just get started",
+      "Your day is waiting",
+      "Time to begin",
+      "One tap and you're in",
+      "Off you go – you've got this"
+    ],
+    pl: [
+      "Zacznij teraz",
+      "Dziś dobry dzień na start",
+      "Do dzieła!",
+      "Pierwszy krok się liczy",
+      "Ruszamy!",
+      "Gotowy? Zacznij teraz",
+      "Po prostu zacznij",
+      "Twój dzień czeka",
+      "Czas zacząć",
+      "Jedno kliknięcie i jesteś w grze",
+      "Naprzód – dasz radę"
+    ]
+  };
+
+  // Einfacher, stabiler String-Hash (für deterministische "Zufalls"-Auswahl,
+  // die sich nicht bei jedem render() ändert, sondern nur wenn sich der
+  // Fortschritt oder der Tag ändert).
+  function hashStr(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h * 31 + str.charCodeAt(i)) >>> 0;
+    }
+    return h;
+  }
+
+  function fillTemplate(str, vars) {
+    return str.replace(/\{(\w+)\}/g, (m, key) => (vars[key] !== undefined ? vars[key] : m));
+  }
+
+  // Wählt deterministisch (aber "zufällig" wirkend) einen Text aus dem
+  // sprachspezifischen Pool aus, stabil pro seedKey.
+  function pickCollapsedText(pool, seedKey, vars) {
+    const list = pool[state.settings.lang] || pool.de;
+    const idx = hashStr(seedKey) % list.length;
+    return fillTemplate(list[idx], vars || {});
+  }
 
   // Standard-Abschlussmeldungen (mit {name}-Platzhalter, wird bei fehlendem Namen
   // entfernt). Nicht mehr über die Einstellungen editierbar — reine Zufallsauswahl.
@@ -1107,7 +1336,7 @@
       card_progress_count: "{done} von {total} Tagesziele & Challenges geschafft!",
       settings_theme_label: "Farbschema", settings_lang_label: "Sprache",
       settings_lang_note: "Die Sprache wirkt sich auf alle Texte und Standard-Sprüche aus.",
-      settings_done: "Fertig", settings_nav_general: "Allgemein", settings_nav_theme: "Farben & Schriftgröße",
+      settings_done: "Fertig", settings_nav_general: "Allgemein", settings_nav_theme: "Farben & Schriftgröße", settings_nav_challenges: "Challenges",
       theme1: "Massively", theme2: "Dimension", theme3: "Glut",
       theme4: "Editorial", theme5: "Stellar", theme6: "Phantom",
       theme7: "Hyperspace", theme8: "Solid State", theme9: "Wiese", theme10: "Himmel",
@@ -1145,6 +1374,7 @@
       task_examples: "z. B. Sport machen|z. B. Gesunde Ernährung|z. B. Lesen|z. B. Wasser trinken|z. B. Tagebuch schreiben|z. B. Spazieren gehen",
       setup_submit: "Challenge starten", setup_back: "← Zurück", setup_cancel: "Abbrechen",
       edit_btn: "Bearbeiten", edit_title: "Challenge bearbeiten", edit_save_btn: "Speichern",
+      reorder_up: "Nach oben verschieben", reorder_down: "Nach unten verschieben",
       edit_days_note: "Bereits begonnen — mindestens {min} Tage (bis heute).",
       edit_err_days: "Bitte gib einen Wert zwischen {min} und {max} ein.",
       add_challenge_btn: "+ Neue Challenge starten",
@@ -1153,15 +1383,31 @@
       settings_group_personal: "Persönlich", settings_group_behavior: "Verhalten",
       settings_max_challenges_label: "Maximale Anzahl gleichzeitiger Challenges",
       settings_max_challenges_note: "Wie viele Challenges du parallel laufen lassen kannst.",
+      settings_accordion_label: "Nur eine Challenge gleichzeitig aufgeklappt",
+      settings_accordion_note: "Beim Aufklappen einer Challenge werden die anderen automatisch eingeklappt.",
+      settings_collapse_start_label: "Challenges beim Start eingeklappt anzeigen",
+      settings_collapse_start_note: "Alle Challenge-Karten sind beim Öffnen der App zunächst eingeklappt.",
       settings_fontsize_label: "Schriftgröße",
       settings_fontsize_current: "Aktuell: {px}px",
       fontsize_small: "Klein", fontsize_normal: "Normal", fontsize_large: "Groß",
+      custom_theme_base_label: "Als Basis übernehmen",
+      custom_theme_base_placeholder: "– Theme wählen –",
+      custom_theme_bg_label: "Hintergrund",
+      custom_theme_accent1_label: "Akzent 1",
+      custom_theme_accent2_label: "Akzent 2",
+      custom_theme_accent3_label: "Akzent 3",
+      custom_theme_reset: "Editor schließen",
+      custom_theme_bookmark_save: "Als meine Farbe speichern",
+      custom_theme_bookmark_restore: "Zurück zur gespeicherten Farbe",
+      custom_theme_bookmark_note: "Du kannst jederzeit zu dieser gespeicherten Farbe zurück, auch nachdem du weiter herumprobiert hast.",
+      custom_theme_bookmark_note_empty: "Tipp: Wenn dir eine Farbkombination gefällt, speichere sie – dann kommst du beim Herumprobieren immer wieder dorthin zurück.",
       err_title: "Bitte gib einen Titel ein.", err_days: "Bitte gib eine gültige Anzahl Tage ein (1 bis {max}).",
       err_days_inline: "Maximal {max} Tage möglich. Bitte gib einen Wert zwischen 1 und {max} ein.",
       err_start: "Bitte wähle ein Startdatum.", err_tasks: "Bitte lege mindestens ein Tagesziel & Challenge an.",
       err_start_past: "Das Startdatum darf nicht in der Vergangenheit liegen. Frühestens heute.",
       waiting_lead: "Deine Challenge startet am {date} — noch {daysPhrase}.",
       waiting_meta: "{days} {daysUnit} · {tasks} {tasksUnit}",
+      waiting_collapsed: "Beginnt am: {date}",
       unit_day_singular: "Tag", unit_day_plural: "Tage",
       unit_task_singular: "Tagesziel & Challenge", unit_task_plural: "Tagesziele & Challenges",
       abort_btn: "Challenge vorzeitig beenden",
@@ -1205,7 +1451,7 @@
       card_progress_count: "{done} of {total} tasks done!",
       settings_theme_label: "Color scheme", settings_lang_label: "Language",
       settings_lang_note: "The language affects all texts and the default quotes.",
-      settings_done: "Done", settings_nav_general: "General", settings_nav_theme: "Appearance",
+      settings_done: "Done", settings_nav_general: "General", settings_nav_theme: "Appearance", settings_nav_challenges: "Challenges",
       theme1: "Massively", theme2: "Dimension", theme3: "Ember",
       theme4: "Editorial", theme5: "Stellar", theme6: "Phantom",
       theme7: "Hyperspace", theme8: "Solid State", theme9: "Meadow", theme10: "Skylight",
@@ -1222,10 +1468,10 @@
       data_title: "Back up your data",
       settings_nav_info: "About the app",
       welcome_title: "Welcome!",
-      welcome_text: "Your daily companion to follow through on goals and build new habits.\n✓ Free   ✓ No sign-up   ✓ Data stored locally only",
+      welcome_text: "Challenge App\nYour daily companion to master personal challenges and build new habits. With success messages that truly feel good.\n✓ Free   ✓ No sign-up   ✓ Data stored locally only",
       welcome_start_btn: "Let's go!",
       welcome_toggle_label: "Show this message on start",
-      share_btn: "Recommend this app", share_text: "Challenge App\nYour daily companion for mastering personal challenges and building new habits. With success messages that truly feel good.\n✓ Free   ✓ No sign-up   ✓ Data stays local on your device",
+      share_btn: "Recommend this app", share_text: "Challenge App\nYour daily companion to master personal challenges and build new habits. With success messages that truly feel good.\n✓ Free   ✓ No sign-up   ✓ Data stored locally only",
       energie_btn: "Go to Energietankstelle",
       share_copied: "Link copied!",
       info_signoff: "Enjoy this app and have great success with it.\nIf you have ideas to make the app even better, feel free to reach out.\n{email}\n\nBest regards\nNorbert",
@@ -1243,6 +1489,7 @@
       task_examples: "e.g. Exercise|e.g. Healthy eating|e.g. Read|e.g. Drink water|e.g. Journal|e.g. Go for a walk",
       setup_submit: "Start challenge", setup_back: "← Back", setup_cancel: "Cancel",
       edit_btn: "Edit", edit_title: "Edit challenge", edit_save_btn: "Save",
+      reorder_up: "Move up", reorder_down: "Move down",
       edit_days_note: "Already started — at least {min} days (through today).",
       edit_err_days: "Please enter a value between {min} and {max}.",
       add_challenge_btn: "+ Start new challenge",
@@ -1251,15 +1498,31 @@
       settings_group_personal: "Personal", settings_group_behavior: "Behavior",
       settings_max_challenges_label: "Maximum number of simultaneous challenges",
       settings_max_challenges_note: "How many challenges you can run in parallel.",
+      settings_accordion_label: "Only one challenge expanded at a time",
+      settings_accordion_note: "Expanding a challenge automatically collapses the others.",
+      settings_collapse_start_label: "Show challenges collapsed on start",
+      settings_collapse_start_note: "All challenge cards are collapsed when you open the app.",
       settings_fontsize_label: "Font size",
       settings_fontsize_current: "Current: {px}px",
       fontsize_small: "Small", fontsize_normal: "Normal", fontsize_large: "Large",
+      custom_theme_base_label: "Use as base",
+      custom_theme_base_placeholder: "– Choose theme –",
+      custom_theme_bg_label: "Background",
+      custom_theme_accent1_label: "Accent 1",
+      custom_theme_accent2_label: "Accent 2",
+      custom_theme_accent3_label: "Accent 3",
+      custom_theme_reset: "Close editor",
+      custom_theme_bookmark_save: "Save as my color",
+      custom_theme_bookmark_restore: "Back to saved color",
+      custom_theme_bookmark_note: "You can always come back to this saved color, even after further experimenting.",
+      custom_theme_bookmark_note_empty: "Tip: once you like a combination, save it — then you can always return to it while trying other colors.",
       err_title: "Please enter a title.", err_days: "Please enter a valid number of days (1 to {max}).",
       err_days_inline: "Maximum {max} days. Please enter a value between 1 and {max}.",
       err_start: "Please choose a start date.", err_tasks: "Please add at least one task.",
       err_start_past: "The start date can't be in the past. Earliest is today.",
       waiting_lead: "Your challenge starts on {date} — {daysPhrase} to go.",
       waiting_meta: "{days} {daysUnit} · {tasks} {tasksUnit}",
+      waiting_collapsed: "Starts on: {date}",
       unit_day_singular: "day", unit_day_plural: "days",
       unit_task_singular: "daily task", unit_task_plural: "daily tasks",
       abort_btn: "Cancel challenge",
@@ -1303,7 +1566,7 @@
       card_progress_count: "{done} z {total} zadań wykonanych!",
       settings_theme_label: "Schemat kolorów", settings_lang_label: "Język",
       settings_lang_note: "Język wpływa na wszystkie teksty i domyślne cytaty.",
-      settings_done: "Gotowe", settings_nav_general: "Ogólne", settings_nav_theme: "Wygląd",
+      settings_done: "Gotowe", settings_nav_general: "Ogólne", settings_nav_theme: "Wygląd", settings_nav_challenges: "Wyzwania",
       theme1: "Massively", theme2: "Dimension", theme3: "Żar",
       theme4: "Editorial", theme5: "Stellar", theme6: "Phantom",
       theme7: "Hyperspace", theme8: "Solid State", theme9: "Łąka", theme10: "Niebo",
@@ -1341,6 +1604,7 @@
       task_examples: "np. Uprawiaj sport|np. Zdrowe odżywianie|np. Czytaj|np. Pij wodę|np. Prowadź dziennik|np. Idź na spacer",
       setup_submit: "Rozpocznij wyzwanie", setup_back: "← Wstecz", setup_cancel: "Anuluj",
       edit_btn: "Edytuj", edit_title: "Edytuj wyzwanie", edit_save_btn: "Zapisz",
+      reorder_up: "Przesuń w górę", reorder_down: "Przesuń w dół",
       edit_days_note: "Już rozpoczęte — minimum {min} dni (do dziś).",
       edit_err_days: "Podaj wartość od {min} do {max}.",
       add_challenge_btn: "+ Rozpocznij nowe wyzwanie",
@@ -1349,15 +1613,31 @@
       settings_group_personal: "Osobiste", settings_group_behavior: "Zachowanie",
       settings_max_challenges_label: "Maksymalna liczba równoczesnych wyzwań",
       settings_max_challenges_note: "Ile wyzwań możesz prowadzić równolegle.",
+      settings_accordion_label: "Tylko jedno wyzwanie rozwinięte naraz",
+      settings_accordion_note: "Rozwinięcie jednego wyzwania automatycznie zwija pozostałe.",
+      settings_collapse_start_label: "Pokaż wyzwania zwinięte po starcie",
+      settings_collapse_start_note: "Wszystkie karty wyzwań są zwinięte przy otwarciu aplikacji.",
       settings_fontsize_label: "Rozmiar czcionki",
       settings_fontsize_current: "Aktualnie: {px}px",
       fontsize_small: "Mały", fontsize_normal: "Normalny", fontsize_large: "Duży",
+      custom_theme_base_label: "Użyj jako bazy",
+      custom_theme_base_placeholder: "– Wybierz motyw –",
+      custom_theme_bg_label: "Tło",
+      custom_theme_accent1_label: "Akcent 1",
+      custom_theme_accent2_label: "Akcent 2",
+      custom_theme_accent3_label: "Akcent 3",
+      custom_theme_reset: "Zamknij edytor",
+      custom_theme_bookmark_save: "Zapisz jako mój kolor",
+      custom_theme_bookmark_restore: "Wróć do zapisanego koloru",
+      custom_theme_bookmark_note: "Możesz zawsze wrócić do tego zapisanego koloru, nawet po dalszych eksperymentach.",
+      custom_theme_bookmark_note_empty: "Wskazówka: gdy podoba ci się kombinacja, zapisz ją — wtedy zawsze możesz do niej wrócić.",
       err_title: "Podaj tytuł.", err_days: "Podaj prawidłową liczbę dni (1 do {max}).",
       err_days_inline: "Maksymalnie {max} dni. Podaj wartość od 1 do {max}.",
       err_start: "Wybierz datę rozpoczęcia.", err_tasks: "Dodaj co najmniej jedno zadanie.",
       err_start_past: "Data rozpoczęcia nie może być w przeszłości. Najwcześniej dzisiaj.",
       waiting_lead: "Twoje wyzwanie zaczyna się {date} — zostało {daysPhrase}.",
       waiting_meta: "{days} {daysUnit} · {tasks} {tasksUnit}",
+      waiting_collapsed: "Zaczyna się: {date}",
       unit_day_singular: "dzień", unit_day_plural: "dni",
       unit_task_singular: "codzienne zadanie", unit_task_plural: "codziennych zadań",
       abort_btn: "Przerwij wyzwanie",
@@ -1408,7 +1688,7 @@
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 1, fontSize: 18, showWelcomeOnStart: true, forcedDayQuoteId: null })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, customTheme: null, customThemeSaved: null })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -1419,10 +1699,16 @@
   if (typeof state.settings.maxChallenges !== 'number' || state.settings.maxChallenges < 1) {
     state.settings.maxChallenges = 1;
   }
-  state.settings.maxChallenges = Math.min(state.settings.maxChallenges, 3);
+  state.settings.maxChallenges = Math.min(state.settings.maxChallenges, 5);
 
   if (typeof state.settings.showWelcomeOnStart !== 'boolean') {
     state.settings.showWelcomeOnStart = true;
+  }
+  if (typeof state.settings.accordionChallengeCards !== 'boolean') {
+    state.settings.accordionChallengeCards = false;
+  }
+  if (typeof state.settings.collapseChallengesOnStart !== 'boolean') {
+    state.settings.collapseChallengesOnStart = false;
   }
 
   const LEGACY_FONT_SIZES = { small: 16, normal: 18, large: 21 };
@@ -1435,7 +1721,11 @@
   }
 
   let setupMode = false;
+  // Wenn gewünscht, sollen alle Challenge-Karten beim App-Start eingeklappt sein.
   let collapsedCards = {};
+  if (state.settings.collapseChallengesOnStart) {
+    state.challenges.forEach(c => { collapsedCards[c.id] = true; });
+  }
   let setupPrefill = null;
   let pendingCompletionModals = [];
 
@@ -1982,24 +2272,95 @@
     return card;
   }
 
+  // Verschiebt eine Challenge in der Reihenfolge. Da die Karten in umgekehrter
+  // Array-Reihenfolge angezeigt werden (das letzte Element steht optisch oben),
+  // bedeutet "nach oben" ein Vorrücken im Array-Index und "nach unten" ein
+  // Zurückrücken.
+  function moveChallenge(c, direction) {
+    const idx = state.challenges.findIndex(x => x.id === c.id);
+    if (idx === -1) return;
+    const swapIdx = direction === 'up' ? idx + 1 : idx - 1;
+    if (swapIdx < 0 || swapIdx >= state.challenges.length) return;
+    const tmp = state.challenges[idx];
+    state.challenges[idx] = state.challenges[swapIdx];
+    state.challenges[swapIdx] = tmp;
+    persist();
+    render();
+  }
+
+  const ARROW_UP_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 15l7-7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ARROW_DOWN_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 9l7 7 7-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Erzeugt die Auf/Ab-Pfeile zum Umsortieren. Nur sichtbar, wenn mehr als
+  // eine Challenge aktiv/anstehend ist. An den Rand-Positionen fehlt der
+  // jeweils nicht mögliche Pfeil komplett.
+  function reorderButtonsHtml(c) {
+    if (state.challenges.length < 2) return '';
+    const idx = state.challenges.findIndex(x => x.id === c.id);
+    const canMoveUp = idx < state.challenges.length - 1;
+    const canMoveDown = idx > 0;
+    if (!canMoveUp && !canMoveDown) return '';
+    return `
+      <div class="reorder-btns">
+        ${canMoveUp ? `<button type="button" class="reorder-btn" id="btn-move-up" title="${escapeHtml(t('reorder_up'))}" aria-label="${escapeHtml(t('reorder_up'))}">${ARROW_UP_SVG}</button>` : ''}
+        ${canMoveDown ? `<button type="button" class="reorder-btn" id="btn-move-down" title="${escapeHtml(t('reorder_down'))}" aria-label="${escapeHtml(t('reorder_down'))}">${ARROW_DOWN_SVG}</button>` : ''}
+      </div>
+    `;
+  }
+
+  function bindReorderButtons(card, c) {
+    const upBtn = card.querySelector('#btn-move-up');
+    if (upBtn) upBtn.addEventListener('click', () => moveChallenge(c, 'up'));
+    const downBtn = card.querySelector('#btn-move-down');
+    if (downBtn) downBtn.addEventListener('click', () => moveChallenge(c, 'down'));
+  }
+
   function renderWaiting(c) {
     const daysUntil = daysBetween(todayStr(), c.startDate);
     const taskUnit = c.tasks.length === 1 ? t('unit_task_singular') : t('unit_task_plural');
     const endDate = addDays(c.startDate, c.days - 1);
+    const isCollapsed = collapsedCards[c.id] === true;
+
+    const collapsedInfoHtml = isCollapsed
+      ? `<div class="card-collapsed-status">${t('waiting_collapsed', { date: fmtDisplayFull(c.startDate) })}</div>`
+      : '';
+
     const card = el(`
       <div class="card">
-        <h1>${escapeHtml(c.title)}</h1>
-        <p class="lead">${t('waiting_lead', { date: fmtDisplayFull(c.startDate), daysPhrase: daysPhrase(daysUntil) })}</p>
-        <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
-        <div class="meta-line">${t('waiting_meta', { days: c.days, daysUnit: c.days === 1 ? t('unit_day_singular') : t('unit_day_plural'), tasks: c.tasks.length, tasksUnit: taskUnit })}</div>
-        <div class="card-footer-links">
-          <button type="button" class="text-link-btn" id="btn-edit">${t('edit_btn')}</button>
-          <button type="button" class="text-link-btn" id="btn-abort">${t('abort_btn')}</button>
-        </div>
+        <button type="button" class="card-toggle" id="btn-collapse">
+          <h1>${escapeHtml(c.title)}</h1>
+          <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
+        </button>
+        ${collapsedInfoHtml}
+        ${!isCollapsed ? `
+          <p class="lead">${t('waiting_lead', { date: fmtDisplayFull(c.startDate), daysPhrase: daysPhrase(daysUntil) })}</p>
+          <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
+          <div class="meta-line">${t('waiting_meta', { days: c.days, daysUnit: c.days === 1 ? t('unit_day_singular') : t('unit_day_plural'), tasks: c.tasks.length, tasksUnit: taskUnit })}</div>
+          <div class="card-footer-links">
+            ${reorderButtonsHtml(c)}
+            <button type="button" class="text-link-btn" id="btn-edit">${t('edit_btn')}</button>
+            <button type="button" class="text-link-btn" id="btn-abort">${t('abort_btn')}</button>
+          </div>
+        ` : ''}
       </div>
     `);
-    card.querySelector('#btn-edit').addEventListener('click', () => showEditChallengeModal(c));
-    card.querySelector('#btn-abort').addEventListener('click', () => {
+
+    card.querySelector('#btn-collapse').addEventListener('click', () => {
+      const willExpand = isCollapsed;
+      // Akkordeon-Modus: Beim Aufklappen einer Karte werden alle anderen eingeklappt.
+      if (willExpand && state.settings.accordionChallengeCards) {
+        state.challenges.forEach(other => {
+          if (other.id !== c.id) collapsedCards[other.id] = true;
+        });
+      }
+      collapsedCards[c.id] = !isCollapsed;
+      render();
+    });
+
+    const editBtn = card.querySelector('#btn-edit');
+    if (editBtn) editBtn.addEventListener('click', () => showEditChallengeModal(c));
+    const abortBtn = card.querySelector('#btn-abort');
+    if (abortBtn) abortBtn.addEventListener('click', () => {
       confirmModal(t('abort_future_title'), t('abort_future_text'), () => {
         archiveChallenge(c, true);
         state.challenges = state.challenges.filter(x => x.id !== c.id);
@@ -2007,6 +2368,7 @@
         render();
       });
     });
+    bindReorderButtons(card, c);
     return card;
   }
 
@@ -2066,12 +2428,28 @@
     }
     const isCollapsed = collapsedCards[c.id] === true;
 
+    let collapsedInfoHtml = '';
+    if (isCollapsed && c.tasks.length > 0) {
+      const totalToday = c.tasks.length;
+      const remainingToday = totalToday - doneToday;
+      let collapsedMsg;
+      if (doneToday === 0) {
+        collapsedMsg = pickCollapsedText(COLLAPSED_START_MSGS, `${c.id}|${today}|start`, {});
+      } else if (doneToday === totalToday) {
+        collapsedMsg = pickCollapsedText(COLLAPSED_COMPLETE_MSGS, `${c.id}|${today}|complete`, { done: doneToday, total: totalToday });
+      } else {
+        collapsedMsg = pickCollapsedText(COLLAPSED_PROGRESS_MSGS, `${c.id}|${today}|progress|${doneToday}`, { done: doneToday, total: totalToday, remaining: remainingToday });
+      }
+      collapsedInfoHtml = `<div class="card-collapsed-status"><img src="icon-192.png" alt="" class="card-collapsed-icon">${escapeHtml(collapsedMsg)}</div>`;
+    }
+
     const card = el(`
       <div class="card">
         <button type="button" class="card-toggle" id="btn-collapse">
           <h1>${escapeHtml(c.title)}</h1>
           <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
         </button>
+        ${collapsedInfoHtml}
         ${!isCollapsed ? `
           <div class="meta-line">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days })}</div>
           <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
@@ -2084,6 +2462,7 @@
           ${cardStatusHtml}
           <div class="task-list compact">${taskHtml}</div>
           <div class="card-footer-links">
+            ${reorderButtonsHtml(c)}
             <button type="button" class="text-link-btn" id="btn-edit">${t('edit_btn')}</button>
             <button type="button" class="text-link-btn" id="btn-abort">${t('abort_btn')}</button>
           </div>
@@ -2092,6 +2471,13 @@
     `);
 
     card.querySelector('#btn-collapse').addEventListener('click', () => {
+      const willExpand = isCollapsed;
+      // Akkordeon-Modus: Beim Aufklappen einer Karte werden alle anderen eingeklappt.
+      if (willExpand && state.settings.accordionChallengeCards) {
+        state.challenges.forEach(other => {
+          if (other.id !== c.id) collapsedCards[other.id] = true;
+        });
+      }
       collapsedCards[c.id] = !isCollapsed;
       render();
     });
@@ -2133,6 +2519,8 @@
         });
       });
     }
+
+    bindReorderButtons(card, c);
 
     return card;
   }
@@ -2510,7 +2898,17 @@
     launchConfetti('big');
   }
 
-  let settingsExpanded = { general: true, theme: false, messages: false, data: false, info: false };
+  let settingsExpanded = { general: true, theme: false, challenges: false, messages: false, data: false, info: false };
+  // Ob der Editor für das "Eigene Farben"-Theme innerhalb der Farben-Sektion
+  // aufgeklappt ist. Bleibt (wie settingsExpanded) über Re-Renders des
+  // Panels hinweg erhalten, damit er beim Live-Anpassen der Farben nicht
+  // ständig zuklappt.
+  let customThemeEditorOpen = false;
+  // Rein visuelle, NICHT gespeicherte Erinnerung an die zuletzt im
+  // "Als Basis übernehmen"-Dropdown gewählte Option. Wird beim (Wieder-)
+  // Öffnen des Editors zurückgesetzt, damit das Dropdown nicht dauerhaft
+  // einen längst überholten Ausgangspunkt anzeigt.
+  let customThemeBaseSelection = null;
 
   function showSettingsPanel(openSection) {
     modalRoot.innerHTML = '';
@@ -2521,6 +2919,16 @@
 
     const themeSwatches = THEME_GRID_ORDER.map(key => {
       if (!key) return `<div class="theme-swatch-gap" aria-hidden="true"></div>`;
+      if (key === 'custom') {
+        const base = getCustomBase();
+        const unset = !state.settings.customTheme;
+        return `
+      <div class="theme-swatch theme-swatch-custom ${unset ? 'unset' : ''} ${state.settings.themeKey === 'custom' ? 'active' : ''}" data-theme="custom">
+        ${themeMockupHtml(base)}
+        <div class="tname">${escapeHtml(t('theme_custom'))}</div>
+      </div>
+    `;
+      }
       const th = THEMES.find(x => x.key === key);
       if (!th) return '';
       return `
@@ -2571,21 +2979,55 @@
       <input type="text" id="s-username" placeholder="${escapeHtml(t('settings_username_placeholder'))}" value="${escapeHtml(state.settings.userName || '')}" />
       <div class="lang-note">${t('settings_username_note')}</div>
 
-      <label>${t('settings_max_challenges_label')}</label>
-      <select id="s-max-challenges">
-        <option value="1" ${state.settings.maxChallenges === 1 ? 'selected' : ''}>1</option>
-        <option value="2" ${state.settings.maxChallenges === 2 ? 'selected' : ''}>2</option>
-        <option value="3" ${state.settings.maxChallenges === 3 ? 'selected' : ''}>3</option>
-      </select>
-      <div class="lang-note">${t('settings_max_challenges_note')}</div>
-
       <label>${t('settings_lang_label')}</label>
       <select id="settings-lang">${langOptions}</select>
       <div class="lang-note">${t('settings_lang_note')}</div>
     `;
 
+    const customBaseForEditor = getCustomBase();
+    const customBaseOptions = THEMES.map(th => `<option value="${th.key}" ${customThemeBaseSelection === th.key ? 'selected' : ''}>${escapeHtml(t(th.labelKey).toLowerCase())}</option>`).join('');
+    const hasSavedCustom = !!state.settings.customThemeSaved;
+    const customThemeEditorHtml = (customThemeEditorOpen && state.settings.themeKey === 'custom') ? `
+      <div class="custom-theme-editor" id="custom-theme-editor">
+        <label>${t('custom_theme_base_label')}</label>
+        <select id="s-custom-base">
+          <option value="" ${customThemeBaseSelection ? '' : 'selected'}>${t('custom_theme_base_placeholder')}</option>
+          ${customBaseOptions}
+        </select>
+
+        <div class="custom-color-grid">
+          <div class="custom-color-field">
+            <label for="s-custom-ink">${t('custom_theme_bg_label')}</label>
+            <input type="color" id="s-custom-ink" value="${customBaseForEditor.ink}">
+          </div>
+          <div class="custom-color-field">
+            <label for="s-custom-gold">${t('custom_theme_accent1_label')}</label>
+            <input type="color" id="s-custom-gold" value="${customBaseForEditor.gold}">
+          </div>
+          <div class="custom-color-field">
+            <label for="s-custom-sage">${t('custom_theme_accent2_label')}</label>
+            <input type="color" id="s-custom-sage" value="${customBaseForEditor.sage}">
+          </div>
+          <div class="custom-color-field">
+            <label for="s-custom-rust">${t('custom_theme_accent3_label')}</label>
+            <input type="color" id="s-custom-rust" value="${customBaseForEditor.rust}">
+          </div>
+        </div>
+
+        <div class="modal-actions custom-theme-bookmark-row">
+          <button type="button" class="btn-secondary" id="s-custom-bookmark-save">${t('custom_theme_bookmark_save')}</button>
+          ${hasSavedCustom ? `<button type="button" class="btn-secondary" id="s-custom-bookmark-restore">${t('custom_theme_bookmark_restore')}</button>` : ''}
+        </div>
+        <div class="lang-note custom-theme-saved-note">${hasSavedCustom ? t('custom_theme_bookmark_note') : t('custom_theme_bookmark_note_empty')}</div>
+
+        <button type="button" class="text-link-btn custom-theme-reset-link" id="s-custom-reset">${t('custom_theme_reset')}</button>
+      </div>
+    ` : '';
+
+
     const themeBody = `
       <div class="theme-grid" id="s-themes">${themeSwatches}</div>
+      ${customThemeEditorHtml}
 
       <label style="margin-top:24px;">${t('settings_fontsize_label')}</label>
       <div class="fontsize-row">
@@ -2594,6 +3036,36 @@
         <span class="fontsize-sample" style="font-size:24px;">A</span>
       </div>
       <div class="lang-note" id="s-fontsize-value">${t('settings_fontsize_current', { px: state.settings.fontSize })}</div>
+    `;
+
+    const challengesBody = `
+      <label>${t('settings_max_challenges_label')}</label>
+      <select id="s-max-challenges">
+        <option value="1" ${state.settings.maxChallenges === 1 ? 'selected' : ''}>1</option>
+        <option value="2" ${state.settings.maxChallenges === 2 ? 'selected' : ''}>2</option>
+        <option value="3" ${state.settings.maxChallenges === 3 ? 'selected' : ''}>3</option>
+        <option value="4" ${state.settings.maxChallenges === 4 ? 'selected' : ''}>4</option>
+        <option value="5" ${state.settings.maxChallenges === 5 ? 'selected' : ''}>5</option>
+      </select>
+      <div class="lang-note">${t('settings_max_challenges_note')}</div>
+
+      <label class="toggle-row" for="s-accordion-toggle">
+        <span class="toggle-row-text">${t('settings_accordion_label')}</span>
+        <span class="switch">
+          <input type="checkbox" id="s-accordion-toggle" ${state.settings.accordionChallengeCards ? 'checked' : ''} />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="lang-note">${t('settings_accordion_note')}</div>
+
+      <label class="toggle-row" for="s-collapse-start-toggle">
+        <span class="toggle-row-text">${t('settings_collapse_start_label')}</span>
+        <span class="switch">
+          <input type="checkbox" id="s-collapse-start-toggle" ${state.settings.collapseChallengesOnStart ? 'checked' : ''} />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="lang-note">${t('settings_collapse_start_note')}</div>
     `;
 
     const messagesBody = `
@@ -2614,13 +3086,13 @@
     const infoBody = `
       <img src="icon-192.png" alt="" class="welcome-icon">
       <p class="info-readonly-text">${escapeHtml(t('welcome_text'))}</p>
-      <div class="toggle-row">
-        <label for="s-welcome-toggle">${t('welcome_toggle_label')}</label>
+      <label class="toggle-row" for="s-welcome-toggle">
+        <span class="toggle-row-text">${t('welcome_toggle_label')}</span>
         <span class="switch">
           <input type="checkbox" id="s-welcome-toggle" ${state.settings.showWelcomeOnStart ? 'checked' : ''} />
           <span class="slider"></span>
         </span>
-      </div>
+      </label>
       <p class="info-readonly-text info-signoff">${escapeHtml(t('info_signoff', { email: 'n.szpak@web.de' }))}</p>
     `;
 
@@ -2637,6 +3109,7 @@
 
           ${sectionCard('general', t('settings_nav_general'), generalBody)}
           ${sectionCard('theme', t('settings_nav_theme'), themeBody)}
+          ${sectionCard('challenges', t('settings_nav_challenges'), challengesBody)}
           ${sectionCard('messages', t('quotes_title'), messagesBody)}
           ${sectionCard('data', t('data_title'), dataBody)}
           ${sectionCard('info', t('settings_nav_info'), infoBody)}
@@ -2684,6 +3157,18 @@
       render();
     });
 
+    const accordionToggle = overlay.querySelector('#s-accordion-toggle');
+    if (accordionToggle) accordionToggle.addEventListener('change', (e) => {
+      state.settings.accordionChallengeCards = e.target.checked;
+      persist();
+    });
+
+    const collapseStartToggle = overlay.querySelector('#s-collapse-start-toggle');
+    if (collapseStartToggle) collapseStartToggle.addEventListener('change', (e) => {
+      state.settings.collapseChallengesOnStart = e.target.checked;
+      persist();
+    });
+
     const fontInput = overlay.querySelector('#s-fontsize');
     if (fontInput) fontInput.addEventListener('input', (e) => {
       const px = parseInt(e.target.value, 10);
@@ -2705,11 +3190,101 @@
 
     overlay.querySelectorAll('.theme-swatch').forEach(sw => {
       sw.addEventListener('click', () => {
-        state.settings.themeKey = sw.getAttribute('data-theme');
+        const key = sw.getAttribute('data-theme');
+        if (key === 'custom') {
+          const wasClosed = !(customThemeEditorOpen && state.settings.themeKey === 'custom');
+          if (!state.settings.customTheme) {
+            // Erststart: eigenes Theme mit den Werten des zuletzt aktiven
+            // Themes vorbefüllen, statt bei Null anzufangen.
+            const base = themeBase(state.settings.themeKey);
+            state.settings.customTheme = { ink: base.ink, gold: base.gold, sage: base.sage, rust: base.rust };
+          }
+          if (wasClosed) {
+            // Editor wird frisch geöffnet -> Dropdown-Anzeige zurücksetzen,
+            // damit dort nicht mehr eine längst vergangene Auswahl steht.
+            customThemeBaseSelection = null;
+          }
+          state.settings.themeKey = 'custom';
+          customThemeEditorOpen = wasClosed ? true : !customThemeEditorOpen;
+          persist();
+          applyTheme('custom');
+          showSettingsPanel();
+          return;
+        }
+        state.settings.themeKey = key;
+        customThemeEditorOpen = false;
         persist();
-        applyTheme(state.settings.themeKey);
+        applyTheme(key);
         showSettingsPanel();
       });
+    });
+
+    const customBaseSelect = overlay.querySelector('#s-custom-base');
+    if (customBaseSelect) customBaseSelect.addEventListener('change', (e) => {
+      const key = e.target.value;
+      if (!key) return;
+      const src = themeBase(key);
+      state.settings.customTheme = { ink: src.ink, gold: src.gold, sage: src.sage, rust: src.rust };
+      state.settings.themeKey = 'custom';
+      customThemeBaseSelection = key;
+      persist();
+      applyTheme('custom');
+      showSettingsPanel();
+    });
+
+    function refreshCustomSwatchPreview() {
+      const previewEl = overlay.querySelector('.theme-swatch-custom .preview');
+      if (!previewEl) return;
+      const base = getCustomBase();
+      const blocks = [base.ink, base.surface, base.gold, base.sage, base.rust];
+      previewEl.querySelectorAll('.swatch-block').forEach((block, i) => { block.style.background = blocks[i]; });
+    }
+
+    CUSTOM_THEME_FIELDS.forEach(field => {
+      const input = overlay.querySelector('#s-custom-' + field);
+      if (!input) return;
+      // 'input' feuert live während der Auswahl im nativen Farbwähler ->
+      // sofortige Vorschau in der ganzen App, ohne das Panel komplett neu zu
+      // zeichnen (das würde den Picker auf manchen Geräten unterbrechen).
+      input.addEventListener('input', (e) => {
+        if (!state.settings.customTheme) state.settings.customTheme = { ...getCustomBase() };
+        state.settings.customTheme[field] = e.target.value;
+        state.settings.themeKey = 'custom';
+        applyTheme('custom');
+        refreshCustomSwatchPreview();
+      });
+      input.addEventListener('change', () => persist());
+    });
+
+    const customBookmarkSaveBtn = overlay.querySelector('#s-custom-bookmark-save');
+    if (customBookmarkSaveBtn) customBookmarkSaveBtn.addEventListener('click', () => {
+      // Merkt die aktuellen 4 Farben explizit als "meine gute Farbe" — getrennt
+      // von den laufend automatisch gespeicherten Live-Werten. Nur so lässt
+      // sich später gezielt zu genau diesem Stand zurückkehren, auch wenn
+      // zwischenzeitlich weiter herumprobiert wurde.
+      state.settings.customThemeSaved = { ...state.settings.customTheme };
+      persist();
+      showSettingsPanel();
+    });
+
+    const customBookmarkRestoreBtn = overlay.querySelector('#s-custom-bookmark-restore');
+    if (customBookmarkRestoreBtn) customBookmarkRestoreBtn.addEventListener('click', () => {
+      if (!state.settings.customThemeSaved) return;
+      state.settings.customTheme = { ...state.settings.customThemeSaved };
+      state.settings.themeKey = 'custom';
+      customThemeBaseSelection = null;
+      persist();
+      applyTheme('custom');
+      showSettingsPanel();
+    });
+
+    const customResetBtn = overlay.querySelector('#s-custom-reset');
+    if (customResetBtn) customResetBtn.addEventListener('click', () => {
+      // Klappt nur den Editor ein. themeKey bleibt 'custom' — die Kachel
+      // "Eigene Farben" bleibt also weiterhin als aktives Theme ausgewählt.
+      // Wer ein anderes Theme möchte, tippt direkt auf dessen Kachel.
+      customThemeEditorOpen = false;
+      showSettingsPanel();
     });
 
     const addQuoteDayBtn = overlay.querySelector('#add-quote-day-btn');

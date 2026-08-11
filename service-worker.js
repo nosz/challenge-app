@@ -1,7 +1,7 @@
 // Service Worker für Challenge App
 // Cache-Name bei jeder neuen Version hochzählen (z.B. wenn sich index.html ändert),
 // damit Nutzer die neue Version bekommen statt einer alten aus dem Cache.
-const CACHE_VERSION = '4.5.4';
+const CACHE_VERSION = '4.5.9';
 const CACHE_NAME = 'challenge-app-' + CACHE_VERSION;
 
 const ASSETS_TO_CACHE = [

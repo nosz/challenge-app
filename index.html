@@ -133,6 +133,12 @@
     padding-top: 4px;
     line-height: 1.2;
   }
+  header.top .brand-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+    line-height: 1.3;
+  }
 
   .icon-btn {
     background: none;
@@ -456,7 +462,7 @@
   .task-check.checked .name { color: var(--text-muted); text-decoration: line-through; }
 
   .meta-line { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; line-height: 1.5; }
-  .day-done-icon { width: 15px; height: 15px; border-radius: 3px; vertical-align: -2px; margin-left: 2px; }
+  .meta-line-primary { color: var(--text); font-weight: 600; }
   .path-note { color: var(--text-faint); font-size: 0.72rem; margin: 2px 0 4px; }
 
   .detail-task-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -901,7 +907,10 @@
   <header class="top">
     <div class="brand-group">
       <img src="icon-192.png" alt="" class="brand-icon">
-      <div class="brand" id="brand-title">Challenge App</div>
+      <div>
+        <div class="brand" id="brand-title">Challenge App</div>
+        <div class="brand-date" id="brand-date"></div>
+      </div>
     </div>
     <div class="toprow-actions">
       <a class="icon-only-btn" id="link-energietankstelle" href="https://nosz.github.io/energietankstelle/" target="energie" rel="noopener" title="Energietankstelle" aria-label="Energietankstelle">
@@ -934,7 +943,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '4.5.4';
+  const APP_VERSION = '4.5.6';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1505,8 +1514,8 @@
       abort_btn: "Challenge vorzeitig beenden",
       abort_future_title: "Challenge vorzeitig beenden?",
       abort_future_text: "Diese Challenge wurde noch nicht begonnen. Sie wird in die Historie verschoben und beendet.",
-      day_label: "Tag {current} von {total}",
-      day_label_done: "Tag {current} von {total} {word}! {emoji}",
+      day_label: "{date} · Tag {current} von {total}",
+      day_label_done: "{date} · Tag {current} von {total} {word}!",
       stat_streak: "Serie", stat_rate: "Fortschritt", stat_best_streak: "Beste Serie",
       today_tasks_title: "Heutige Tagesziele & Challenges",
       abort_active_title: "Challenge vorzeitig beenden?",
@@ -1620,8 +1629,8 @@
       abort_btn: "Cancel challenge",
       abort_future_title: "Cancel this challenge?",
       abort_future_text: "This challenge hasn't started yet. It will be moved to your history and ended.",
-      day_label: "Day {current} of {total}",
-      day_label_done: "Day {current} of {total}, done! {emoji}",
+      day_label: "{date} · Day {current} of {total}",
+      day_label_done: "{date} · Day {current} of {total}, done!",
       stat_streak: "Streak", stat_rate: "Progress", stat_best_streak: "Best streak",
       today_tasks_title: "Today's tasks",
       abort_active_title: "Cancel this challenge?",
@@ -1735,8 +1744,8 @@
       abort_btn: "Przerwij wyzwanie",
       abort_future_title: "Przerwać wyzwanie?",
       abort_future_text: "To wyzwanie jeszcze się nie rozpoczęło. Zostanie przeniesione do historii i zakończone.",
-      day_label: "Dzień {current} z {total}",
-      day_label_done: "Dzień {current} z {total}, gotowe! {emoji}",
+      day_label: "{date} · Dzień {current} z {total}",
+      day_label_done: "{date} · Dzień {current} z {total}, gotowe!",
       stat_streak: "Seria", stat_rate: "Postęp", stat_best_streak: "Najlepsza seria",
       today_tasks_title: "Dzisiejsze zadania",
       abort_active_title: "Przerwać wyzwanie?",
@@ -1942,8 +1951,6 @@
   const DAY_DONE_WORDS = {
     de: ['gemeistert', 'geschafft', 'erledigt', 'durchgezogen', 'im Sack', 'erobert', 'abgehakt', 'gerockt', 'gepackt']
   };
-  const DAY_DONE_ICON = '<img src="icon-192.png" alt="" class="day-done-icon">';
-
   function simpleHash(str) {
     let h = 0;
     for (let i = 0; i < str.length; i++) {
@@ -1956,7 +1963,7 @@
     const words = DAY_DONE_WORDS[state.settings.lang] || DAY_DONE_WORDS.de;
     const wordHash = simpleHash(challengeId + ':' + dayIndex + ':word');
     const word = words[wordHash % words.length];
-    return t('day_label_done', { current, total, word, emoji: DAY_DONE_ICON });
+    return t('day_label_done', { current, total, word, date: fmtDisplayWeekdayShort(todayStr()) });
   }
 
   function daysPhrase(n) {
@@ -1981,6 +1988,8 @@
     document.title = name;
     const brandEl = document.getElementById('brand-title');
     if (brandEl) brandEl.textContent = name;
+    const dateEl = document.getElementById('brand-date');
+    if (dateEl) dateEl.textContent = fmtDisplayFull(todayStr());
   }
 
   function applyStaticStrings() {
@@ -2001,6 +2010,13 @@
   function addDays(str, n) { const d = parseD(str); d.setDate(d.getDate() + n); return fmt(d); }
   function daysBetween(fromStr, toStr) { const a = parseD(fromStr), b = parseD(toStr); return Math.round((b - a) / 86400000); }
   function fmtDisplay(str) { const d = parseD(str); return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear(); }
+  // Wochentag + kompaktes Datum ohne Jahr (z.B. "Dienstag, 11.08") - für die
+  // Tag-X-von-Y-Zeile, damit sofort erkennbar ist, welcher Wochentag heute ist.
+  function fmtDisplayWeekdayShort(str) {
+    const d = parseD(str);
+    const names = WEEKDAYS[state.settings.lang] || WEEKDAYS.de;
+    return names[d.getDay()] + ', ' + pad(d.getDate()) + '.' + pad(d.getMonth() + 1);
+  }
   const WEEKDAYS = {
     de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
     en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -2446,7 +2462,7 @@
         ${!isCollapsed ? `
           <div class="card-collapse-zone">
             <p class="lead">${t('waiting_lead', { date: fmtDisplayFull(c.startDate), daysPhrase: daysPhrase(daysUntil) })}</p>
-            <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
+            <div class="meta-line">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(endDate) })}</div>
             <div class="meta-line">${t('waiting_meta', { days: c.days, daysUnit: c.days === 1 ? t('unit_day_singular') : t('unit_day_plural'), tasks: c.tasks.length, tasksUnit: taskUnit })}</div>
           </div>
           <div class="card-footer-links">
@@ -2593,8 +2609,8 @@
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
           <div class="card-collapse-zone">
-            <div class="meta-line">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days })}</div>
-            <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
+            <div class="meta-line meta-line-primary">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days, date: fmtDisplayWeekdayShort(todayStr()) })}</div>
+            <div class="meta-line">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(endDate) })}</div>
             <div class="path">${pathHtml}</div>
             ${showRangeNote ? `<div class="path-note">${t('chunk_range', { start: weekList[0].dayNum, end: weekList[weekList.length - 1].dayNum })}</div>` : ''}
             <div class="progress-row">
@@ -2949,7 +2965,7 @@
     const tasksHtml = h.tasks.map(tk => `<div class="detail-task">${escapeHtml(tk.name)}</div>`).join('');
 
     return `
-      <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(h.startDate), end: fmtDisplayFull(endDate) })}</div>
+      <div class="meta-line">${t('active_dates', { start: fmtDisplay(h.startDate), end: fmtDisplay(endDate) })}</div>
       <div class="stats-row" style="margin-top:14px;">
         <div class="stat-box"><span class="num">${h.doneCount}/${h.days}</span><span class="lbl">${t('stat_days_done')}</span></div>
         <div class="stat-box"><span class="num">${h.rate}%</span><span class="lbl">${t('stat_rate')}</span></div>

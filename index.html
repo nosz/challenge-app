@@ -251,9 +251,27 @@
     margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.3;
     display: flex; align-items: center; gap: 8px;
   }
-  .card-collapsed-icon {
-    width: 22px; height: 22px; object-fit: contain; border-radius: 6px; flex-shrink: 0;
+  /* Eingeklappte Karte, Tag komplett erledigt: dezenter Akzent-Pill statt
+     reinem Fließtext, damit der "geschafft"-Status auch beim schnellen
+     Scrollen sofort auffällt. Bei 0 bzw. teilweise erledigt bleibt es
+     bewusst reiner Text ohne Icon/Hintergrund (siehe renderActive). */
+  .card-collapsed-status.card-collapsed-complete {
+    background: linear-gradient(120deg, var(--surface-2) 0%, var(--ink-2) 100%);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: var(--gold-soft);
+    font-weight: 600;
+    animation: progressComplete .3s ease;
   }
+  .card-collapsed-check {
+    width: 20px; height: 20px; flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-collapsed-check svg { width: 12px; height: 12px; }
 
   label { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; margin-top: 18px; }
   label:first-of-type { margin-top: 0; }
@@ -492,15 +510,18 @@
   @media (hover: hover) and (pointer: fine) {
     .text-link-btn:hover { color: var(--rust); }
   }
-  /* Zweizeiliger Footer: oben Bearbeiten + Umsortier-Pfeile nebeneinander,
-     darunter der Abbrechen-Button in voller Breite. So hat "Challenge
-     vorzeitig abbrechen" genug Platz und wird auf dem Handy nicht mehr
-     abgeschnitten. */
+  /* Zweizeiliger Footer: Zeile 1 = Bearbeiten + Umsortier-Pfeile. Zeile 2 =
+     "Challenge vorzeitig beenden" als eigener, voller Button. Der
+     Abbrechen-Button teilt sich bewusst die neutrale Optik mit
+     "Bearbeiten" (gleicher Rahmen, gleiche Textfarbe, gleiches Hover) –
+     keine Warnfarbe (Rust) und kein Icon-Kontrast, damit er nicht
+     alarmierend wirkt und nicht aus Versehen bzw. leichtfertig angetippt
+     wird, aber trotzdem klar als vollwertige Aktion erreichbar ist. */
   .card-footer-links {
     display: flex; flex-direction: column; gap: 10px;
     margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
   }
-  .card-footer-row { display: flex; align-items: stretch; gap: 10px; }
+  .card-footer-row { display: flex; align-items: center; gap: 10px; }
   .card-action-btn {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
     background: none; border: 1px solid var(--border); border-radius: 10px;
@@ -514,10 +535,9 @@
     .card-action-btn:hover { border-color: var(--gold); color: var(--gold-soft); }
   }
   .card-action-btn:active { transform: translateY(1px); }
-  .card-action-btn-danger { color: var(--rust); border-color: var(--rust); }
-  @media (hover: hover) and (pointer: fine) {
-    .card-action-btn-danger:hover { background: var(--rust); color: var(--ink); }
-  }
+  /* Eigene, volle Zeile für den Abbrechen-Button – sonst identisch zu
+     .card-action-btn (bewusst keine eigene Farbgebung/Warnfarbe). */
+  .card-abort-btn { width: 100%; }
   /* Umsortier-Pfeile als eigenständige, quadratische Buttons neben
      Bearbeiten. Enthält nur die tatsächlich möglichen Pfeile (an den
      Rändern der Liste also nur einen). */
@@ -914,7 +934,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '4.5.1';
+  const APP_VERSION = '4.5.4';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1172,48 +1192,51 @@
   };
 
   // Variante 2: alles erledigt ({done} === {total} && {total} > 0)
+  // Bewusst ohne Zahlen: done === total ist hier per Definition immer wahr,
+  // "{done} von {total}" wäre also bei jeder Gesamtzahl redundant (nicht nur
+  // bei total === 1, wo "1 von 1" besonders unbeholfen klingt).
   const COLLAPSED_COMPLETE_MSGS = {
     de: [
-      "{done} von {total} – stark gemacht!",
+      "Tag komplett – stark gemacht!",
       "Alles erledigt – du hast geliefert!",
-      "{done} von {total} – Tag gerockt!",
+      "Tag gerockt!",
       "Geschafft – auf dich ist Verlass!",
-      "{done} von {total} – sauber durchgezogen!",
+      "Sauber durchgezogen!",
       "Alle Punkte abgehakt – weiter so!",
-      "{done} von {total} – Bestleistung!",
+      "Bestleistung!",
       "Tag komplett – gönn dir das!",
-      "{done} von {total} – richtig stark!",
-      "{done} von {total} – das sitzt!",
+      "Richtig stark!",
+      "Das sitzt!",
       "Tag abgehakt – gut gemacht!",
-      "{done} von {total} – so geht das!"
+      "So geht das!"
     ],
     en: [
-      "{done} of {total} – well played!",
+      "Day complete – well played!",
       "All done – you delivered!",
-      "{done} of {total} – day nailed!",
+      "Day nailed!",
       "Done – you can count on yourself!",
-      "{done} of {total} – cleanly pulled off!",
+      "Cleanly pulled off!",
       "Every box checked – keep it up!",
-      "{done} of {total} – personal best!",
+      "Personal best!",
       "Day complete – treat yourself!",
-      "{done} of {total} – really strong!",
-      "{done} of {total} – that's the spirit!",
+      "Really strong!",
+      "That's the spirit!",
       "Day checked off – well done!",
-      "{done} of {total} – that's how it's done!"
+      "That's how it's done!"
     ],
     pl: [
-      "{done} z {total} – mocna robota!",
+      "Dzień kompletny – mocna robota!",
       "Wszystko zrobione – dowiozłeś!",
-      "{done} z {total} – dzień zaliczony!",
+      "Dzień zaliczony!",
       "Zrobione – można na tobie polegać!",
-      "{done} z {total} – czysto wykonane!",
+      "Czysto wykonane!",
       "Wszystkie punkty odhaczone – tak dalej!",
-      "{done} z {total} – najlepszy wynik!",
+      "Najlepszy wynik!",
       "Dzień kompletny – zafunduj sobie coś!",
-      "{done} z {total} – naprawdę mocno!",
-      "{done} z {total} – to jest to!",
+      "Naprawdę mocno!",
+      "To jest to!",
       "Dzień odhaczony – dobra robota!",
-      "{done} z {total} – tak to się robi!"
+      "Tak to się robi!"
     ]
   };
 
@@ -2369,7 +2392,13 @@
   const ARROW_UP_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 19h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 15V6M7 10l5-5 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const ARROW_DOWN_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 9v9M7 14l5 5 5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const EDIT_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const ABORT_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  // Icon für den "Challenge vorzeitig beenden"-Button im Footer. Bewusst im
+  // gleichen neutralen Stroke-Stil wie EDIT_SVG gehalten (keine Warnfarbe im
+  // Icon selbst, die Farbgebung kommt ausschließlich über die Button-Klasse).
+  const ABORT_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9.3 9.3l5.4 5.4M14.7 9.3l-5.4 5.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  // Check-Badge für die eingeklappte Karte bei komplett erledigtem Tag
+  // (ersetzt das bisherige App-Icon dort durch ein echtes "erledigt"-Signal).
+  const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   // Erzeugt die Auf/Ab-Pfeile zum Umsortieren, als eigenständige Buttons
   // neben "Bearbeiten" im Footer. Nur sichtbar, wenn mehr als eine
@@ -2425,7 +2454,7 @@
               <button type="button" class="card-action-btn" id="btn-edit">${EDIT_SVG}<span>${t('edit_btn')}</span></button>
               ${reorderButtonsHtml(c)}
             </div>
-            <button type="button" class="card-action-btn card-action-btn-danger" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
+            <button type="button" class="card-action-btn card-abort-btn" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
           </div>
         ` : ''}
       </div>
@@ -2536,15 +2565,21 @@
     if (isCollapsed && c.tasks.length > 0) {
       const totalToday = c.tasks.length;
       const remainingToday = totalToday - doneToday;
+      const isDayComplete = doneToday === totalToday;
       let collapsedMsg;
       if (doneToday === 0) {
         collapsedMsg = pickCollapsedText(COLLAPSED_START_MSGS, `${c.id}|${today}|start`, {});
-      } else if (doneToday === totalToday) {
-        collapsedMsg = pickCollapsedText(COLLAPSED_COMPLETE_MSGS, `${c.id}|${today}|complete`, { done: doneToday, total: totalToday });
+      } else if (isDayComplete) {
+        collapsedMsg = pickCollapsedText(COLLAPSED_COMPLETE_MSGS, `${c.id}|${today}|complete`, {});
       } else {
         collapsedMsg = pickCollapsedText(COLLAPSED_PROGRESS_MSGS, `${c.id}|${today}|progress|${doneToday}`, { done: doneToday, total: totalToday, remaining: remainingToday });
       }
-      collapsedInfoHtml = `<div class="card-collapsed-status"><img src="icon-192.png" alt="" class="card-collapsed-icon">${escapeHtml(collapsedMsg)}</div>`;
+      // Nur bei komplett erledigtem Tag gibt es das Check-Badge + den
+      // Akzent-Hintergrund als "Erfolgssignal". Bei 0 bzw. teilweise
+      // erledigt steht bewusst nur reiner Text da, ohne Icon.
+      collapsedInfoHtml = isDayComplete
+        ? `<div class="card-collapsed-status card-collapsed-complete"><span class="card-collapsed-check">${CHECK_SVG}</span>${escapeHtml(collapsedMsg)}</div>`
+        : `<div class="card-collapsed-status">${escapeHtml(collapsedMsg)}</div>`;
     }
 
     const card = el(`
@@ -2574,7 +2609,7 @@
               <button type="button" class="card-action-btn" id="btn-edit">${EDIT_SVG}<span>${t('edit_btn')}</span></button>
               ${reorderButtonsHtml(c)}
             </div>
-            <button type="button" class="card-action-btn card-action-btn-danger" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
+            <button type="button" class="card-action-btn card-abort-btn" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
           </div>
         ` : ''}
       </div>
@@ -3111,6 +3146,8 @@
       <label>${t('settings_lang_label')}</label>
       <select id="settings-lang">${langOptions}</select>
       <div class="lang-note">${t('settings_lang_note')}</div>
+
+      <div class="version-tag" style="text-align:left; margin:18px 0 0;">${t('version_label')} ${APP_VERSION}</div>
     `;
 
     const customBaseForEditor = getCustomBase();
@@ -3231,7 +3268,6 @@
           <div class="settings-top-bar">
             <div>
               <h1 style="margin:0; padding-bottom:0;">${t('settings_title')}</h1>
-              <div class="version-tag" style="text-align:left; margin:4px 0 0;">${t('version_label')} ${APP_VERSION}</div>
             </div>
             <button type="button" class="icon-only-btn" id="s-close-top" title="${escapeHtml(t('settings_done'))}">×</button>
           </div>

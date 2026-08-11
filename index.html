@@ -513,24 +513,10 @@
      Handlung ist, nicht nur Kontext. */
   .task-highlight {
     margin: 4px 0 14px;
-    padding: 14px 14px 6px;
+    padding: 12px 14px 6px;
     background: linear-gradient(160deg, rgba(227,168,59,0.10) 0%, rgba(227,168,59,0.03) 100%);
     border: 1px solid var(--gold);
     border-radius: 12px;
-  }
-  .task-highlight-header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; margin-bottom: 2px;
-  }
-  .task-highlight-title {
-    font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--gold-soft);
-  }
-  .task-highlight-count {
-    font-size: 0.78rem; font-weight: 700; color: var(--gold-soft);
-    background: rgba(227,168,59,0.15); border: 1px solid var(--gold);
-    border-radius: 20px; padding: 2px 10px; flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
   }
 
   .text-link-btn {
@@ -968,7 +954,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '4.6.0';
+  const APP_VERSION = '4.6.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1470,7 +1456,7 @@
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Tageslicht",
       theme_chahell: "chahell", theme_chadunk: "chadunk",
-      active_dates: "Start: {start}<br>Ende: {end}",
+      active_dates: "Start: {start} & Ende: {end}",
       quotes_title: "Meldungen", messages_day_title: "Tagesmeldungen", messages_completion_title: "Abschlussmeldungen",
       quotes_new_label: "Neue Tagesmeldung hinzufügen", completion_new_label: "Neue Abschlussmeldung hinzufügen",
       quotes_add_btn: "Hinzufügen", quotes_edit_btn: "Bearbeiten", quotes_delete_btn: "Löschen",
@@ -1585,7 +1571,7 @@
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Daylight",
       theme_chahell: "chahell", theme_chadunk: "chadunk",
-      active_dates: "Started: {start}<br>Ends: {end}",
+      active_dates: "Started: {start} & Ends: {end}",
       quotes_title: "Messages", messages_day_title: "Daily messages", messages_completion_title: "Completion messages",
       quotes_new_label: "Add a new daily message", completion_new_label: "Add a new completion message",
       quotes_add_btn: "Add", quotes_edit_btn: "Edit", quotes_delete_btn: "Delete",
@@ -1700,7 +1686,7 @@
       theme14: "Rich Reds", theme15: "Weight Training", theme16: "Green Beauty", theme17: "Coral Greenery",
       theme_daylight: "Światło dnia",
       theme_chahell: "chahell", theme_chadunk: "chadunk",
-      active_dates: "Rozpoczęto: {start}<br>Koniec: {end}",
+      active_dates: "Rozpoczęto: {start} & Koniec: {end}",
       quotes_title: "Wiadomości", messages_day_title: "Wiadomości dnia", messages_completion_title: "Wiadomości ukończenia",
       quotes_new_label: "Dodaj nową wiadomość dnia", completion_new_label: "Dodaj nową wiadomość ukończenia",
       quotes_add_btn: "Dodaj", quotes_edit_btn: "Edytuj", quotes_delete_btn: "Usuń",
@@ -2634,22 +2620,18 @@
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
           <div class="task-highlight">
-            <div class="task-highlight-header">
-              <span class="task-highlight-title">${t('today_tasks_title')}</span>
-              <span class="task-highlight-count">${doneToday}/${c.tasks.length}</span>
-            </div>
             <div class="task-list compact">${taskHtml}</div>
           </div>
           ${cardStatusHtml}
           <div class="card-collapse-zone">
             <div class="meta-line meta-line-primary">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days, date: fmtDisplayWeekdayShort(todayStr()) })}</div>
-            <div class="meta-line">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(endDate) })}</div>
             <div class="path">${pathHtml}</div>
             ${showRangeNote ? `<div class="path-note">${t('chunk_range', { start: weekList[0].dayNum, end: weekList[weekList.length - 1].dayNum })}</div>` : ''}
             <div class="progress-row">
               <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${stats.rate}%"></div></div>
               <span class="progress-pct">${stats.rate}%</span>
             </div>
+            <div class="meta-line">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(endDate) })}</div>
           </div>
           <div class="card-footer-links">
             <div class="card-footer-row">

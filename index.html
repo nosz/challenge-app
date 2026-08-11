@@ -539,6 +539,13 @@
     margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
   }
   .card-footer-row { display: flex; align-items: center; gap: 10px; }
+  /* Tag/Datum-Zeile direkt unter dem Titel (oberhalb der Aufgabenliste).
+     Etwas kräftiger als die übrigen meta-line-Texte, da sie hier als
+     eine Art Subtitle der Karte fungiert. */
+  .card-subtitle {
+    font-family: var(--font-ui); font-size: 0.85rem; font-weight: 600;
+    color: var(--text); opacity: 0.75; margin: 2px 0 14px;
+  }
   .card-action-btn {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
     background: none; border: 1px solid var(--border); border-radius: 10px;
@@ -954,7 +961,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '4.6.1';
+  const APP_VERSION = '4.6.2';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2619,26 +2626,23 @@
         </div>
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
+          <div class="card-subtitle">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days, date: fmtDisplayWeekdayShort(todayStr()) })}</div>
           <div class="task-highlight">
             <div class="task-list compact">${taskHtml}</div>
           </div>
           ${cardStatusHtml}
           <div class="card-collapse-zone">
-            <div class="meta-line meta-line-primary">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days, date: fmtDisplayWeekdayShort(todayStr()) })}</div>
             <div class="path">${pathHtml}</div>
             ${showRangeNote ? `<div class="path-note">${t('chunk_range', { start: weekList[0].dayNum, end: weekList[weekList.length - 1].dayNum })}</div>` : ''}
             <div class="progress-row">
               <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${stats.rate}%"></div></div>
-              <span class="progress-pct">${stats.rate}%</span>
             </div>
-            <div class="meta-line">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(endDate) })}</div>
           </div>
           <div class="card-footer-links">
             <div class="card-footer-row">
-              <button type="button" class="card-action-btn" id="btn-edit">${EDIT_SVG}<span>${t('edit_btn')}</span></button>
               ${reorderButtonsHtml(c)}
+              <button type="button" class="card-action-btn" id="btn-edit">${EDIT_SVG}<span>${t('edit_btn')}</span></button>
             </div>
-            <button type="button" class="card-action-btn card-abort-btn" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
           </div>
         ` : ''}
       </div>
@@ -2700,18 +2704,6 @@
         }
       });
     });
-
-    const abortBtn = card.querySelector('#btn-abort');
-    if (abortBtn) {
-      abortBtn.addEventListener('click', () => {
-        confirmModal(t('abort_active_title'), t('abort_active_text'), () => {
-          archiveChallenge(c, true);
-          state.challenges = state.challenges.filter(x => x.id !== c.id);
-          persist();
-          render();
-        });
-      });
-    }
 
     bindReorderButtons(card, c);
 
@@ -2878,6 +2870,8 @@
           <label>${t('label_title')}</label>
           <input type="text" id="e-title" value="${escapeHtml(c.title)}" />
 
+          ${isStarted ? `<div class="meta-line" style="margin:2px 0 14px;">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(addDays(c.startDate, c.days - 1)) })}</div>` : ''}
+
           <label>${t('label_days')}</label>
           <input type="number" id="e-days" min="${minDays}" max="${MAX_DAYS}" value="${c.days}" />
           <div id="e-days-error" class="error-msg-inline hidden"></div>
@@ -2895,6 +2889,7 @@
           <div id="e-error" class="error-msg hidden"></div>
           <button type="button" class="btn-primary" id="e-save">${t('edit_save_btn')}</button>
           <button type="button" class="btn-secondary" style="margin-top:10px;" id="e-cancel">${t('confirm_cancel')}</button>
+          ${isStarted ? `<button type="button" class="text-link-btn" id="e-abort" style="margin-top:16px; display:block; text-align:center; width:100%;">${t('abort_btn')}</button>` : ''}
         </div>
       </div>
     `);
@@ -2928,6 +2923,19 @@
     });
 
     overlay.querySelector('#e-cancel').addEventListener('click', () => modalRoot.innerHTML = '');
+
+    const abortLink = overlay.querySelector('#e-abort');
+    if (abortLink) {
+      abortLink.addEventListener('click', () => {
+        confirmModal(t('abort_active_title'), t('abort_active_text'), () => {
+          archiveChallenge(c, true);
+          state.challenges = state.challenges.filter(x => x.id !== c.id);
+          persist();
+          modalRoot.innerHTML = '';
+          render();
+        });
+      });
+    }
 
     overlay.querySelector('#e-save').addEventListener('click', () => {
       const errBox = overlay.querySelector('#e-error');

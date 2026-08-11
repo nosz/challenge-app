@@ -78,6 +78,7 @@
     padding-bottom: max(80px, env(safe-area-inset-bottom));
     transition: background-color var(--transition-theme), color var(--transition-theme);
   }
+  body.scroll-locked { overflow: hidden; }
 
   /* Dezenter, zum Theme passender Scrollbalken */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -102,7 +103,9 @@
     position: sticky;
     top: 0;
     z-index: 30;
-    background: var(--ink);
+    background: color-mix(in srgb, var(--ink) 72%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
     box-shadow: 0 8px 24px -16px rgba(0,0,0,0.55);
     transition: background-color var(--transition-theme), border-color var(--transition-theme);
   }
@@ -206,6 +209,10 @@
   h2 { font-family: var(--font-display); font-size: clamp(1.1rem, 1rem + .5vw, 1.3rem); font-weight: normal; margin: 0 0 14px; color: var(--gold-soft); line-height: 1.3; }
   p.lead { color: var(--text-muted); margin: 0 0 22px; line-height: 1.55; }
 
+  .card-title-row { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+  .card-title-row .card-toggle { flex: 1; min-width: 0; margin: 0; }
+  .card-title-row .card-toggle h1 { margin: 0; }
+
   .card-toggle {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     width: 100%; background: none; border: none; cursor: pointer; padding: 0; margin: 0; text-align: left;
@@ -225,6 +232,21 @@
     .card-toggle:hover .card-toggle-icon { filter: brightness(1.1); transform: translateY(-1px); }
   }
   .card-collapsed-clickable { cursor: pointer; }
+  /* Fläche zwischen Titel und Fortschritts-% (bzw. bei wartenden Challenges
+     zwischen Titel und den Meta-Zeilen), die zusätzlich zum Titel-Button
+     zum Einklappen der Karte anklickbar ist. Negative margin + passendes
+     padding vergrößert die Trefferfläche minimal, ohne den sichtbaren
+     Abstand der Zeilen zu verändern. */
+  .card-collapse-zone {
+    cursor: pointer;
+    border-radius: 10px;
+    margin: -6px -8px 0;
+    padding: 6px 8px 2px;
+    transition: background-color var(--transition-fast);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-collapse-zone:hover { background-color: var(--surface-2); }
+  }
   .card-collapsed-status {
     margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.3;
     display: flex; align-items: center; gap: 8px;
@@ -411,7 +433,7 @@
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     transition: all .15s;
   }
-  .task-check.checked .box { background: var(--sage); border-color: var(--sage); color: #10241a; }
+  .task-check.checked .box { background: var(--sage); border-color: var(--sage); color: #10241a; animation: checkPop .28s cubic-bezier(.34,1.56,.64,1); }
   .task-check .name { font-size: 0.98rem; overflow-wrap: anywhere; }
   .task-check.checked .name { color: var(--text-muted); text-decoration: line-through; }
 
@@ -445,6 +467,7 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    animation: progressComplete .3s ease;
   }
   .card-progress-status.card-progress-complete .cpc-badge {
     text-transform: uppercase;
@@ -469,21 +492,46 @@
   @media (hover: hover) and (pointer: fine) {
     .text-link-btn:hover { color: var(--rust); }
   }
+  /* Zweizeiliger Footer: oben Bearbeiten + Umsortier-Pfeile nebeneinander,
+     darunter der Abbrechen-Button in voller Breite. So hat "Challenge
+     vorzeitig abbrechen" genug Platz und wird auf dem Handy nicht mehr
+     abgeschnitten. */
   .card-footer-links {
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    display: flex; flex-direction: column; gap: 10px;
     margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
   }
-  .card-footer-links .text-link-btn { margin-top: 0; }
-  .reorder-btns { display: flex; gap: 8px; }
-  .reorder-btn {
-    background: none; border: 1px solid var(--border); color: var(--text-muted);
-    cursor: pointer; width: 32px; height: 32px; border-radius: 8px; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    transition: color var(--transition-fast), border-color var(--transition-fast);
+  .card-footer-row { display: flex; align-items: stretch; gap: 10px; }
+  .card-action-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: none; border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text-muted); font-size: 0.85rem; font-weight: 600; font-family: var(--font-ui);
+    padding: 10px 10px; cursor: pointer; min-width: 0;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
   }
-  .reorder-btn svg { width: 16px; height: 16px; display: block; }
+  .card-action-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; flex-shrink: 0; }
   @media (hover: hover) and (pointer: fine) {
-    .reorder-btn:hover { color: var(--rust); border-color: var(--rust); }
+    .card-action-btn:hover { border-color: var(--gold); color: var(--gold-soft); }
+  }
+  .card-action-btn:active { transform: translateY(1px); }
+  .card-action-btn-danger { color: var(--rust); border-color: var(--rust); }
+  @media (hover: hover) and (pointer: fine) {
+    .card-action-btn-danger:hover { background: var(--rust); color: var(--ink); }
+  }
+  /* Umsortier-Pfeile als eigenständige, quadratische Buttons neben
+     Bearbeiten. Enthält nur die tatsächlich möglichen Pfeile (an den
+     Rändern der Liste also nur einen). */
+  .reorder-btns-row { display: flex; gap: 6px; flex-shrink: 0; }
+  .reorder-btn {
+    width: 44px; flex-shrink: 0;
+    background: none; border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text-muted); cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+  }
+  .reorder-btn svg { width: 17px; height: 17px; display: block; }
+  @media (hover: hover) and (pointer: fine) {
+    .reorder-btn:hover { border-color: var(--gold); color: var(--gold-soft); }
   }
   .reorder-btn:active { transform: translateY(1px); }
 
@@ -497,14 +545,22 @@
   }
 
   .add-challenge-card {
-    display: block; width: 100%; border: 2px dashed var(--border); border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; border: 2px dashed var(--border); border-radius: var(--radius);
     background: none; color: var(--text-muted); padding: clamp(16px, 4vw, 20px); text-align: center;
-    font-size: 0.95rem; font-family: var(--font-ui); cursor: pointer; margin-bottom: 20px;
+    font-size: 0.95rem; font-family: var(--font-ui); font-weight: 600; cursor: pointer; margin-bottom: 20px;
     min-height: 56px;
     transition: border-color var(--transition-fast), color var(--transition-fast);
   }
+  .add-challenge-card .add-challenge-icon {
+    background: var(--gold); color: #211505; border-radius: 50%; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: transform var(--transition-fast);
+  }
+  .add-challenge-card .add-challenge-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
   @media (hover: hover) and (pointer: fine) {
     .add-challenge-card:hover { border-color: var(--gold); color: var(--gold-soft); }
+    .add-challenge-card:hover .add-challenge-icon { transform: rotate(90deg); }
   }
 
   .max-note {
@@ -577,6 +633,7 @@
     display: flex; align-items: center; justify-content: center;
     padding: var(--gutter); z-index: 50;
     animation: overlayIn .18s ease;
+    overscroll-behavior: contain;
   }
   .modal {
     background: var(--surface);
@@ -587,6 +644,7 @@
     width: 100%;
     max-height: min(88vh, 88dvh);
     overflow-y: auto;
+    overscroll-behavior: contain;
     box-shadow: var(--shadow);
     text-align: center;
     animation: modalIn .22s cubic-bezier(.2,.8,.3,1);
@@ -689,6 +747,7 @@
     align-items: flex-start;
     padding: clamp(20px, 5vw, 32px) var(--gutter);
     overflow-y: auto;
+    overscroll-behavior: contain;
     animation: none;
   }
   .settings-modal { background: none; border: none; box-shadow: none; padding: 0; max-width: 480px; margin: 0 auto; max-height: none; overflow: visible; animation: fadeSlideIn .2s ease; }
@@ -765,6 +824,15 @@
   @keyframes modalIn {
     from { opacity: 0; transform: translateY(10px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes checkPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  @keyframes progressComplete {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   @keyframes fadeSlideIn {
     from { opacity: 0; transform: translateY(-4px); }
@@ -846,7 +914,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '4.0.0';
+  const APP_VERSION = '4.5.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1378,7 +1446,7 @@
       reorder_up: "Nach oben verschieben", reorder_down: "Nach unten verschieben",
       edit_days_note: "Bereits begonnen — mindestens {min} Tage (bis heute).",
       edit_err_days: "Bitte gib einen Wert zwischen {min} und {max} ein.",
-      add_challenge_btn: "+ Neue Challenge starten",
+      add_challenge_btn: "Neue Challenge starten",
       max_challenges_note: "Maximal {max} Challenges gleichzeitig aktiv. Schließe zuerst eine ab oder erhöhe das Limit in den {settingsLink}.",
       settings_link_word: "Einstellungen",
       settings_group_personal: "Persönlich", settings_group_behavior: "Verhalten",
@@ -1493,7 +1561,7 @@
       reorder_up: "Move up", reorder_down: "Move down",
       edit_days_note: "Already started — at least {min} days (through today).",
       edit_err_days: "Please enter a value between {min} and {max}.",
-      add_challenge_btn: "+ Start new challenge",
+      add_challenge_btn: "Start new challenge",
       max_challenges_note: "Maximum {max} active challenges at once. Finish one first, or raise the limit in {settingsLink}.",
       settings_link_word: "Settings",
       settings_group_personal: "Personal", settings_group_behavior: "Behavior",
@@ -1608,7 +1676,7 @@
       reorder_up: "Przesuń w górę", reorder_down: "Przesuń w dół",
       edit_days_note: "Już rozpoczęte — minimum {min} dni (do dziś).",
       edit_err_days: "Podaj wartość od {min} do {max}.",
-      add_challenge_btn: "+ Rozpocznij nowe wyzwanie",
+      add_challenge_btn: "Rozpocznij nowe wyzwanie",
       max_challenges_note: "Maksymalnie {max} aktywnych wyzwań naraz. Zakończ jedno lub zwiększ limit w {settingsLink}.",
       settings_link_word: "Ustawieniach",
       settings_group_personal: "Osobiste", settings_group_behavior: "Zachowanie",
@@ -1994,6 +2062,15 @@
   const modalRoot = document.getElementById('modal-root');
   const historyList = document.getElementById('history-list');
 
+  // Body-Scroll sperren, solange ein Overlay/Modal offen ist (modal-root nicht
+  // leer). Verhindert, dass auf Touch-Geräten die Seite hinter dem Overlay
+  // mitscrollt/-rubberbanded. Per MutationObserver zentral gelöst, damit alle
+  // ~15 Stellen, die modalRoot.appendChild(...) bzw. modalRoot.innerHTML = ''
+  // nutzen, automatisch erfasst werden.
+  new MutationObserver(() => {
+    document.body.classList.toggle('scroll-locked', modalRoot.children.length > 0);
+  }).observe(modalRoot, { childList: true });
+
   function el(html) { const tpl = document.createElement('template'); tpl.innerHTML = html.trim(); return tpl.content.firstElementChild; }
   function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function showError(box, msg) { box.textContent = msg; box.classList.remove('hidden'); }
@@ -2164,7 +2241,7 @@
   }
 
   function renderAddCard() {
-    const btn = el(`<button type="button" class="add-challenge-card">${t('add_challenge_btn')}</button>`);
+    const btn = el(`<button type="button" class="add-challenge-card"><span class="add-challenge-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14" stroke-width="2.4" stroke-linecap="round"/></svg></span><span>${t('add_challenge_btn')}</span></button>`);
     btn.addEventListener('click', () => {
       setupMode = true;
       setupPrefill = null;
@@ -2289,20 +2366,22 @@
     render();
   }
 
-  const ARROW_UP_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 15l7-7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const ARROW_DOWN_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 9l7 7 7-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ARROW_UP_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 19h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 15V6M7 10l5-5 5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ARROW_DOWN_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 9v9M7 14l5 5 5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const EDIT_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ABORT_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
-  // Erzeugt die Auf/Ab-Pfeile zum Umsortieren. Nur sichtbar, wenn mehr als
-  // eine Challenge aktiv/anstehend ist. An den Rand-Positionen fehlt der
-  // jeweils nicht mögliche Pfeil komplett.
+  // Erzeugt die Auf/Ab-Pfeile zum Umsortieren, als eigenständige Buttons
+  // neben "Bearbeiten" im Footer. Nur sichtbar, wenn mehr als eine
+  // Challenge aktiv/anstehend ist. An den Rand-Positionen wird nur der
+  // tatsächlich mögliche Pfeil gerendert.
   function reorderButtonsHtml(c) {
     if (state.challenges.length < 2) return '';
     const idx = state.challenges.findIndex(x => x.id === c.id);
     const canMoveUp = idx < state.challenges.length - 1;
     const canMoveDown = idx > 0;
-    if (!canMoveUp && !canMoveDown) return '';
     return `
-      <div class="reorder-btns">
+      <div class="reorder-btns-row">
         ${canMoveUp ? `<button type="button" class="reorder-btn" id="btn-move-up" title="${escapeHtml(t('reorder_up'))}" aria-label="${escapeHtml(t('reorder_up'))}">${ARROW_UP_SVG}</button>` : ''}
         ${canMoveDown ? `<button type="button" class="reorder-btn" id="btn-move-down" title="${escapeHtml(t('reorder_down'))}" aria-label="${escapeHtml(t('reorder_down'))}">${ARROW_DOWN_SVG}</button>` : ''}
       </div>
@@ -2328,19 +2407,25 @@
 
     const card = el(`
       <div class="card">
-        <button type="button" class="card-toggle" id="btn-collapse">
-          <h1>${escapeHtml(c.title)}</h1>
-          <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
-        </button>
+        <div class="card-title-row">
+          <button type="button" class="card-toggle" id="btn-collapse">
+            <h1>${escapeHtml(c.title)}</h1>
+            <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
+          </button>
+        </div>
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
-          <p class="lead">${t('waiting_lead', { date: fmtDisplayFull(c.startDate), daysPhrase: daysPhrase(daysUntil) })}</p>
-          <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
-          <div class="meta-line">${t('waiting_meta', { days: c.days, daysUnit: c.days === 1 ? t('unit_day_singular') : t('unit_day_plural'), tasks: c.tasks.length, tasksUnit: taskUnit })}</div>
+          <div class="card-collapse-zone">
+            <p class="lead">${t('waiting_lead', { date: fmtDisplayFull(c.startDate), daysPhrase: daysPhrase(daysUntil) })}</p>
+            <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
+            <div class="meta-line">${t('waiting_meta', { days: c.days, daysUnit: c.days === 1 ? t('unit_day_singular') : t('unit_day_plural'), tasks: c.tasks.length, tasksUnit: taskUnit })}</div>
+          </div>
           <div class="card-footer-links">
-            ${reorderButtonsHtml(c)}
-            <button type="button" class="text-link-btn" id="btn-edit">${t('edit_btn')}</button>
-            <button type="button" class="text-link-btn" id="btn-abort">${t('abort_btn')}</button>
+            <div class="card-footer-row">
+              <button type="button" class="card-action-btn" id="btn-edit">${EDIT_SVG}<span>${t('edit_btn')}</span></button>
+              ${reorderButtonsHtml(c)}
+            </div>
+            <button type="button" class="card-action-btn card-action-btn-danger" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
           </div>
         ` : ''}
       </div>
@@ -2360,16 +2445,17 @@
 
     // Im eingeklappten Zustand ist die komplette Karte klickbar (nicht nur der
     // Header-Button), damit das Aufklappen auch beim Tippen auf den unteren
-    // Kartenbereich funktioniert. Im aufgeklappten Zustand bleibt nur der
-    // Header-Button für das Einklappen zuständig, da sonst Klicks auf
-    // interaktive Elemente (Bearbeiten/Abbrechen) versehentlich die Karte
-    // schließen würden.
+    // Kartenbereich funktioniert. Im aufgeklappten Zustand ist zusätzlich zum
+    // Header-Button auch die .card-collapse-zone (Info-Text + Meta-Zeilen)
+    // zum Einklappen klickbar. Bearbeiten/Abbrechen-Buttons bleiben bewusst
+    // außen vor, damit Klicks darauf nicht versehentlich die Karte schließen.
     card.addEventListener('click', (e) => {
+      if (e.target.closest('.reorder-btns-row')) return;
       if (isCollapsed) {
         toggleCollapse();
         return;
       }
-      if (e.target.closest('#btn-collapse')) {
+      if (e.target.closest('#btn-collapse') || e.target.closest('.card-collapse-zone')) {
         toggleCollapse();
       }
     });
@@ -2463,26 +2549,32 @@
 
     const card = el(`
       <div class="card">
-        <button type="button" class="card-toggle" id="btn-collapse">
-          <h1>${escapeHtml(c.title)}</h1>
-          <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
-        </button>
+        <div class="card-title-row">
+          <button type="button" class="card-toggle" id="btn-collapse">
+            <h1>${escapeHtml(c.title)}</h1>
+            <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
+          </button>
+        </div>
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
-          <div class="meta-line">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days })}</div>
-          <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
-          <div class="path">${pathHtml}</div>
-          ${showRangeNote ? `<div class="path-note">${t('chunk_range', { start: weekList[0].dayNum, end: weekList[weekList.length - 1].dayNum })}</div>` : ''}
-          <div class="progress-row">
-            <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${stats.rate}%"></div></div>
-            <span class="progress-pct">${stats.rate}%</span>
+          <div class="card-collapse-zone">
+            <div class="meta-line">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days })}</div>
+            <div class="meta-line">${t('active_dates', { start: fmtDisplayFull(c.startDate), end: fmtDisplayFull(endDate) })}</div>
+            <div class="path">${pathHtml}</div>
+            ${showRangeNote ? `<div class="path-note">${t('chunk_range', { start: weekList[0].dayNum, end: weekList[weekList.length - 1].dayNum })}</div>` : ''}
+            <div class="progress-row">
+              <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${stats.rate}%"></div></div>
+              <span class="progress-pct">${stats.rate}%</span>
+            </div>
           </div>
           ${cardStatusHtml}
           <div class="task-list compact">${taskHtml}</div>
           <div class="card-footer-links">
-            ${reorderButtonsHtml(c)}
-            <button type="button" class="text-link-btn" id="btn-edit">${t('edit_btn')}</button>
-            <button type="button" class="text-link-btn" id="btn-abort">${t('abort_btn')}</button>
+            <div class="card-footer-row">
+              <button type="button" class="card-action-btn" id="btn-edit">${EDIT_SVG}<span>${t('edit_btn')}</span></button>
+              ${reorderButtonsHtml(c)}
+            </div>
+            <button type="button" class="card-action-btn card-action-btn-danger" id="btn-abort">${ABORT_SVG}<span>${t('abort_btn')}</span></button>
           </div>
         ` : ''}
       </div>
@@ -2502,16 +2594,18 @@
 
     // Im eingeklappten Zustand ist die komplette Karte klickbar (nicht nur der
     // Header-Button), damit das Aufklappen auch beim Tippen auf den unteren
-    // Kartenbereich funktioniert. Im aufgeklappten Zustand bleibt nur der
-    // Header-Button für das Einklappen zuständig, da sonst Klicks auf
-    // interaktive Elemente (Aufgaben, Bearbeiten/Abbrechen) versehentlich die
-    // Karte schließen würden.
+    // Kartenbereich funktioniert. Im aufgeklappten Zustand ist zusätzlich zum
+    // Header-Button auch die .card-collapse-zone (Tag-/Datums-Zeile, Wochen-
+    // Punkte, Fortschrittsbalken inkl. %-Zahl) zum Einklappen klickbar.
+    // Aufgaben-Checkliste und Bearbeiten/Abbrechen-Buttons bleiben bewusst
+    // außen vor, damit Klicks darauf nicht versehentlich die Karte schließen.
     card.addEventListener('click', (e) => {
+      if (e.target.closest('.reorder-btns-row')) return;
       if (isCollapsed) {
         toggleCollapse();
         return;
       }
-      if (e.target.closest('#btn-collapse')) {
+      if (e.target.closest('#btn-collapse') || e.target.closest('.card-collapse-zone')) {
         toggleCollapse();
       }
     });
@@ -3475,6 +3569,52 @@
   });
 
   document.getElementById('btn-settings').addEventListener('click', () => showSettingsPanel());
+
+  // Wisch-Navigation: Egal ob nach links oder rechts gewischt wird - auf dem
+  // Hauptbildschirm öffnen sich die Einstellungen, in den Einstellungen
+  // kommt man zurück zum Hauptbildschirm (wie der ×-Button). Läuft ein
+  // anderer Dialog (Bearbeiten-Formular, Bestätigung, etc.), wird nicht
+  // gewischt, damit man beim Tippen/Scrollen in Formularen nicht
+  // versehentlich die Ansicht wechselt.
+  const SWIPE_MIN_DISTANCE = 70;
+  const SWIPE_MAX_OFF_AXIS = 60;
+  const SWIPE_MAX_DURATION = 600;
+  let swipeStartX = null;
+  let swipeStartY = null;
+  let swipeStartTime = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) { swipeStartX = null; return; }
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+    swipeStartTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (swipeStartX === null) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - swipeStartX;
+    const dy = touch.clientY - swipeStartY;
+    const dt = Date.now() - swipeStartTime;
+    swipeStartX = null;
+    if (dt > SWIPE_MAX_DURATION) return;
+    if (Math.abs(dx) < SWIPE_MIN_DISTANCE) return;
+    if (Math.abs(dy) > SWIPE_MAX_OFF_AXIS) return;
+
+    const settingsOpen = !!modalRoot.querySelector('.settings-overlay');
+
+    if (settingsOpen) {
+      modalRoot.innerHTML = '';
+      render();
+      return;
+    }
+
+    // Ist irgendein anderer Dialog offen (Bearbeiten, Bestätigung, ...),
+    // nicht navigieren.
+    if (modalRoot.children.length > 0) return;
+
+    showSettingsPanel();
+  }, { passive: true });
 
   let historyExpanded = false;
   document.getElementById('history-toggle').addEventListener('click', () => {

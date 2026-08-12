@@ -961,7 +961,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.0.0';
+  const APP_VERSION = '5.0.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2692,6 +2692,15 @@
 
         const nowComplete = c.tasks.every(tk => c.checks[today][tk.id]);
         const isLastDay = dayIndex === c.days;
+        // Bei einem frischen Tagesabschluss (nicht der allerletzte Challenge-Tag,
+        // dort greift die separate Abschluss-Sondermeldung) MUSS die
+        // Tagesmeldung hier — vor render() — gezogen werden. Sonst könnte
+        // render() zuerst eine andere, bereits fertige Karte rendern und ihr
+        // damit versehentlich eine evtl. erzwungene Meldung wegschnappen
+        // (siehe drawDayCompletionMessage()).
+        if (willBeChecked && nowComplete && !isLastDay) {
+          drawDayCompletionMessage(c, today);
+        }
         render();
         if (willBeChecked && nowComplete && isLastDay) {
           // Abschluss-Sondermeldung wurde bereits von render() ausgelöst
@@ -3001,23 +3010,15 @@
 
   function pickRandomQuote(lang) {
     const list = getQuotes(lang);
-    // Wurde gerade eine Tagesmeldung bearbeitet, muss sie garantiert als
-    // allererste Meldung für den nächsten Tagesabschluss erscheinen — erst
-    // danach greift wieder das normale Zufallsprinzip. Die Markierung wird
-    // hier verbraucht (einmalig) und dauerhaft zurückgesetzt.
-    const forcedId = state.settings.forcedDayQuoteId;
-    if (forcedId) {
-      state.settings.forcedDayQuoteId = null;
-      persist();
-      const forced = list.find(q => q.id === forcedId);
-      if (forced) return forced.text;
-    }
     // Alle Sprüche (eigene + Standard) bilden einen gemeinsamen Pool mit
     // Gleichgewichtung pro Spruch. Vorher bekamen "eigene" Sprüche pauschal
     // 50% der Chance, egal wie viele es gibt — bei nur einem eigenen Spruch
     // gegenüber z.B. 30 Standardsprüchen erschien dieser eine dadurch bei
     // fast jedem zweiten Tagesabschluss, was sich wie ein Fehler ("immer die
     // gleiche Meldung") anfühlte.
+    // HINWEIS: forcedDayQuoteId wird bewusst NICHT hier ausgewertet, siehe
+    // drawDayCompletionMessage(). Diese Funktion liefert immer eine echte
+    // Zufallsauswahl.
     return list[Math.floor(Math.random() * list.length)].text;
   }
 
@@ -3037,6 +3038,46 @@
   // beim erneuten Rendern (z.B. nach jedem Klick) nicht wechselt und Modal
   // sowie Kartenanzeige denselben Text zeigen.
   const dayCompletionCache = {};
+
+  // Wird AUSSCHLIESSLICH vom Task-Klick-Handler aufgerufen, in dem Moment,
+  // in dem eine Challenge für "heute" tatsächlich komplett wird — und zwar
+  // VOR dem folgenden render(). Nur hier darf forcedDayQuoteId (gesetzt beim
+  // Hinzufügen/Bearbeiten einer Meldung) verbraucht werden.
+  //
+  // Warum nicht direkt in getDayCompletionMessage()/pickRandomQuote()? Weil
+  // render() für JEDE aktive Karte läuft, die heute schon fertig ist —
+  // unabhängig davon, ob der Nutzer gerade wirklich etwas abgehakt hat oder
+  // nur z.B. die Einstellungen geschlossen oder eine andere Karte auf-/
+  // zugeklappt hat. Lag eine erzwungene Meldung an, konnte davor jede
+  // beliebige andere schon-fertige Karte, die einfach zufällig zuerst einen
+  // fehlenden Cache-Eintrag füllte, die Markierung "wegschnappen" — die
+  // eigentlich gemeinte Karte bekam dann wieder eine normale Zufallsmeldung.
+  // Das erklärte das unzuverlässige Verhalten ("mal beim 1., mal erst beim
+  // 2./3. Mal").
+  function drawDayCompletionMessage(c, dateStr) {
+    const key = c.id + '_' + dateStr;
+    if (dayCompletionCache[key]) return dayCompletionCache[key];
+    let quoteText = null;
+    const forcedId = state.settings.forcedDayQuoteId;
+    if (forcedId) {
+      state.settings.forcedDayQuoteId = null;
+      persist();
+      const forced = getQuotes(state.settings.lang).find(q => q.id === forcedId);
+      if (forced) quoteText = forced.text;
+    }
+    if (quoteText === null) quoteText = pickRandomQuote(state.settings.lang);
+    dayCompletionCache[key] = {
+      badge: personalBadge('quote_modal_badge', 'quote_modal_badge_personal'),
+      quote: quoteText
+    };
+    return dayCompletionCache[key];
+  }
+
+  // Reiner Lese-/Fallback-Pfad für die Anzeige (Karten-Badge, Modal-Lookup).
+  // Zieht bei fehlendem Cache-Eintrag IMMER normal zufällig — z.B. wenn nach
+  // einem Reload eine bereits fertige Karte zum ersten Mal in dieser Session
+  // gerendert wird. Verbraucht NIE forcedDayQuoteId (siehe
+  // drawDayCompletionMessage() oben).
   function getDayCompletionMessage(c, dateStr) {
     const key = c.id + '_' + dateStr;
     if (!dayCompletionCache[key]) {

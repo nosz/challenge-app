@@ -4,6 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Challenge  App</title>
+<script>
+// ---------- Early Theme Apply ----------
+// Läuft synchron/blockierend, BEVOR irgendetwas gemalt wird (deshalb ganz
+// oben im <head>, vor dem <style>-Block). Liest das gespeicherte Theme +
+// Schriftgröße direkt aus localStorage und setzt die CSS-Variablen sofort,
+// damit der Browser gleich mit den richtigen Werten rendert statt erst mit
+// den :root-Fallbacks zu starten und dann sichtbar umzuschalten (FOUC).
+//
+// Diese Funktionen sind absichtlich global (nicht in der Haupt-IIFE weiter
+// unten), damit sie dort wiederverwendet werden können, statt ein zweites
+// Mal definiert zu werden (eine Quelle der Wahrheit, kein Auseinanderlaufen
+// bei zukünftigen Theme-Änderungen).
+function hexToRgb(hex) {
+  hex = (hex || '#000000').replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16) || 0;
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+function rgbToHex({ r, g, b }) {
+  return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+function mixColor(hexA, hexB, t) {
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  return rgbToHex({ r: a.r + (b.r - a.r) * t, g: a.g + (b.g - a.g) * t, b: a.b + (b.b - a.b) * t });
+}
+function lightenColor(hex, t) { return mixColor(hex, '#ffffff', t); }
+function darkenColor(hex, t) { return mixColor(hex, '#000000', t); }
+function relLuminanceHex(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+}
+
+const THEMES = [
+  { key: 'chahell', labelKey: 'theme_chahell', base: { ink:'#f7f1e4', surface:'#ffffff', gold:'#c98a2e', sage:'#8a9a4f', rust:'#c15a3f', text:'#3a2f22' } },
+  { key: 'chadunk', labelKey: 'theme_chadunk', base: { ink:'#17130c', surface:'#221b12', gold:'#e3a93e', sage:'#9db56a', rust:'#d9704f', text:'#f2e9d8' } },
+  { key: 'daylight', labelKey: 'theme_daylight', base: { ink:'#f5f6f4', surface:'#ffffff', gold:'#4f8f8a', sage:'#6a9c6f', rust:'#c1614f', text:'#232a28' } },
+  { key: 'ember', labelKey: 'theme3', base: { ink:'#f5f1e8', surface:'#ffffff', gold:'#da7756', sage:'#7c9560', rust:'#b8493f', text:'#3d3929' } },
+  { key: 'skylight', labelKey: 'theme10', base: { ink:'#f2f5fa', surface:'#ffffff', gold:'#2f7fd1', sage:'#4fae7c', rust:'#d1544f', text:'#1c2733' } },
+  { key: 'dimension', labelKey: 'theme2', base: { ink:'#0a0d12', surface:'#151b24', gold:'#4a9eff', sage:'#52c785', rust:'#d1544f', text:'#e9eef3' } },
+  { key: 'phantom', labelKey: 'theme6', base: { ink:'#15130f', surface:'#211d17', gold:'#e0793c', sage:'#7c9e5f', rust:'#b3503f', text:'#f1ece2' } },
+  { key: 'solid-state', labelKey: 'theme8', base: { ink:'#17121c', surface:'#221b2b', gold:'#b355d6', sage:'#4fae9e', rust:'#c9527a', text:'#f0e9f5' } }
+];
+
+function deriveThemeVars(base) {
+  const light = relLuminanceHex(base.ink) > 0.55;
+  return {
+    ink: base.ink, surface: base.surface, gold: base.gold, sage: base.sage, rust: base.rust, text: base.text,
+    'ink-2': light ? darkenColor(base.ink, 0.05) : lightenColor(base.ink, 0.05),
+    'surface-2': light ? darkenColor(base.surface, 0.05) : lightenColor(base.surface, 0.06),
+    border: mixColor(base.surface, base.text, light ? 0.3 : 0.22),
+    'gold-soft': light ? darkenColor(base.gold, 0.32) : lightenColor(base.gold, 0.18),
+    'sage-soft': light ? darkenColor(base.sage, 0.32) : lightenColor(base.sage, 0.18),
+    'text-muted': mixColor(base.text, base.ink, light ? 0.35 : 0.4),
+    'text-faint': mixColor(base.text, base.ink, light ? 0.62 : 0.65)
+  };
+}
+
+function deriveSurfaceText(ink) {
+  const light = relLuminanceHex(ink) > 0.55;
+  return {
+    surface: light ? '#ffffff' : lightenColor(ink, 0.06),
+    text: light ? darkenColor(ink, 0.75) : lightenColor(ink, 0.92)
+  };
+}
+
+function getCustomBase(settings) {
+  const c = settings.customTheme;
+  const src = c || {
+    ink: THEMES[0].base.ink, gold: THEMES[0].base.gold,
+    sage: THEMES[0].base.sage, rust: THEMES[0].base.rust
+  };
+  const derived = deriveSurfaceText(src.ink);
+  return { ink: src.ink, gold: src.gold, sage: src.sage, rust: src.rust, surface: derived.surface, text: derived.text };
+}
+
+function themeBase(themeKey, settings) {
+  if (themeKey === 'custom') return getCustomBase(settings);
+  const theme = THEMES.find(x => x.key === themeKey);
+  return theme ? theme.base : THEMES[0].base;
+}
+
+function resolveThemeVars(themeKey, settings) {
+  return deriveThemeVars(themeBase(themeKey, settings));
+}
+
+function applyTheme(themeKey, settings) {
+  const vars = resolveThemeVars(themeKey, settings);
+  Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
+  document.documentElement.style.setProperty('--cs', relLuminanceHex(vars.ink) > 0.55 ? 'light' : 'dark');
+}
+
+const FONT_SIZES = { small: 16, normal: 18, large: 21 };
+function applyFontSize(size) {
+  const px = typeof size === 'number' ? size : (FONT_SIZES[size] || 18);
+  document.documentElement.style.fontSize = px + 'px';
+}
+
+// Nur beim allerersten Laden ausführen (vor dem ersten Paint). Fehler hier
+// dürfen die Seite niemals blockieren — im Zweifel greifen einfach die
+// :root-CSS-Fallbacks (die inzwischen selbst dem chahell-Theme entsprechen).
+try {
+  const raw = localStorage.getItem('motiv_settings');
+  const settings = raw ? JSON.parse(raw) : null;
+  const themeKey = (settings && settings.themeKey) || 'chahell';
+  const fontSize = (settings && settings.fontSize !== undefined) ? settings.fontSize : 20;
+  applyTheme(themeKey, settings || {});
+  applyFontSize(fontSize);
+} catch (e) {
+  console.warn('Early Theme Apply fehlgeschlagen, Fallback auf CSS-Defaults:', e);
+}
+</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -29,19 +140,25 @@
 
 <style>
   :root {
-    --ink: #10161c;
-    --ink-2: #171f27;
-    --surface: #1c2731;
-    --surface-2: #24313d;
-    --border: #32404d;
-    --gold: #e3a83b;
-    --gold-soft: #f0c876;
-    --sage: #6fa97c;
-    --sage-soft: #86c294;
-    --rust: #c96a4e;
-    --text: #ede9e0;
-    --text-muted: #93a1ac;
-    --text-faint: #5d6b76;
+    /* Diese Werte sind absichtlich identisch zum Default-Theme "chahell"
+       (siehe THEMES weiter unten), damit der allererste Browser-Paint
+       (bevor das Early-Theme-Script im <head> übernimmt) schon die
+       richtigen Farben zeigt. Ändert sich das Default-Theme, diese Werte
+       bitte mit deriveThemeVars(THEMES[0].base) neu berechnen und
+       nachziehen. */
+    --ink: #f7f1e4;
+    --ink-2: #ebe5d9;
+    --surface: #ffffff;
+    --surface-2: #f2f2f2;
+    --border: #c4c1bd;
+    --gold: #c98a2e;
+    --gold-soft: #895e1f;
+    --sage: #8a9a4f;
+    --sage-soft: #5e6936;
+    --rust: #c15a3f;
+    --text: #3a2f22;
+    --text-muted: #7c7366;
+    --text-faint: #afa79a;
     --shadow: 0 20px 50px -20px rgba(0,0,0,0.6);
     --radius: 14px;
     --font-display: Georgia, 'Times New Roman', serif;
@@ -54,7 +171,7 @@
     --transition-theme: .25s ease;
   }
 
-  html { color-scheme: var(--cs, dark); scroll-behavior: smooth; }
+  html { color-scheme: var(--cs, light); scroll-behavior: smooth; }
 
   * { box-sizing: border-box; }
 
@@ -961,7 +1078,7 @@
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.0.1';
+  const APP_VERSION = '5.1.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -982,20 +1099,9 @@
     { code: 'en', label: 'English' }
   ];
 
-  // 10 Farbpaletten, inspiriert von der visuellen Identität bekannter HTML5 UP
-  // Templates (html5up.net) — jede nur als 6 Basisfarben definiert; alle
-  // abgeleiteten Zwischentöne (Ränder, gedämpfte Texte usw.) werden automatisch
-  // über deriveThemeVars() berechnet, damit überall guter Kontrast entsteht.
-  const THEMES = [
-    { key: 'chahell', labelKey: 'theme_chahell', base: { ink:'#f7f1e4', surface:'#ffffff', gold:'#c98a2e', sage:'#8a9a4f', rust:'#c15a3f', text:'#3a2f22' } },
-    { key: 'chadunk', labelKey: 'theme_chadunk', base: { ink:'#17130c', surface:'#221b12', gold:'#e3a93e', sage:'#9db56a', rust:'#d9704f', text:'#f2e9d8' } },
-    { key: 'daylight', labelKey: 'theme_daylight', base: { ink:'#f5f6f4', surface:'#ffffff', gold:'#4f8f8a', sage:'#6a9c6f', rust:'#c1614f', text:'#232a28' } },
-    { key: 'ember', labelKey: 'theme3', base: { ink:'#f5f1e8', surface:'#ffffff', gold:'#da7756', sage:'#7c9560', rust:'#b8493f', text:'#3d3929' } },
-    { key: 'skylight', labelKey: 'theme10', base: { ink:'#f2f5fa', surface:'#ffffff', gold:'#2f7fd1', sage:'#4fae7c', rust:'#d1544f', text:'#1c2733' } },
-    { key: 'dimension', labelKey: 'theme2', base: { ink:'#0a0d12', surface:'#151b24', gold:'#4a9eff', sage:'#52c785', rust:'#d1544f', text:'#e9eef3' } },
-    { key: 'phantom', labelKey: 'theme6', base: { ink:'#15130f', surface:'#211d17', gold:'#e0793c', sage:'#7c9e5f', rust:'#b3503f', text:'#f1ece2' } },
-    { key: 'solid-state', labelKey: 'theme8', base: { ink:'#17121c', surface:'#221b2b', gold:'#b355d6', sage:'#4fae9e', rust:'#c9527a', text:'#f0e9f5' } }
-  ];
+  // THEMES ist jetzt global im Early-Theme-Script in <head> definiert
+  // (10 Farbpaletten, inspiriert von der visuellen Identität bekannter
+  // HTML5 UP Templates, html5up.net) — hier nicht nochmal definieren.
 
   // Reihenfolge für die Farbübersicht in den Einstellungen: immer 3 pro Zeile.
   // Zeile 1: die neuen (chahell, chadunk) + Lücke
@@ -1009,76 +1115,18 @@
     'dimension', 'phantom', 'solid-state'
   ];
 
-  // --- Farb-Hilfsfunktionen für individuell einstellbare Themes ---
-  function hexToRgb(hex) {
-    hex = (hex || '#000000').replace('#', '');
-    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
-    const num = parseInt(hex, 16) || 0;
-    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
-  }
-  function rgbToHex({ r, g, b }) {
-    return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-  }
-  function mixColor(hexA, hexB, t) {
-    const a = hexToRgb(hexA), b = hexToRgb(hexB);
-    return rgbToHex({ r: a.r + (b.r - a.r) * t, g: a.g + (b.g - a.g) * t, b: a.b + (b.b - a.b) * t });
-  }
-  function lightenColor(hex, t) { return mixColor(hex, '#ffffff', t); }
-  function darkenColor(hex, t) { return mixColor(hex, '#000000', t); }
-  function relLuminanceHex(hex) {
-    const { r, g, b } = hexToRgb(hex);
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  }
-
-  function deriveThemeVars(base) {
-    const light = relLuminanceHex(base.ink) > 0.55;
-    return {
-      ink: base.ink, surface: base.surface, gold: base.gold, sage: base.sage, rust: base.rust, text: base.text,
-      'ink-2': light ? darkenColor(base.ink, 0.05) : lightenColor(base.ink, 0.05),
-      'surface-2': light ? darkenColor(base.surface, 0.05) : lightenColor(base.surface, 0.06),
-      border: mixColor(base.surface, base.text, light ? 0.3 : 0.22),
-      'gold-soft': light ? darkenColor(base.gold, 0.32) : lightenColor(base.gold, 0.18),
-      'sage-soft': light ? darkenColor(base.sage, 0.32) : lightenColor(base.sage, 0.18),
-      'text-muted': mixColor(base.text, base.ink, light ? 0.35 : 0.4),
-      'text-faint': mixColor(base.text, base.ink, light ? 0.62 : 0.65)
-    };
-  }
-
-  // "Fläche" (surface) und "Text" werden beim eigenen Theme nicht einzeln
-  // abgefragt, sondern automatisch aus der Hintergrundfarbe abgeleitet – genau
-  // nach dem Muster, das die 8 mitgelieferten Themes bereits verwenden (helle
-  // Hintergründe -> fast weiße Fläche, fast schwarzer Text; dunkle
-  // Hintergründe -> etwas hellere Fläche, fast weißer Text).
-  function deriveSurfaceText(ink) {
-    const light = relLuminanceHex(ink) > 0.55;
-    return {
-      surface: light ? '#ffffff' : lightenColor(ink, 0.06),
-      text: light ? darkenColor(ink, 0.75) : lightenColor(ink, 0.92)
-    };
-  }
+  // Farb-Hilfsfunktionen (hexToRgb, mixColor, ...), THEMES, deriveThemeVars,
+  // deriveSurfaceText, getCustomBase, themeBase, resolveThemeVars und
+  // applyTheme/applyFontSize sind jetzt global im Early-Theme-Script ganz
+  // oben in <head> definiert (läuft vor dem ersten Paint, siehe dort) und
+  // werden hier einfach weiterverwendet — nicht mehr doppelt definieren,
+  // sonst laufen die beiden Kopien irgendwann auseinander.
+  // getCustomBase()/themeBase()/resolveThemeVars() erwarten hier weiterhin
+  // nur den themeKey; state.settings wird beim Aufruf mitgegeben (siehe
+  // Aufrufstellen weiter unten, die jetzt `state.settings` als 2. Argument
+  // übergeben).
 
   const CUSTOM_THEME_FIELDS = ['ink', 'gold', 'sage', 'rust'];
-
-  // Baut die vollständige 6-Farben-Basis für das "Eigene Farben"-Theme aus
-  // state.settings.customTheme (nur 4 Werte: Hintergrund + 3 Akzente).
-  // Solange der Nutzer noch nichts eingestellt hat, dient das erste
-  // mitgelieferte Theme als Startpunkt, damit die Kachel trotzdem eine
-  // sinnvolle Vorschau zeigt.
-  function getCustomBase() {
-    const c = state.settings.customTheme;
-    const src = c || {
-      ink: THEMES[0].base.ink, gold: THEMES[0].base.gold,
-      sage: THEMES[0].base.sage, rust: THEMES[0].base.rust
-    };
-    const derived = deriveSurfaceText(src.ink);
-    return { ink: src.ink, gold: src.gold, sage: src.sage, rust: src.rust, surface: derived.surface, text: derived.text };
-  }
-
-  function themeBase(themeKey) {
-    if (themeKey === 'custom') return getCustomBase();
-    const theme = THEMES.find(x => x.key === themeKey);
-    return theme ? theme.base : THEMES[0].base;
-  }
 
   function themeMockupHtml(base) {
     const blocks = [base.ink, base.surface, base.gold, base.sage, base.rust];
@@ -1087,10 +1135,6 @@
         ${blocks.map(c => `<div class="swatch-block" style="background:${c};"></div>`).join('')}
       </div>
     `;
-  }
-
-  function resolveThemeVars(themeKey) {
-    return deriveThemeVars(themeBase(themeKey));
   }
 
   const DEFAULT_QUOTES = {
@@ -1989,17 +2033,10 @@
     return n + ' ' + unit;
   }
 
-  function applyTheme(themeKey) {
-    const vars = resolveThemeVars(themeKey);
-    Object.entries(vars).forEach(([k, v]) => document.documentElement.style.setProperty('--' + k, v));
-    document.documentElement.style.setProperty('--cs', relLuminanceHex(vars.ink) > 0.55 ? 'light' : 'dark');
-  }
-
-  const FONT_SIZES = { small: 16, normal: 18, large: 21 };
-  function applyFontSize(size) {
-    const px = typeof size === 'number' ? size : (FONT_SIZES[size] || 18);
-    document.documentElement.style.fontSize = px + 'px';
-  }
+  // applyTheme() und applyFontSize() sind jetzt global im Early-Theme-Script
+  // in <head> definiert (laufen dort bereits vor dem ersten Paint) — hier
+  // nicht nochmal definieren, nur weiterverwenden. applyTheme() braucht ab
+  // jetzt state.settings als 2. Argument (für den 'custom'-Theme-Fall).
 
   function applyBranding() {
     const name = state.settings.appName || 'Challenge';
@@ -2354,7 +2391,12 @@
     if (pf.tasks && pf.tasks.length) pf.tasks.forEach(tk => addTaskRow(tk.name));
     else { addTaskRow('', 0); addTaskRow('', 1); }
 
-    card.querySelector('#f-add-task').addEventListener('click', () => addTaskRow('', taskRows.children.length));
+    card.querySelector('#f-add-task').addEventListener('click', () => {
+      addTaskRow('', taskRows.children.length);
+      const inputs = taskRows.querySelectorAll('.task-row input');
+      const last = inputs[inputs.length - 1];
+      if (last) last.focus();
+    });
 
     const daysInput = card.querySelector('#f-days');
     const errBoxLive = card.querySelector('#f-error');
@@ -2915,7 +2957,12 @@
       taskRows.appendChild(row);
     }
     c.tasks.forEach(tk => addEditTaskRow(tk.name, tk.id));
-    overlay.querySelector('#e-add-task').addEventListener('click', () => addEditTaskRow('', null));
+    overlay.querySelector('#e-add-task').addEventListener('click', () => {
+      addEditTaskRow('', null);
+      const inputs = taskRows.querySelectorAll('.task-row input');
+      const last = inputs[inputs.length - 1];
+      if (last) last.focus();
+    });
 
     const daysInput = overlay.querySelector('#e-days');
     const daysErrBox = overlay.querySelector('#e-days-error');
@@ -3162,7 +3209,7 @@
     const themeSwatches = THEME_GRID_ORDER.map(key => {
       if (!key) return `<div class="theme-swatch-gap" aria-hidden="true"></div>`;
       if (key === 'custom') {
-        const base = getCustomBase();
+        const base = getCustomBase(state.settings);
         const unset = !state.settings.customTheme;
         return `
       <div class="theme-swatch theme-swatch-custom ${unset ? 'unset' : ''} ${state.settings.themeKey === 'custom' ? 'active' : ''}" data-theme="custom">
@@ -3228,7 +3275,7 @@
       <div class="version-tag" style="text-align:left; margin:18px 0 0;">${t('version_label')} ${APP_VERSION}</div>
     `;
 
-    const customBaseForEditor = getCustomBase();
+    const customBaseForEditor = getCustomBase(state.settings);
     const customBaseOptions = THEMES.map(th => `<option value="${th.key}" ${customThemeBaseSelection === th.key ? 'selected' : ''}>${escapeHtml(t(th.labelKey).toLowerCase())}</option>`).join('');
     const hasSavedCustom = !!state.settings.customThemeSaved;
     const customThemeEditorHtml = (customThemeEditorOpen && state.settings.themeKey === 'custom') ? `
@@ -3439,7 +3486,7 @@
           if (!state.settings.customTheme) {
             // Erststart: eigenes Theme mit den Werten des zuletzt aktiven
             // Themes vorbefüllen, statt bei Null anzufangen.
-            const base = themeBase(state.settings.themeKey);
+            const base = themeBase(state.settings.themeKey, state.settings);
             state.settings.customTheme = { ink: base.ink, gold: base.gold, sage: base.sage, rust: base.rust };
           }
           if (wasClosed) {
@@ -3450,14 +3497,14 @@
           state.settings.themeKey = 'custom';
           customThemeEditorOpen = wasClosed ? true : !customThemeEditorOpen;
           persist();
-          applyTheme('custom');
+          applyTheme('custom', state.settings);
           showSettingsPanel();
           return;
         }
         state.settings.themeKey = key;
         customThemeEditorOpen = false;
         persist();
-        applyTheme(key);
+        applyTheme(key, state.settings);
         showSettingsPanel();
       });
     });
@@ -3466,19 +3513,19 @@
     if (customBaseSelect) customBaseSelect.addEventListener('change', (e) => {
       const key = e.target.value;
       if (!key) return;
-      const src = themeBase(key);
+      const src = themeBase(key, state.settings);
       state.settings.customTheme = { ink: src.ink, gold: src.gold, sage: src.sage, rust: src.rust };
       state.settings.themeKey = 'custom';
       customThemeBaseSelection = key;
       persist();
-      applyTheme('custom');
+      applyTheme('custom', state.settings);
       showSettingsPanel();
     });
 
     function refreshCustomSwatchPreview() {
       const previewEl = overlay.querySelector('.theme-swatch-custom .preview');
       if (!previewEl) return;
-      const base = getCustomBase();
+      const base = getCustomBase(state.settings);
       const blocks = [base.ink, base.surface, base.gold, base.sage, base.rust];
       previewEl.querySelectorAll('.swatch-block').forEach((block, i) => { block.style.background = blocks[i]; });
     }
@@ -3490,10 +3537,10 @@
       // sofortige Vorschau in der ganzen App, ohne das Panel komplett neu zu
       // zeichnen (das würde den Picker auf manchen Geräten unterbrechen).
       input.addEventListener('input', (e) => {
-        if (!state.settings.customTheme) state.settings.customTheme = { ...getCustomBase() };
+        if (!state.settings.customTheme) state.settings.customTheme = { ...getCustomBase(state.settings) };
         state.settings.customTheme[field] = e.target.value;
         state.settings.themeKey = 'custom';
-        applyTheme('custom');
+        applyTheme('custom', state.settings);
         refreshCustomSwatchPreview();
       });
       input.addEventListener('change', () => persist());
@@ -3517,7 +3564,7 @@
       state.settings.themeKey = 'custom';
       customThemeBaseSelection = null;
       persist();
-      applyTheme('custom');
+      applyTheme('custom', state.settings);
       showSettingsPanel();
     });
 
@@ -3668,7 +3715,7 @@
           setupMode = false;
           setupPrefill = null;
           persist();
-          applyTheme(state.settings.themeKey);
+          applyTheme(state.settings.themeKey, state.settings);
           applyFontSize(state.settings.fontSize);
           applyBranding();
           render();
@@ -3741,7 +3788,11 @@
     if (iconImgEl) iconImgEl.src = historyExpanded ? 'img/info-circle-fill.svg' : 'img/info-circle.svg';
   });
 
-  applyTheme(state.settings.themeKey);
+  // Erneutes Anwenden hier ist redundant zum Early-Theme-Script in <head>
+  // (das lief schon vor dem ersten Paint), aber günstig als Absicherung:
+  // falls sich state.settings beim Laden/Reparieren oben noch verändert hat
+  // (z.B. Migration einer alten Version), zieht das hier sauber nach.
+  applyTheme(state.settings.themeKey, state.settings);
   applyFontSize(state.settings.fontSize);
   applyBranding();
   render();

@@ -694,6 +694,28 @@ try {
     .reorder-btn:hover { border-color: var(--gold); color: var(--gold-soft); }
   }
   .reorder-btn:active { transform: translateY(1px); }
+  /* Motivations-Blitz-Button: sitzt in der Titelzeile links neben dem
+     i-Symbol, nur im aufgeklappten Zustand sichtbar. Bewusst auffälliger als
+     die übrigen, neutralen Buttons — rund wie das i-Symbol (gleiche Höhe),
+     mit warmem Goldschimmer statt neutralem Rahmen, damit er als
+     "besonderer" Button sofort ins Auge fällt. */
+  .card-title-boost-btn {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(240,169,46,0.55);
+    background: radial-gradient(circle at 50% 30%, rgba(240,169,46,0.2), transparent 70%);
+    cursor: pointer; padding: 0; margin-top: 0;
+    transition: filter var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+  }
+  .boost-btn-icon { width: 18px; height: 18px; display: block; filter: drop-shadow(0 0 3px rgba(240,169,46,0.55)); }
+  @media (hover: hover) and (pointer: fine) {
+    .card-title-boost-btn:hover { border-color: #f0a92e; background: radial-gradient(circle at 50% 30%, rgba(240,169,46,0.32), transparent 70%); filter: brightness(1.1); transform: translateY(-1px); }
+  }
+  .card-title-boost-btn:active { transform: translateY(1px); }
+  /* Boost-Modal: gleiche Basis wie .quote-modal, mit zusätzlichem großem
+     Blitz-Icon oben als visueller Motivations-Auftakt. */
+  .boost-modal-icon { display: flex; justify-content: center; margin-bottom: 6px; }
+  .boost-modal-icon img { width: 44px; height: 44px; filter: drop-shadow(0 0 8px rgba(240,169,46,0.5)); }
 
   .back-link {
     background: none; border: none; color: var(--text-muted); font-size: 0.8rem;
@@ -1077,7 +1099,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.1.3';
+  const APP_VERSION = '5.4.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1487,6 +1509,121 @@ try {
     ]
   };
 
+  // 12 Motivations-Texte für den Blitz-Button (spontaner Motivationsschub).
+  // Bewusst auch für den Fall geschrieben, dass gerade GAR KEINE Lust auf
+  // die Challenge besteht — das ist ja genau der Moment, in dem jemand auf
+  // diesen Button drücken würde. Gleiches {name}-Muster wie bei
+  // DEFAULT_COMPLETION_MESSAGES (Fallback ohne Namen entfernt "{name}, ").
+  const DEFAULT_BOOST_MESSAGES = {
+    de: [
+      "{name}, du musst jetzt nicht motiviert sein. Du musst nur anfangen — und die Kraft holt dich unterwegs ein.",
+      "{name}, spür kurz hin: Wie gut wird es sich anfühlen, wenn du das gleich geschafft hast? Genau dahin gehst du jetzt.",
+      "{name}, Motivation kommt fast immer erst NACH dem ersten Schritt, nie davor. Mach ihn einfach — der Rest folgt von selbst.",
+      "{name}, du hast schon Tage gemeistert, an denen du dich innerlich dagegen gesträubt hast. Auch heute schaffst du das wieder.",
+      "{name}, stell dir vor, wie stolz du dich fühlst, sobald du das hinter dir hast. Dieses Gefühl wartet schon auf dich.",
+      "{name}, es muss nicht perfekt sein. Es muss nur echt sein — und echt bist du gerade, mit jeder Ausrede, die du trotzdem überwindest.",
+      "{name}, jeder Tag, an dem du trotzdem dranbleibst, zählt doppelt. Genau weil er nicht leicht war, bleibt er dir.",
+      "{name}, du brauchst keine riesige Willenskraft. Du brauchst nur die nächsten fünf Minuten — den Rest schenkt dir der Schwung.",
+      "{name}, keine Lust zu haben ist menschlich. Trotzdem loszugehen ist stark — und genau das bist du gerade.",
+      "{name}, du bist schon weiter gekommen, als du am Anfang für möglich gehalten hast. Lass ausgerechnet einen schwachen Moment das nicht zunichtemachen.",
+      "{name}, du musst dich nicht bereit fühlen, um anzufangen. Fang an — bereit fühlst du dich danach von ganz allein. ❤️",
+      "{name}, dein zukünftiges Ich blickt gerade auf dich zurück und hofft, dass du jetzt weitermachst. Enttäusch es nicht.",
+      "{name}, in diesem Moment entscheidet sich, wer du morgen bist. Triff die Entscheidung, auf die du stolz sein wirst.",
+      "{name}, du kennst dieses Gefühl schon — kurz zögern, dann anfangen, dann froh sein. Überspring einfach das Zögern.",
+      "{name}, niemand sieht gerade zu, niemand zwingt dich. Und genau deshalb zählt es, wenn du es trotzdem tust — für dich, ganz allein.",
+      "{name}, dein Herz weiß längst, dass du das willst. Lass den Kopf kurz beiseite und folge einfach dem ersten Schritt.",
+      "{name}, du hast dir dieses Ziel nicht ohne Grund gesetzt. Erinnere dich kurz daran, warum — und leg los.",
+      "{name}, dieser eine unbequeme Moment jetzt ist der Preis für das gute Gefühl gleich danach. Er lohnt sich, das weißt du.",
+      "{name}, du bist stärker, als sich dieser Moment gerade anfühlt. Das hast du schon oft genug bewiesen.",
+      "{name}, mach den ersten Schritt nicht, weil du musst — mach ihn, weil du dich danach lieben wirst dafür. ❤️",
+      "{name}, jede große Veränderung fühlt sich vorher unmöglich an und hinterher selbstverständlich. Du stehst genau an diesem Übergang.",
+      "{name}, du wirst heute Abend zurückblicken. Sorg dafür, dass du dann stolz auf dich bist, nicht enttäuscht.",
+      "{name}, während du das liest, merkst du vielleicht schon, wie ein Teil von dir sich bereit macht, loszulegen — noch bevor du bewusst 'ja' gesagt hast.",
+      "{name}, du musst gar nicht wissen, wann genau der Punkt kommt, an dem es leicht wird — du wirst es einfach merken, sobald du angefangen hast.",
+      "{name}, ob du jetzt sofort loslegst oder erst tief durchatmest und dann loslegst — du legst los. Beides führt dich zum selben Ort.",
+      "{name}, je tiefer du spürst, wie wichtig dir das ist, desto leichter wird der erste Schritt — und du spürst es schon.",
+      "{name}, irgendwo in dir gibt es bereits die Entscheidung, weiterzumachen. Du musst sie nur zulassen, hier und jetzt.",
+      "{name}, du kannst gar nicht anders, als stärker zu werden, mit jedem einzelnen Mal, das du trotzdem dranbleibst — das passiert einfach, ganz von selbst.",
+      "{name}, stell dir vor, du hättest schon angefangen. Genau dieses Gefühl — das kannst du dir jetzt holen, in diesem Moment.",
+      "{name}, und während du merkst, wie sich dieser Satz gerade liest, kannst du auch merken, wie sich etwas in dir schon in Bewegung setzt.",
+      "{name}, du weißt nicht, wie leicht sich das gleich anfühlen wird — und genau das ist der beste Grund, es jetzt herauszufinden.",
+      "{name}, tief in dir warst du schon immer jemand, der durchzieht. Du musst dich nur daran erinnern — genau jetzt."
+    ],
+    en: [
+      "{name}, you don't need to feel motivated right now. Just begin — the strength will catch up with you on the way.",
+      "{name}, take a second to feel it: how good will it feel once this is done? That's exactly where you're headed.",
+      "{name}, motivation almost always shows up AFTER the first step, never before. Just take it — the rest follows on its own.",
+      "{name}, you've already gotten through days when everything in you resisted. You'll get through today too.",
+      "{name}, picture how proud you'll feel the moment this is behind you. That feeling is already waiting for you.",
+      "{name}, it doesn't have to be perfect. It just has to be real — and you're being real right now, pushing past every excuse anyway.",
+      "{name}, every day you show up anyway counts double. Precisely because it wasn't easy, it stays with you.",
+      "{name}, you don't need a mountain of willpower. You just need the next five minutes — momentum will carry the rest.",
+      "{name}, not feeling like it is human. Going anyway is strength — and that's exactly what you are right now.",
+      "{name}, you've already come further than you thought possible at the start. Don't let one weak moment undo that.",
+      "{name}, you don't have to feel ready to begin. Begin — and you'll feel ready right after. ❤️",
+      "{name}, your future self is looking back at you right now, hoping you keep going. Don't let them down.",
+      "{name}, this moment decides who you'll be tomorrow. Make the choice you'll be proud of.",
+      "{name}, you know this feeling already — hesitate, then start, then feel glad. Just skip the hesitating part.",
+      "{name}, nobody's watching, nobody's forcing you. And that's exactly why it counts when you do it anyway — for you, only you.",
+      "{name}, your heart already knows you want this. Set your head aside for a moment and just take the first step.",
+      "{name}, you didn't set this goal for no reason. Remember why for a second — and go.",
+      "{name}, this one uncomfortable moment is the price for the good feeling right after. It's worth it, and you know it.",
+      "{name}, you're stronger than this moment feels. You've proven that plenty of times already.",
+      "{name}, don't take the first step because you have to — take it because you'll love yourself for it afterward. ❤️",
+      "{name}, every big change feels impossible beforehand and obvious afterward. You're standing right at that turning point.",
+      "{name}, tonight you'll look back on today. Make sure you're proud of what you see, not disappointed.",
+      "{name}, as you read this, you might already notice part of you getting ready to begin — even before you've consciously said yes.",
+      "{name}, you don't need to know exactly when it gets easier — you'll simply notice it, once you've started.",
+      "{name}, whether you dive in right now or take a deep breath first and then dive in — you're diving in either way. Both paths lead to the same place.",
+      "{name}, the more you feel how much this matters to you, the easier that first step becomes — and you're already feeling it.",
+      "{name}, somewhere inside you, the decision to keep going has already been made. You just need to let it in, right here, right now.",
+      "{name}, you can't help but grow stronger with every single time you show up anyway — it just happens, all on its own.",
+      "{name}, imagine you'd already started. That exact feeling — you can reach for it right now, in this very moment.",
+      "{name}, and as you notice how this sentence is landing, you might also notice something in you already starting to move.",
+      "{name}, you don't know yet how easy this is about to feel — and that's exactly the best reason to find out now.",
+      "{name}, deep down, you've always been someone who follows through. You just need to remember that — right now."
+    ],
+    pl: [
+      "{name}, nie musisz teraz czuć motywacji. Po prostu zacznij — siła dogoni cię po drodze.",
+      "{name}, poczuj to na chwilę: jak dobrze będzie, gdy to skończysz? Właśnie tam teraz zmierzasz.",
+      "{name}, motywacja niemal zawsze pojawia się PO pierwszym kroku, nigdy przed. Zrób go — reszta przyjdzie sama.",
+      "{name}, miałeś już dni, gdy wszystko się w tobie buntowało. Dziś też dasz radę.",
+      "{name}, wyobraź sobie, jak dumny będziesz, gdy to zostanie za tobą. To uczucie już na ciebie czeka.",
+      "{name}, nie musi być idealnie. Musi być prawdziwie — a jesteś prawdziwy właśnie teraz, przełamując każdą wymówkę.",
+      "{name}, każdy dzień, w którym mimo wszystko wytrwasz, liczy się podwójnie. Właśnie dlatego, że nie był łatwy, zostaje z tobą.",
+      "{name}, nie potrzebujesz ogromnej siły woli. Potrzebujesz tylko następnych pięciu minut — resztę zrobi rozpęd.",
+      "{name}, brak ochoty jest ludzki. Zrobienie tego mimo to jest siłą — a właśnie taki teraz jesteś.",
+      "{name}, zaszedłeś już dalej, niż myślałeś na początku. Nie pozwól, by jedna chwila słabości to przekreśliła.",
+      "{name}, nie musisz czuć się gotowy, by zacząć. Zacznij — poczujesz się gotowy zaraz potem. ❤️",
+      "{name}, twoje przyszłe ja patrzy teraz na ciebie z nadzieją, że nie odpuścisz. Nie zawiedź go.",
+      "{name}, ten moment decyduje, kim będziesz jutro. Podejmij decyzję, z której będziesz dumny.",
+      "{name}, znasz to uczucie — chwila wahania, potem start, potem radość. Po prostu pomiń wahanie.",
+      "{name}, nikt teraz nie patrzy, nikt cię nie zmusza. I właśnie dlatego liczy się, że i tak to zrobisz — dla siebie, tylko dla siebie.",
+      "{name}, twoje serce już wie, że tego chcesz. Odłóż na chwilę myśli na bok i zrób pierwszy krok.",
+      "{name}, nie postawiłeś sobie tego celu bez powodu. Przypomnij sobie na chwilę dlaczego — i zacznij.",
+      "{name}, ta jedna niewygodna chwila to cena za dobre uczucie zaraz potem. Warto, i dobrze o tym wiesz.",
+      "{name}, jesteś silniejszy, niż czujesz się w tej chwili. Udowodniłeś to już wiele razy.",
+      "{name}, zrób pierwszy krok nie dlatego, że musisz — zrób go, bo później sam siebie za to pokochasz. ❤️",
+      "{name}, każda wielka zmiana wcześniej wydaje się niemożliwa, a później oczywista. Stoisz właśnie w tym punkcie zwrotnym.",
+      "{name}, dziś wieczorem spojrzysz na ten dzień. Zadbaj, by być z siebie dumny, a nie rozczarowany.",
+      "{name}, gdy to czytasz, może już zauważasz, jak część ciebie szykuje się do działania — jeszcze zanim świadomie powiedziałeś 'tak'.",
+      "{name}, nie musisz wiedzieć dokładnie, kiedy zrobi się łatwiej — po prostu to zauważysz, gdy już zaczniesz.",
+      "{name}, czy zaczniesz od razu, czy najpierw głęboko odetchniesz i wtedy zaczniesz — i tak zaczynasz. Obie drogi prowadzą w to samo miejsce.",
+      "{name}, im głębiej czujesz, jak ważne jest to dla ciebie, tym łatwiejszy staje się pierwszy krok — a ty już to czujesz.",
+      "{name}, gdzieś w tobie decyzja, by kontynuować, już zapadła. Musisz tylko na nią pozwolić, tu i teraz.",
+      "{name}, nie możesz nie stawać się silniejszy z każdym razem, gdy mimo wszystko wytrwasz — to dzieje się po prostu samo.",
+      "{name}, wyobraź sobie, że już zacząłeś. Właśnie to uczucie — możesz po nie sięgnąć teraz, w tej chwili.",
+      "{name}, i gdy zauważasz, jak brzmi to zdanie, możesz też zauważyć, jak coś w tobie już zaczyna się poruszać.",
+      "{name}, jeszcze nie wiesz, jak łatwo zaraz to poczujesz — i to jest właśnie najlepszy powód, by się przekonać teraz.",
+      "{name}, głęboko w środku zawsze byłeś kimś, kto doprowadza sprawy do końca. Musisz tylko sobie o tym przypomnieć — właśnie teraz."
+    ]
+  };
+
+  function pickRandomBoostMessage(lang) {
+    const list = DEFAULT_BOOST_MESSAGES[lang] || DEFAULT_BOOST_MESSAGES.de;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   const STRINGS = {
     de: {
       settings_btn: "Einstellungen", quotes_btn: "Sprüche", data_btn: "Daten",
@@ -1494,6 +1631,7 @@ try {
       settings_username_label: "Dein Name", settings_username_placeholder: "Dein Name",
       settings_username_note: "Wird verwendet, um Erfolgsmeldungen persönlicher zu gestalten.",
       quote_modal_badge_personal: "Weiter so, {name}!", completion_modal_badge_personal: "{name}, geschafft!",
+      boost_modal_badge: "Motivationsschub", boost_modal_badge_personal: "Für dich, {name}",
       progress_toast_count: "{done} von {total} Tagesziele & Challenges erledigt", progress_toast_named: "{name},",
       card_progress_count: "{done} von {total} Tagesziele & Challenges geschafft!",
       settings_theme_label: "Farbschema", settings_lang_label: "Sprache",
@@ -1549,6 +1687,10 @@ try {
       settings_accordion_note: "Beim Aufklappen einer Challenge werden die anderen automatisch eingeklappt.",
       settings_collapse_start_label: "Challenges beim Start eingeklappt anzeigen",
       settings_collapse_start_note: "Alle Challenge-Karten sind beim Öffnen der App zunächst eingeklappt.",
+      settings_boost_label: "Motivations-Button an Challenges anzeigen",
+      settings_boost_note: "Zeigt bei jeder laufenden Challenge einen Blitz-Button für einen spontanen Motivationsschub.",
+      boost_btn_label: "Motivationsschub",
+      boost_modal_close: "Los geht's",
       settings_fontsize_label: "Schriftgröße",
       settings_fontsize_current: "Aktuell: {px}px",
       fontsize_small: "Klein", fontsize_normal: "Normal", fontsize_large: "Groß",
@@ -1609,6 +1751,7 @@ try {
       settings_username_label: "Your name", settings_username_placeholder: "Your name",
       settings_username_note: "Used to make success messages more personal.",
       quote_modal_badge_personal: "Keep going, {name}!", completion_modal_badge_personal: "{name}, you did it!",
+      boost_modal_badge: "Motivation boost", boost_modal_badge_personal: "For you, {name}",
       progress_toast_count: "{done} of {total} tasks done", progress_toast_named: "{name},",
       card_progress_count: "{done} of {total} tasks done!",
       settings_theme_label: "Color scheme", settings_lang_label: "Language",
@@ -1664,6 +1807,10 @@ try {
       settings_accordion_note: "Expanding a challenge automatically collapses the others.",
       settings_collapse_start_label: "Show challenges collapsed on start",
       settings_collapse_start_note: "All challenge cards are collapsed when you open the app.",
+      settings_boost_label: "Show motivation button on challenges",
+      settings_boost_note: "Shows a lightning button on every active challenge for a spontaneous motivation boost.",
+      boost_btn_label: "Motivation boost",
+      boost_modal_close: "Let's go",
       settings_fontsize_label: "Font size",
       settings_fontsize_current: "Current: {px}px",
       fontsize_small: "Small", fontsize_normal: "Normal", fontsize_large: "Large",
@@ -1724,6 +1871,7 @@ try {
       settings_username_label: "Twoje imię", settings_username_placeholder: "Twoje imię",
       settings_username_note: "Używane, aby uczynić wiadomości o sukcesie bardziej osobistymi.",
       quote_modal_badge_personal: "Tak trzymaj, {name}!", completion_modal_badge_personal: "{name}, udało się!",
+      boost_modal_badge: "Zastrzyk motywacji", boost_modal_badge_personal: "Dla ciebie, {name}",
       progress_toast_count: "{done} z {total} zadań wykonanych", progress_toast_named: "{name},",
       card_progress_count: "{done} z {total} zadań wykonanych!",
       settings_theme_label: "Schemat kolorów", settings_lang_label: "Język",
@@ -1779,6 +1927,10 @@ try {
       settings_accordion_note: "Rozwinięcie jednego wyzwania automatycznie zwija pozostałe.",
       settings_collapse_start_label: "Pokaż wyzwania zwinięte po starcie",
       settings_collapse_start_note: "Wszystkie karty wyzwań są zwinięte przy otwarciu aplikacji.",
+      settings_boost_label: "Pokaż przycisk motywacji przy wyzwaniach",
+      settings_boost_note: "Pokazuje przy każdym aktywnym wyzwaniu przycisk błyskawicy z nagłym zastrzykiem motywacji.",
+      boost_btn_label: "Zastrzyk motywacji",
+      boost_modal_close: "Do dzieła",
       settings_fontsize_label: "Rozmiar czcionki",
       settings_fontsize_current: "Aktualnie: {px}px",
       fontsize_small: "Mały", fontsize_normal: "Normalny", fontsize_large: "Duży",
@@ -1850,7 +2002,7 @@ try {
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, customTheme: null, customThemeSaved: null })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: false, customTheme: null, customThemeSaved: null })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -1871,6 +2023,9 @@ try {
   }
   if (typeof state.settings.collapseChallengesOnStart !== 'boolean') {
     state.settings.collapseChallengesOnStart = false;
+  }
+  if (typeof state.settings.showBoostButton !== 'boolean') {
+    state.settings.showBoostButton = false;
   }
 
   const LEGACY_FONT_SIZES = { small: 16, normal: 18, large: 21 };
@@ -2474,6 +2629,12 @@ try {
   // Check-Badge für die eingeklappte Karte bei komplett erledigtem Tag
   // (ersetzt das bisherige App-Icon dort durch ein echtes "erledigt"-Signal).
   const CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  // Icon für den Motivations-Blitz-Button. Als <img> auf die separate SVG-
+  // Datei verwiesen (statt Inline-SVG wie die übrigen Icons), damit sie sich
+  // per CSS-Filter/Farbe auffällig in Gold absetzen lässt und weil sie —
+  // anders als die neutralen Stroke-Icons — bewusst als "besonderer" Button
+  // erkennbar sein soll.
+  const BOOST_ICON_HTML = '<img src="img/lightning-charge.svg" alt="" class="boost-btn-icon">';
 
   // Erzeugt die Auf/Ab-Pfeile zum Umsortieren, als eigenständige Buttons
   // neben "Bearbeiten" im Footer. Nur sichtbar, wenn mehr als eine
@@ -2662,8 +2823,9 @@ try {
         <div class="card-title-row">
           <button type="button" class="card-toggle" id="btn-collapse">
             <h1>${escapeHtml(c.title)}</h1>
-            <span class="card-toggle-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
           </button>
+          ${(!isCollapsed && state.settings.showBoostButton && doneToday < c.tasks.length) ? `<button type="button" class="card-title-boost-btn" id="btn-boost" title="${escapeHtml(t('boost_btn_label'))}" aria-label="${escapeHtml(t('boost_btn_label'))}">${BOOST_ICON_HTML}</button>` : ''}
+          <span class="card-toggle-icon" id="btn-collapse-icon"><img src="${isCollapsed ? 'img/info-circle.svg' : 'img/info-circle-fill.svg'}" alt=""></span>
         </div>
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
@@ -2704,17 +2866,19 @@ try {
     // Im eingeklappten Zustand ist die komplette Karte klickbar (nicht nur der
     // Header-Button), damit das Aufklappen auch beim Tippen auf den unteren
     // Kartenbereich funktioniert. Im aufgeklappten Zustand ist zusätzlich zum
-    // Header-Button auch die .card-collapse-zone (Tag-/Datums-Zeile, Wochen-
-    // Punkte, Fortschrittsbalken inkl. %-Zahl) zum Einklappen klickbar.
+    // Header-Button (inkl. dem separat stehenden i-Icon, das aus dem Button
+    // herausgelöst wurde, damit der Blitz-Button als eigenständiges Element
+    // daneben Platz hat) auch die .card-collapse-zone (Tag-/Datums-Zeile,
+    // Wochen-Punkte, Fortschrittsbalken inkl. %-Zahl) zum Einklappen klickbar.
     // Aufgaben-Checkliste und Bearbeiten/Abbrechen-Buttons bleiben bewusst
     // außen vor, damit Klicks darauf nicht versehentlich die Karte schließen.
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.reorder-btns-row')) return;
+      if (e.target.closest('.reorder-btns-row') || e.target.closest('#btn-boost')) return;
       if (isCollapsed) {
         toggleCollapse();
         return;
       }
-      if (e.target.closest('#btn-collapse') || e.target.closest('.card-collapse-zone')) {
+      if (e.target.closest('#btn-collapse') || e.target.closest('#btn-collapse-icon') || e.target.closest('.card-collapse-zone')) {
         toggleCollapse();
       }
     });
@@ -2722,6 +2886,8 @@ try {
 
     const editBtn = card.querySelector('#btn-edit');
     if (editBtn) editBtn.addEventListener('click', () => showEditChallengeModal(c));
+    const boostBtn = card.querySelector('#btn-boost');
+    if (boostBtn) boostBtn.addEventListener('click', () => showBoostModal());
 
     card.querySelectorAll('.task-check').forEach(row => {
       row.addEventListener('click', () => {
@@ -3195,6 +3361,39 @@ try {
     launchConfetti('big');
   }
 
+  // Öffnet den spontanen Motivationsschub (Blitz-Button an der Karte).
+  // Bewusst unabhängig von Tag/Challenge-Status — reiner Zufallsziehung bei
+  // jedem Klick (kein Seed wie bei den Tages-/Abschlussmeldungen), da der
+  // Button gerade für spontane "Ich hab grad keine Lust"-Momente gedacht ist.
+  function showBoostModal() {
+    const name = (state.settings.userName || '').trim();
+    const rawMessage = pickRandomBoostMessage(state.settings.lang);
+    const escaped = escapeHtml(rawMessage);
+    // Gleiches {name}-Muster wie showChallengeCompleteModal: mit Namen wird
+    // er hervorgehoben eingesetzt, ohne Namen wird "{name}, " sauber entfernt
+    // und der Satz großgeschrieben.
+    const messageHtml = name
+      ? escaped.split('{name}').join(`<span class="name-highlight">${escapeHtml(name)}</span>`)
+      : (() => {
+          const cleaned = escaped.replace(/\{name\},\s*/g, '').replace(/\{name\}\s*/g, '');
+          return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+        })();
+    modalRoot.innerHTML = '';
+    const overlay = el(`
+      <div class="overlay">
+        <div class="modal quote-modal boost-modal">
+          <div class="boost-modal-icon">${BOOST_ICON_HTML}</div>
+          <div class="badge">${personalBadge('boost_modal_badge', 'boost_modal_badge_personal')}</div>
+          <p class="quote-text">${messageHtml}</p>
+          <button class="btn-primary" style="margin-top:0;" id="boost-close">${t('boost_modal_close')}</button>
+        </div>
+      </div>
+    `);
+    overlay.querySelector('#boost-close').addEventListener('click', () => modalRoot.innerHTML = '');
+    modalRoot.appendChild(overlay);
+    launchConfetti('small');
+  }
+
   let settingsExpanded = { general: true, theme: false, challenges: false, messages: false, data: false, info: false };
   // Ob der Editor für das "Eigene Farben"-Theme innerhalb der Farben-Sektion
   // aufgeklappt ist. Bleibt (wie settingsExpanded) über Re-Renders des
@@ -3365,6 +3564,15 @@ try {
         </span>
       </label>
       <div class="lang-note">${t('settings_collapse_start_note')}</div>
+
+      <label class="toggle-row" for="s-boost-toggle">
+        <span class="toggle-row-text">${t('settings_boost_label')}</span>
+        <span class="switch">
+          <input type="checkbox" id="s-boost-toggle" ${state.settings.showBoostButton ? 'checked' : ''} />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="lang-note">${t('settings_boost_note')}</div>
     `;
 
     const messagesBody = `
@@ -3464,6 +3672,12 @@ try {
     const collapseStartToggle = overlay.querySelector('#s-collapse-start-toggle');
     if (collapseStartToggle) collapseStartToggle.addEventListener('change', (e) => {
       state.settings.collapseChallengesOnStart = e.target.checked;
+      persist();
+    });
+
+    const boostToggle = overlay.querySelector('#s-boost-toggle');
+    if (boostToggle) boostToggle.addEventListener('change', (e) => {
+      state.settings.showBoostButton = e.target.checked;
       persist();
     });
 

@@ -412,6 +412,39 @@ try {
   }
   input:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(227,168,59,0.14); }
 
+  /* Zeile aus Textfeld + explizitem Speichern-Button (z.B. App-Name, Nutzername
+     in den Settings). Ersetzt Auto-Save-bei-Fokusverlust: der Nutzer sieht klar,
+     ob eine Änderung noch ungespeichert ist (Button aktiv = ungespeichert). */
+  .field-save-row { display: flex; gap: 8px; align-items: center; }
+  .field-save-row input { flex: 1; min-width: 0; }
+  .field-save-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--ink-2);
+    color: var(--text-faint);
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform 0.15s ease;
+  }
+  .field-save-btn.is-dirty {
+    background: var(--gold);
+    color: #211505;
+    border-color: var(--gold);
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .field-save-btn.is-dirty:hover { filter: brightness(1.1); }
+  }
+  .field-save-btn.just-saved { transform: scale(1.18); }
+
   select {
     width: 100%;
     background: var(--ink-2);
@@ -1099,7 +1132,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.7.1';
+  const APP_VERSION = '5.7.2';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1745,6 +1778,7 @@ try {
       settings_title: "Einstellungen", settings_appname_label: "App-Name",
       settings_username_label: "Dein Name", settings_username_placeholder: "Dein Name",
       settings_username_note: "Wird verwendet, um Erfolgsmeldungen persönlicher zu gestalten.",
+      field_save_label: "Speichern",
       quote_modal_badge_personal: "Weiter so, {name}!", completion_modal_badge_personal: "{name}, geschafft!",
       boost_modal_badge: "Motivationsschub", boost_modal_badge_personal: "Für dich, {name}",
       progress_toast_count: "{done} von {total} Tagesziele & Challenges erledigt", progress_toast_named: "{name},",
@@ -1870,6 +1904,7 @@ try {
       settings_title: "Settings", settings_appname_label: "App name",
       settings_username_label: "Your name", settings_username_placeholder: "Your name",
       settings_username_note: "Used to make success messages more personal.",
+      field_save_label: "Save",
       quote_modal_badge_personal: "Keep going, {name}!", completion_modal_badge_personal: "{name}, you did it!",
       boost_modal_badge: "Motivation boost", boost_modal_badge_personal: "For you, {name}",
       progress_toast_count: "{done} of {total} tasks done", progress_toast_named: "{name},",
@@ -1995,6 +2030,7 @@ try {
       settings_title: "Ustawienia", settings_appname_label: "Nazwa aplikacji",
       settings_username_label: "Twoje imię", settings_username_placeholder: "Twoje imię",
       settings_username_note: "Używane, aby uczynić wiadomości o sukcesie bardziej osobistymi.",
+      field_save_label: "Zapisz",
       quote_modal_badge_personal: "Tak trzymaj, {name}!", completion_modal_badge_personal: "{name}, udało się!",
       boost_modal_badge: "Zastrzyk motywacji", boost_modal_badge_personal: "Dla ciebie, {name}",
       progress_toast_count: "{done} z {total} zadań wykonanych", progress_toast_named: "{name},",
@@ -2460,6 +2496,32 @@ try {
   function el(html) { const tpl = document.createElement('template'); tpl.innerHTML = html.trim(); return tpl.content.firstElementChild; }
   function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function showError(box, msg) { box.textContent = msg; box.classList.remove('hidden'); }
+
+  // Verkabelt ein Textfeld mit explizitem Speichern-Button (ersetzt Auto-Save
+  // bei Fokusverlust). Der Button ist nur aktiv ("is-dirty"), solange sich der
+  // aktuelle Wert vom zuletzt gespeicherten unterscheidet. Speichern per Klick
+  // oder Enter-Taste; kurze Skalier-Animation am Button als stille Bestätigung.
+  function wireSaveField(input, btn, saveFn) {
+    let savedValue = input.value.trim();
+    const updateDirty = () => {
+      const isDirty = input.value.trim() !== savedValue;
+      btn.classList.toggle('is-dirty', isDirty);
+    };
+    const doSave = () => {
+      if (!btn.classList.contains('is-dirty')) return;
+      const value = input.value.trim();
+      saveFn(value);
+      savedValue = value;
+      btn.classList.remove('is-dirty');
+      btn.classList.add('just-saved');
+      setTimeout(() => btn.classList.remove('just-saved'), 220);
+    };
+    input.addEventListener('input', updateDirty);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); doSave(); input.blur(); }
+    });
+    btn.addEventListener('click', doSave);
+  }
 
   function launchConfetti(mode) {
     const big = mode === 'big';
@@ -3667,10 +3729,16 @@ try {
 
     const generalBody = `
       <label>${t('settings_appname_label')}</label>
-      <input type="text" id="s-appname" value="${escapeHtml(state.settings.appName || 'Challenge')}" />
+      <div class="field-save-row">
+        <input type="text" id="s-appname" value="${escapeHtml(state.settings.appName || 'Challenge')}" />
+        <button type="button" class="field-save-btn" id="s-appname-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">✓</button>
+      </div>
 
       <label>${t('settings_username_label')}</label>
-      <input type="text" id="s-username" placeholder="${escapeHtml(t('settings_username_placeholder'))}" value="${escapeHtml(state.settings.userName || '')}" />
+      <div class="field-save-row">
+        <input type="text" id="s-username" placeholder="${escapeHtml(t('settings_username_placeholder'))}" value="${escapeHtml(state.settings.userName || '')}" />
+        <button type="button" class="field-save-btn" id="s-username-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">✓</button>
+      </div>
       <div class="lang-note">${t('settings_username_note')}</div>
 
       <label>${t('settings_lang_label')}</label>
@@ -3851,15 +3919,17 @@ try {
     overlay.querySelector('#s-close-top').addEventListener('click', () => { modalRoot.innerHTML = ''; render(); });
 
     const appNameInput = overlay.querySelector('#s-appname');
-    if (appNameInput) appNameInput.addEventListener('change', (e) => {
-      state.settings.appName = e.target.value.trim() || 'Challenge';
+    const appNameSaveBtn = overlay.querySelector('#s-appname-save');
+    if (appNameInput && appNameSaveBtn) wireSaveField(appNameInput, appNameSaveBtn, (value) => {
+      state.settings.appName = value || 'Challenge';
       persist();
       applyBranding();
     });
 
     const usernameInput = overlay.querySelector('#s-username');
-    if (usernameInput) usernameInput.addEventListener('change', (e) => {
-      state.settings.userName = e.target.value.trim();
+    const usernameSaveBtn = overlay.querySelector('#s-username-save');
+    if (usernameInput && usernameSaveBtn) wireSaveField(usernameInput, usernameSaveBtn, (value) => {
+      state.settings.userName = value;
       persist();
     });
 

@@ -1099,7 +1099,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.5.2';
+  const APP_VERSION = '5.5.3';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2100,7 +2100,7 @@ try {
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: false, showDailyMotivation: true, customTheme: null, customThemeSaved: null })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, customTheme: null, customThemeSaved: null })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -2123,7 +2123,18 @@ try {
     state.settings.collapseChallengesOnStart = false;
   }
   if (typeof state.settings.showBoostButton !== 'boolean') {
-    state.settings.showBoostButton = false;
+    state.settings.showBoostButton = true;
+  }
+  // Einmalige Migration: Der Blitz-Button war bis Version 5.5.2 standardmäßig
+  // AUS. Ab jetzt soll er für alle sichtbar sein — auch für Bestandsnutzer,
+  // die ihn nie manuell aktiviert haben (bei denen steht showBoostButton
+  // bereits als gültiger Boolean auf false, die obige Prüfung greift also
+  // NICHT). Der Flag boostDefaultMigratedV2 sorgt dafür, dass das nur EIN
+  // einziges Mal passiert — schaltet ein Nutzer den Button danach bewusst
+  // wieder aus, bleibt das bei künftigen Updates unangetastet.
+  if (!state.settings.boostDefaultMigratedV2) {
+    state.settings.showBoostButton = true;
+    state.settings.boostDefaultMigratedV2 = true;
   }
   if (typeof state.settings.showDailyMotivation !== 'boolean') {
     state.settings.showDailyMotivation = true;

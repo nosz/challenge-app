@@ -1099,7 +1099,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.5.3';
+  const APP_VERSION = '5.6.0';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1708,6 +1708,37 @@ try {
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  // Beschriftungen für die Schließen-Buttons im Motivations-Modal (Blitz-
+  // Button) und im täglichen Begrüßungs-Modal. Bewusst reiner Zufall ohne
+  // Wiederholungsschutz (siehe pickRandomCtaCloseLabel) — bei 20 Varianten
+  // fällt eine Wiederholung kaum auf, und für einen kurzen Button-Text lohnt
+  // sich kein zusätzlicher State.
+  // PL hat aktuell bewusst nur einen einzigen festen Eintrag (keine
+  // Übersetzung der 20 Varianten vorhanden) — das Array ist der einzige Ort,
+  // der dafür bei Bedarf später erweitert werden muss.
+  const CTA_CLOSE_LABELS = {
+    de: [
+      "Los geht's", "Auf geht's", "Ich starte jetzt", "Dranbleiben",
+      "Jetzt loslegen", "Ich bin bereit", "Ich zieh's durch", "Ich fange schon an",
+      "Es beginnt jetzt", "Genau jetzt", "Ich bin schon unterwegs", "Ich schaff das",
+      "Ich bin dabei", "Weiter geht's", "Und los", "Nächster Schritt",
+      "Es passiert bereits", "Ich spür's schon", "Ich bleib dran", "Der Moment ist da"
+    ],
+    en: [
+      "Let's go", "Off we go", "Starting now", "Stick with it",
+      "Time to begin", "I'm ready", "I'm seeing this through", "Already starting",
+      "It starts now", "Right now", "Already on my way", "I've got this",
+      "I'm in", "Onward", "And go", "Next step",
+      "It's already happening", "I can feel it already", "I'm staying with it", "The moment is here"
+    ],
+    pl: ["Do dzieła"]
+  };
+
+  function pickRandomCtaCloseLabel(lang) {
+    const list = CTA_CLOSE_LABELS[lang] || CTA_CLOSE_LABELS.de;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   const STRINGS = {
     de: {
       settings_btn: "Einstellungen", quotes_btn: "Sprüche", data_btn: "Daten",
@@ -1774,14 +1805,12 @@ try {
       settings_boost_label: "Motivations-Button an Challenges anzeigen",
       settings_boost_note: "Zeigt bei jeder laufenden Challenge einen Blitz-Button für einen spontanen Motivationsschub.",
       boost_btn_label: "Motivationsschub",
-      boost_modal_close: "Los geht's",
       settings_daily_motivation_label: "Täglichen Motivationsgruß anzeigen",
       settings_daily_motivation_note: "Begrüßt dich einmal am Tag beim Öffnen der App mit einem motivierenden Spruch.",
       daily_greeting_night: "Hallo", daily_greeting_night_personal: "Hallo, {name}",
       daily_greeting_morning: "Guten Morgen", daily_greeting_morning_personal: "Guten Morgen, {name}",
       daily_greeting_day: "Guten Tag", daily_greeting_day_personal: "Guten Tag, {name}",
       daily_greeting_evening: "Guten Abend", daily_greeting_evening_personal: "Guten Abend, {name}",
-      daily_motivation_close: "Los geht's",
       settings_fontsize_label: "Schriftgröße",
       settings_fontsize_current: "Aktuell: {px}px",
       fontsize_small: "Klein", fontsize_normal: "Normal", fontsize_large: "Groß",
@@ -1901,14 +1930,12 @@ try {
       settings_boost_label: "Show motivation button on challenges",
       settings_boost_note: "Shows a lightning button on every active challenge for a spontaneous motivation boost.",
       boost_btn_label: "Motivation boost",
-      boost_modal_close: "Let's go",
       settings_daily_motivation_label: "Show daily motivation greeting",
       settings_daily_motivation_note: "Greets you once a day when you open the app with a motivating message.",
       daily_greeting_night: "Hello", daily_greeting_night_personal: "Hello, {name}",
       daily_greeting_morning: "Good morning", daily_greeting_morning_personal: "Good morning, {name}",
       daily_greeting_day: "Good afternoon", daily_greeting_day_personal: "Good afternoon, {name}",
       daily_greeting_evening: "Good evening", daily_greeting_evening_personal: "Good evening, {name}",
-      daily_motivation_close: "Let's go",
       settings_fontsize_label: "Font size",
       settings_fontsize_current: "Current: {px}px",
       fontsize_small: "Small", fontsize_normal: "Normal", fontsize_large: "Large",
@@ -2028,7 +2055,6 @@ try {
       settings_boost_label: "Pokaż przycisk motywacji przy wyzwaniach",
       settings_boost_note: "Pokazuje przy każdym aktywnym wyzwaniu przycisk błyskawicy z nagłym zastrzykiem motywacji.",
       boost_btn_label: "Zastrzyk motywacji",
-      boost_modal_close: "Do dzieła",
       settings_fontsize_label: "Rozmiar czcionki",
       settings_fontsize_current: "Aktualnie: {px}px",
       fontsize_small: "Mały", fontsize_normal: "Normalny", fontsize_large: "Duży",
@@ -3233,7 +3259,7 @@ try {
           <img src="icon-192.png" alt="" class="welcome-icon">
           <div class="badge">${personalBadge(greetingKeys.generic, greetingKeys.personal)}</div>
           <p class="quote-text">${messageHtml}</p>
-          <button class="btn-primary" style="margin-top:0;" id="daily-motivation-close">${t('daily_motivation_close')}</button>
+          <button class="btn-primary" style="margin-top:0;" id="daily-motivation-close">${escapeHtml(pickRandomCtaCloseLabel(state.settings.lang))}</button>
         </div>
       </div>
     `);
@@ -3557,7 +3583,7 @@ try {
           <div class="boost-modal-icon">${BOOST_ICON_HTML}</div>
           <div class="badge">${personalBadge('boost_modal_badge', 'boost_modal_badge_personal')}</div>
           <p class="quote-text">${messageHtml}</p>
-          <button class="btn-primary" style="margin-top:0;" id="boost-close">${t('boost_modal_close')}</button>
+          <button class="btn-primary" style="margin-top:0;" id="boost-close">${escapeHtml(pickRandomCtaCloseLabel(state.settings.lang))}</button>
         </div>
       </div>
     `);

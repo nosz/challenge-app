@@ -1099,7 +1099,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.4.1';
+  const APP_VERSION = '5.5.2';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1112,7 +1112,8 @@ try {
     quotesByLang: 'motiv_quotesByLang',
     completionMessagesByLang: 'motiv_completionMessagesByLang',
     seededQuoteTexts: 'motiv_seededQuoteTexts',
-    settings: 'motiv_settings'
+    settings: 'motiv_settings',
+    dailyMotivationLast: 'motiv_dailyMotivationLast'
   };
 
   const AVAILABLE_LANGS = [
@@ -1624,6 +1625,89 @@ try {
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  // 32 Texte für den täglichen Motivationsgruß (einmal pro Tag beim
+  // manuellen Öffnen der App, siehe showDailyMotivationModal). Bewusst
+  // anders ausgerichtet als DEFAULT_BOOST_MESSAGES: nicht "jetzt sofort
+  // handeln trotz Unlust", sondern den Tag als Ganzes hypnotisch-motivierend
+  // begrüßen. Bleibt generisch auf "heute" / "diesen Tag" bezogen (nicht auf
+  // eine konkrete Challenge), damit die Meldung auch ohne aktive Challenges
+  // funktioniert. Gleiches {name}-Muster wie bei den anderen Pools.
+  const DEFAULT_DAILY_MOTIVATION_MESSAGES = {
+    de: [
+      "{name}, ein neuer Tag liegt vor dir – noch ganz unbeschrieben, bereit, mit genau den Dingen gefüllt zu werden, die dir wichtig sind.",
+      "{name}, noch bevor du heute den ersten Punkt abgehakt hast, ist längst etwas in dir in Bewegung – genau das, was dich heute tragen wird.",
+      "{name}, du musst noch nicht wissen, wie der ganze Tag läuft. Du musst nur wissen, dass der nächste Schritt schon in dir bereitliegt.",
+      "{name}, schön, dass du da bist. Irgendwo zwischen diesem Moment und dem, was du dir vorgenommen hast, liegt schon die Entscheidung, dranzubleiben.",
+      "{name}, dieser Tag gehört noch niemandem – du kannst ihn dir gleich jetzt zu einem guten Tag machen, einfach indem du anfängst.",
+      "{name}, während du diese Zeilen liest, richtet sich schon ein Teil von dir auf das aus, was heute zählt.",
+      "{name}, du weißt noch nicht, wie leicht sich der heutige Tag anfühlen wird – und das ist genau der beste Grund, gleich loszulegen.",
+      "{name}, stell dir kurz den Abend vor, an dem du zufrieden zurückblickst. Genau dorthin führt jeder kleine Schritt, den du heute gehst.",
+      "{name}, du brauchst heute keine perfekte Stimmung. Du brauchst nur den ersten Punkt auf deiner Liste – der Rest ergibt sich.",
+      "{name}, irgendwo in dir ist die Entscheidung für heute längst gefallen. Du musst sie nur noch leben.",
+      "{name}, jeder Morgen ist ein stiller Neustart – und dieser hier gehört ganz dir.",
+      "{name}, du hast schon so viele Tage gemeistert, an die du am Vorabend nicht geglaubt hättest. Heute wird einer mehr davon.",
+      "{name}, während vieles um dich herum gerade seinen gewohnten Lauf nimmt, kannst du innerlich schon wissen: heute ziehst du das durch.",
+      "{name}, du musst den ganzen Tag nicht auf einmal denken. Denk nur an das Nächste – alles andere kommt von selbst.",
+      "{name}, was auch immer gestern war – heute ist ein Tag, an dem du neu beginnen kannst, genau jetzt.",
+      "{name}, spür kurz hin, wie gut es sich anfühlen wird, heute Abend zu wissen: ich bin dran geblieben.",
+      "{name}, die besten Tage beginnen oft ganz unspektakulär – mit einem einzigen ersten Schritt, den du gleich gehen kannst.",
+      "{name}, du bist heute schon einen Schritt weiter als gestern – allein dadurch, dass du diese Zeilen liest und bereit bist.",
+      "{name}, dein heutiges Ich trägt schon die Kraft von jedem Tag, den du bisher durchgehalten hast.",
+      "{name}, du musst dich nicht bereit fühlen, um den Tag gut zu beginnen. Beginn – bereit fühlst du dich unterwegs.",
+      "{name}, irgendwann heute wirst du zurückblicken und froh sein, dass du jetzt, gleich zu Beginn, die Richtung gesetzt hast.",
+      "{name}, heute zählt nicht der perfekte Tag – heute zählt der Tag, an dem du dranbleibst.",
+      "{name}, noch während du diesen Moment kurz für dich nutzt, kann in dir schon die Klarheit wachsen, was heute wichtig ist.",
+      "{name}, du kennst das Gefühl schon, wenn ein Tag gut beginnt. Genau dieses Gefühl kannst du dir jetzt holen.",
+      "{name}, ganz gleich, wie der gestrige Tag war – dieser hier ist neu, unbeschrieben und ganz deiner.",
+      "{name}, du musst heute nicht alles schaffen. Du musst nur anfangen – und schon bist du weiter, als du am Morgen dachtest.",
+      "{name}, während dieser Tag noch jung ist, kannst du schon jetzt die Weichen für einen guten Abend stellen. ❤️",
+      "{name}, was du heute tust, muss nicht groß sein – es muss nur echt sein, und das bist du bereits.",
+      "{name}, dein zukünftiges Ich, das heute Abend zurückblickt, hofft gerade genau jetzt, dass du gut in diesen Tag startest.",
+      "{name}, jeder Tag, den du gut beginnst, macht den nächsten ein kleines bisschen leichter – das hast du schon oft gespürt.",
+      "{name}, dieser Tag hält schon die Möglichkeit für dich bereit, stolz auf dich zu sein. Du musst sie nur ergreifen. ❤️",
+      "{name}, schön, dass du gerade jetzt hier bist – und während du das liest, macht sich vielleicht schon ein Teil von dir bereit für das, was heute noch ansteht."
+    ],
+    en: [
+      "{name}, a new day lies ahead of you – still completely blank, ready to be filled with exactly the things that matter to you.",
+      "{name}, even before you've checked off your first task today, something in you is already moving – exactly what will carry you through today.",
+      "{name}, you don't need to know how the whole day will go yet. You just need to know the next step is already waiting inside you.",
+      "{name}, good to have you here. Somewhere between this moment and what you set out to do, the decision to keep going has already been made.",
+      "{name}, this day doesn't belong to anyone yet – you can make it a good one right now, simply by starting.",
+      "{name}, as you read these lines, part of you is already aligning with what matters today.",
+      "{name}, you don't know yet how easy today is going to feel – and that's exactly the best reason to get started.",
+      "{name}, picture the evening when you look back satisfied. Every small step you take today leads exactly there.",
+      "{name}, you don't need a perfect mood today. You just need the first item on your list – the rest follows.",
+      "{name}, somewhere inside you, today's decision has already been made. You just need to live it.",
+      "{name}, every morning is a quiet restart – and this one is entirely yours.",
+      "{name}, you've already mastered so many days you didn't believe in the night before. Today will be one more of those.",
+      "{name}, while things around you are still going about their usual rhythm, you can already know inside: today, you're following through.",
+      "{name}, you don't have to think about the whole day at once. Just think about what's next – everything else follows on its own.",
+      "{name}, whatever yesterday was – today is a day you can begin again, right now.",
+      "{name}, take a second to feel how good it'll be tonight, knowing: I kept going.",
+      "{name}, the best days often start quite unspectacularly – with one single first step you can take right now.",
+      "{name}, you're already one step ahead of yesterday – just by reading these lines and being ready.",
+      "{name}, today's version of you already carries the strength of every day you've pulled through so far.",
+      "{name}, you don't have to feel ready to start the day well. Start – you'll feel ready along the way.",
+      "{name}, at some point today you'll look back glad that you set the direction right now, right at the start.",
+      "{name}, today isn't about a perfect day – it's about a day you stick with it.",
+      "{name}, even while you're taking this moment for yourself, clarity about what matters today can already be growing in you.",
+      "{name}, you already know the feeling when a day starts well. You can reach for that exact feeling right now.",
+      "{name}, no matter how yesterday went – this day is new, blank, and entirely yours.",
+      "{name}, you don't need to get everything done today. You just need to start – and you're already further than you thought this morning.",
+      "{name}, while this day is still young, you can already set the course for a good evening. ❤️",
+      "{name}, what you do today doesn't have to be big – it just has to be real, and you already are.",
+      "{name}, your future self, looking back tonight, is hoping right now that you start this day well.",
+      "{name}, every day you start well makes the next one a little easier – you've felt that before.",
+      "{name}, this day already holds the chance for you to be proud of yourself. You just have to take it. ❤️",
+      "{name}, good to see you – and as you read this, part of you might already be getting ready for what's ahead today."
+    ]
+  };
+
+  function pickRandomDailyMotivationMessage(lang) {
+    const list = DEFAULT_DAILY_MOTIVATION_MESSAGES[lang] || DEFAULT_DAILY_MOTIVATION_MESSAGES.de;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   const STRINGS = {
     de: {
       settings_btn: "Einstellungen", quotes_btn: "Sprüche", data_btn: "Daten",
@@ -1691,6 +1775,13 @@ try {
       settings_boost_note: "Zeigt bei jeder laufenden Challenge einen Blitz-Button für einen spontanen Motivationsschub.",
       boost_btn_label: "Motivationsschub",
       boost_modal_close: "Los geht's",
+      settings_daily_motivation_label: "Täglichen Motivationsgruß anzeigen",
+      settings_daily_motivation_note: "Begrüßt dich einmal am Tag beim Öffnen der App mit einem motivierenden Spruch.",
+      daily_greeting_night: "Hallo", daily_greeting_night_personal: "Hallo, {name}",
+      daily_greeting_morning: "Guten Morgen", daily_greeting_morning_personal: "Guten Morgen, {name}",
+      daily_greeting_day: "Guten Tag", daily_greeting_day_personal: "Guten Tag, {name}",
+      daily_greeting_evening: "Guten Abend", daily_greeting_evening_personal: "Guten Abend, {name}",
+      daily_motivation_close: "Los geht's",
       settings_fontsize_label: "Schriftgröße",
       settings_fontsize_current: "Aktuell: {px}px",
       fontsize_small: "Klein", fontsize_normal: "Normal", fontsize_large: "Groß",
@@ -1811,6 +1902,13 @@ try {
       settings_boost_note: "Shows a lightning button on every active challenge for a spontaneous motivation boost.",
       boost_btn_label: "Motivation boost",
       boost_modal_close: "Let's go",
+      settings_daily_motivation_label: "Show daily motivation greeting",
+      settings_daily_motivation_note: "Greets you once a day when you open the app with a motivating message.",
+      daily_greeting_night: "Hello", daily_greeting_night_personal: "Hello, {name}",
+      daily_greeting_morning: "Good morning", daily_greeting_morning_personal: "Good morning, {name}",
+      daily_greeting_day: "Good afternoon", daily_greeting_day_personal: "Good afternoon, {name}",
+      daily_greeting_evening: "Good evening", daily_greeting_evening_personal: "Good evening, {name}",
+      daily_motivation_close: "Let's go",
       settings_fontsize_label: "Font size",
       settings_fontsize_current: "Current: {px}px",
       fontsize_small: "Small", fontsize_normal: "Normal", fontsize_large: "Large",
@@ -2002,7 +2100,7 @@ try {
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: false, customTheme: null, customThemeSaved: null })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: false, showDailyMotivation: true, customTheme: null, customThemeSaved: null })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -2026,6 +2124,9 @@ try {
   }
   if (typeof state.settings.showBoostButton !== 'boolean') {
     state.settings.showBoostButton = false;
+  }
+  if (typeof state.settings.showDailyMotivation !== 'boolean') {
+    state.settings.showDailyMotivation = true;
   }
 
   const LEGACY_FONT_SIZES = { small: 16, normal: 18, large: 21 };
@@ -3051,6 +3152,12 @@ try {
   }
 
   function showWelcomeModal() {
+    // Zählt den heutigen Tag als "Begrüßung schon gezeigt" — verhindert,
+    // dass am selben Tag zusätzlich noch der tägliche Motivationsgruß
+    // aufpoppt (siehe showDailyMotivationModal). Gilt auch, falls
+    // "Begrüßung beim Start" später in den Einstellungen wieder aktiviert
+    // wird und an einem Tag erneut erscheint.
+    markDailyMotivationShownToday();
     modalRoot.innerHTML = '';
     const overlay = el(`
       <div class="overlay">
@@ -3068,6 +3175,60 @@ try {
       persist();
     });
     modalRoot.appendChild(overlay);
+  }
+
+  // ---------- Täglicher Motivationsgruß ----------
+  // Einmal pro Kalendertag, beim ersten (manuellen) Öffnen der App. Nutzt
+  // einen eigenen, rohen localStorage-Key (nicht Teil von motiv_settings),
+  // da es sich um einen reinen "wurde heute schon gezeigt"-Merker handelt,
+  // keine Nutzereinstellung. Ein Tag gilt ebenso als "gezeigt", wenn
+  // stattdessen das Welcome-Modal erschien (siehe showWelcomeModal) — es
+  // sollen nie zwei Start-Modals am selben Tag hintereinander erscheinen.
+  function markDailyMotivationShownToday() {
+    try { localStorage.setItem(KEYS.dailyMotivationLast, todayStr()); } catch (e) { /* ignore */ }
+  }
+  function wasDailyMotivationShownToday() {
+    try { return localStorage.getItem(KEYS.dailyMotivationLast) === todayStr(); } catch (e) { return false; }
+  }
+
+  // Liefert je Tageszeit den passenden Begrüßungs-Schlüssel (Nacht/Morgen/
+  // Tag/Abend). Grenzen bewusst grob gehalten: 0–5 Uhr Nacht ("Hallo" statt
+  // "Guten Abend"/"Guten Morgen", da beides nachts unpassend wirkt), 6–10
+  // Uhr Morgen, 11–17 Uhr Tag, ab 18 Uhr Abend.
+  function dailyGreetingKeys() {
+    const hour = new Date().getHours();
+    if (hour < 6) return { generic: 'daily_greeting_night', personal: 'daily_greeting_night_personal' };
+    if (hour < 11) return { generic: 'daily_greeting_morning', personal: 'daily_greeting_morning_personal' };
+    if (hour < 18) return { generic: 'daily_greeting_day', personal: 'daily_greeting_day_personal' };
+    return { generic: 'daily_greeting_evening', personal: 'daily_greeting_evening_personal' };
+  }
+
+  function showDailyMotivationModal() {
+    const name = (state.settings.userName || '').trim();
+    const rawMessage = pickRandomDailyMotivationMessage(state.settings.lang);
+    const escaped = escapeHtml(rawMessage);
+    // Gleiches {name}-Muster wie showBoostModal/showChallengeCompleteModal.
+    const messageHtml = name
+      ? escaped.split('{name}').join(`<span class="name-highlight">${escapeHtml(name)}</span>`)
+      : (() => {
+          const cleaned = escaped.replace(/\{name\},\s*/g, '').replace(/\{name\}\s*/g, '');
+          return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+        })();
+    const greetingKeys = dailyGreetingKeys();
+    modalRoot.innerHTML = '';
+    const overlay = el(`
+      <div class="overlay">
+        <div class="modal quote-modal daily-motivation-modal">
+          <img src="icon-192.png" alt="" class="welcome-icon">
+          <div class="badge">${personalBadge(greetingKeys.generic, greetingKeys.personal)}</div>
+          <p class="quote-text">${messageHtml}</p>
+          <button class="btn-primary" style="margin-top:0;" id="daily-motivation-close">${t('daily_motivation_close')}</button>
+        </div>
+      </div>
+    `);
+    overlay.querySelector('#daily-motivation-close').addEventListener('click', () => modalRoot.innerHTML = '');
+    modalRoot.appendChild(overlay);
+    markDailyMotivationShownToday();
   }
 
   function historyDayStatusList(h) {
@@ -3573,6 +3734,15 @@ try {
         </span>
       </label>
       <div class="lang-note">${t('settings_boost_note')}</div>
+
+      <label class="toggle-row" for="s-daily-motivation-toggle">
+        <span class="toggle-row-text">${t('settings_daily_motivation_label')}</span>
+        <span class="switch">
+          <input type="checkbox" id="s-daily-motivation-toggle" ${state.settings.showDailyMotivation ? 'checked' : ''} />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="lang-note">${t('settings_daily_motivation_note')}</div>
     `;
 
     const messagesBody = `
@@ -3678,6 +3848,12 @@ try {
     const boostToggle = overlay.querySelector('#s-boost-toggle');
     if (boostToggle) boostToggle.addEventListener('change', (e) => {
       state.settings.showBoostButton = e.target.checked;
+      persist();
+    });
+
+    const dailyMotivationToggle = overlay.querySelector('#s-daily-motivation-toggle');
+    if (dailyMotivationToggle) dailyMotivationToggle.addEventListener('change', (e) => {
+      state.settings.showDailyMotivation = e.target.checked;
       persist();
     });
 
@@ -4018,7 +4194,14 @@ try {
   applyFontSize(state.settings.fontSize);
   applyBranding();
   render();
-  if (state.settings.showWelcomeOnStart) showWelcomeModal();
+  // Nie zwei Start-Modals hintereinander: Begrüßung hat Vorrang; nur wenn
+  // sie nicht erscheint UND der Tagesgruß noch nicht heute gezeigt wurde,
+  // kommt der tägliche Motivationsgruß.
+  if (state.settings.showWelcomeOnStart) {
+    showWelcomeModal();
+  } else if (state.settings.showDailyMotivation && !wasDailyMotivationShownToday()) {
+    showDailyMotivationModal();
+  }
 })();
 
 if ('serviceWorker' in navigator) {

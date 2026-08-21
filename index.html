@@ -1099,7 +1099,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.7.0';
+  const APP_VERSION = '5.7.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -4252,8 +4252,20 @@ if ('serviceWorker' in navigator) {
   // die Kontrolle, wird die Seite einmalig automatisch neu geladen, damit
   // garantiert die neueste Version angezeigt wird, statt dass man die App
   // manuell schließen und erneut öffnen muss.
+  //
+  // Wichtig: "controllerchange" feuert nicht nur bei einem echten Update,
+  // sondern auch beim ALLERERSTEN Seitenaufruf, weil der Service Worker in
+  // activate() self.clients.claim() aufruft und dabei die gerade ladende,
+  // bis dahin unkontrollierte Seite übernimmt. Ohne Schutz würde das einen
+  // sofortigen, unnötigen Reload auslösen — sichtbar als kurzes Flackern
+  // (z.B. das gerade geöffnete Willkommens-Modal scheint kurz zu
+  // verschwinden). Deshalb nur reloaden, wenn die Seite beim Laden bereits
+  // einen Controller hatte (= es gab schon eine aktive Version, jetzt kommt
+  // eine neue) — nicht beim erstmaligen Claim ohne Vorgänger.
+  const hadControllerAtLoad = !!navigator.serviceWorker.controller;
   let hasReloaded = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadControllerAtLoad) return;
     if (hasReloaded) return;
     hasReloaded = true;
     window.location.reload();

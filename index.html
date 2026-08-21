@@ -3251,12 +3251,6 @@ try {
   }
 
   function showWelcomeModal() {
-    // Zählt den heutigen Tag als "Begrüßung schon gezeigt" — verhindert,
-    // dass am selben Tag zusätzlich noch der tägliche Motivationsgruß
-    // aufpoppt (siehe showDailyMotivationModal). Gilt auch, falls
-    // "Begrüßung beim Start" später in den Einstellungen wieder aktiviert
-    // wird und an einem Tag erneut erscheint.
-    markDailyMotivationShownToday();
     modalRoot.innerHTML = '';
     const overlay = el(`
       <div class="overlay">
@@ -3272,6 +3266,14 @@ try {
       modalRoot.innerHTML = '';
       state.settings.showWelcomeOnStart = false;
       persist();
+      // Zählt den heutigen Tag als "Begrüßung schon gezeigt" — verhindert,
+      // dass am selben Tag zusätzlich noch der tägliche Motivationsgruß
+      // aufpoppt (siehe showDailyMotivationModal). Bewusst erst hier beim
+      // tatsächlichen Schließen gesetzt (nicht schon beim Anzeigen), damit
+      // ein Modal, das vor dem Schließen durch einen Reload verschwindet
+      // (siehe Service-Worker-Update-Handling unten), den Tagesgruß nicht
+      // "verbrennt", ohne dass der Nutzer ihn je gesehen hat.
+      markDailyMotivationShownToday();
     });
     modalRoot.appendChild(overlay);
   }
@@ -3325,9 +3327,15 @@ try {
         </div>
       </div>
     `);
-    overlay.querySelector('#daily-motivation-close').addEventListener('click', () => modalRoot.innerHTML = '');
+    overlay.querySelector('#daily-motivation-close').addEventListener('click', () => {
+      modalRoot.innerHTML = '';
+      // Erst beim tatsächlichen Schließen setzen, nicht schon beim Anzeigen
+      // (siehe Kommentar in showWelcomeModal) — sonst verliert der Nutzer
+      // den Tagesgruß unbemerkt, falls das Modal vorher durch einen
+      // Service-Worker-Update-Reload verschwindet.
+      markDailyMotivationShownToday();
+    });
     modalRoot.appendChild(overlay);
-    markDailyMotivationShownToday();
   }
 
   function historyDayStatusList(h) {
@@ -4334,11 +4342,41 @@ if ('serviceWorker' in navigator) {
   // eine neue) — nicht beim erstmaligen Claim ohne Vorgänger.
   const hadControllerAtLoad = !!navigator.serviceWorker.controller;
   let hasReloaded = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadControllerAtLoad) return;
+
+  // Reload nicht sofort ausführen, wenn gerade ein Start-Modal (Welcome
+  // oder Tagesgruß) oder irgendein anderes Modal offen ist (#modal-root
+  // nicht leer) — sonst reißt der Reload das Modal weg, bevor der Nutzer
+  // es überhaupt lesen konnte (wirkt wie "Begrüßung schließt sich von
+  // selbst" bzw. "Seite lädt zweimal"). Stattdessen wird gewartet, bis
+  // #modal-root wieder leer ist (Nutzer hat geschlossen), und erst dann
+  // neu geladen. Da die HTML-Seite ohnehin schon Network-first die
+  // neueste Version geladen hat (siehe service-worker.js), eilt der
+  // Reload nicht — es geht nur um Cache-Konsistenz der übrigen Assets.
+  function reloadNow() {
     if (hasReloaded) return;
     hasReloaded = true;
     window.location.reload();
+  }
+
+  function reloadWhenModalsClosed() {
+    const modalRootEl = document.getElementById('modal-root');
+    if (!modalRootEl || modalRootEl.children.length === 0) {
+      reloadNow();
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (modalRootEl.children.length === 0) {
+        observer.disconnect();
+        reloadNow();
+      }
+    });
+    observer.observe(modalRootEl, { childList: true });
+  }
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadControllerAtLoad) return;
+    if (hasReloaded) return;
+    reloadWhenModalsClosed();
   });
 }
 </script>

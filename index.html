@@ -998,6 +998,64 @@ try {
   .hidden { display: none !important; }
   .file-input-hidden { display: none; }
 
+  /* ---------- Zielbilder: Verwaltung in den Einstellungen ---------- */
+  .goal-images-manage { margin-top: 18px; }
+  .goal-images-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 10px; margin-top: 4px;
+  }
+  .goal-image-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .goal-image-thumb {
+    width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+    border-radius: 10px; border: 1px solid var(--border); display: block;
+  }
+  .goal-image-item .text-link-btn { font-size: 0.72rem; }
+
+  /* ---------- Zielbilder: Slideshow ---------- */
+  .goal-slideshow-overlay {
+    background: #fff; padding: 0; align-items: stretch; justify-content: stretch;
+  }
+  .goal-slideshow {
+    position: relative; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    animation: none;
+  }
+  .goal-slideshow-close {
+    position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px; z-index: 3;
+    background: rgba(255,255,255,0.12); color: #999999;
+  }
+  .goal-slideshow-stage {
+    position: relative; width: 100%; flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: pan-y;
+  }
+  .goal-slideshow-img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    animation: fadeSlideIn .25s ease;
+  }
+  .goal-slideshow-controls {
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    padding: 14px 0 max(14px, env(safe-area-inset-bottom));
+    width: 100%;
+  }
+  .goal-slideshow-arrow {
+    flex-shrink: 0;
+    width: 42px; height: 42px; border-radius: 50%; border: none;
+    background: rgba(0,0,0,0.06); color: #999999; font-size: 1.6rem; line-height: 1;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .goal-slideshow-arrow:active { transform: scale(0.92); }
+  .goal-slideshow-dots {
+    display: flex; gap: 8px; justify-content: center;
+  }
+  .goal-slideshow-dot {
+    width: 8px; height: 8px; border-radius: 50%; border: none;
+    background: rgba(0,0,0,0.18); padding: 0; cursor: pointer;
+  }
+  .goal-slideshow-dot.active { background: #999999; }
+
   .info-readonly-text { color: var(--text); line-height: 1.6; white-space: pre-line; margin: 0 0 16px; }
   .toggle-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -1105,6 +1163,9 @@ try {
       <a class="icon-only-btn" id="link-energietankstelle" href="https://nosz.github.io/energietankstelle/" target="energie" rel="noopener" title="Energietankstelle" aria-label="Energietankstelle">
         <img src="img/search-heart.svg" alt="">
       </a>
+      <button class="icon-only-btn hidden" id="btn-goal-images" title="Zielbilder" aria-label="Zielbilder">
+        <img src="img/images.svg" alt="">
+      </button>
       <button class="icon-only-btn" id="btn-settings" title="Einstellungen">
         <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -1132,7 +1193,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.7.2';
+  const APP_VERSION = '5.9.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1897,6 +1958,17 @@ try {
       overflow_notice_title: "Challenge zurückgesetzt",
       overflow_notice_text: "Die gespeicherte Challenge hatte eine ungültig hohe Anzahl an Tagen und wurde automatisch beendet. Challenges sind auf maximal {max} Tage begrenzt.",
       chunk_range: "Tag {start}–{end}",
+      settings_nav_goals: "Zielbilder",
+      goal_images_toggle_label: "Zielbilder aktivieren",
+      goal_images_toggle_note: "Zeigt einen zusätzlichen Button auf der Startseite, der deine Zielbilder als Diashow anzeigt.",
+      goal_images_upload_btn: "Bilder hinzufügen",
+      goal_images_count: "{count} von {max} Bildern",
+      goal_images_empty_note: "Noch keine Zielbilder hinzugefügt.",
+      goal_images_limit_note: "Maximal {max} Zielbilder möglich.",
+      goal_images_delete_btn: "Entfernen",
+      goal_images_btn_title: "Zielbilder",
+      goal_images_speed_label: "Geschwindigkeit des Bildwechsels",
+      goal_images_speed_seconds: "{s} Sekunden",
       version_label: "Version"
     },
     en: {
@@ -2023,6 +2095,17 @@ try {
       overflow_notice_title: "Challenge reset",
       overflow_notice_text: "The saved challenge had an invalid number of days and was automatically ended. Challenges are limited to {max} days.",
       chunk_range: "Day {start}–{end}",
+      settings_nav_goals: "Goal images",
+      goal_images_toggle_label: "Enable goal images",
+      goal_images_toggle_note: "Shows an extra button on the home screen that displays your goal images as a slideshow.",
+      goal_images_upload_btn: "Add images",
+      goal_images_count: "{count} of {max} images",
+      goal_images_empty_note: "No goal images added yet.",
+      goal_images_limit_note: "Up to {max} goal images.",
+      goal_images_delete_btn: "Remove",
+      goal_images_btn_title: "Goal images",
+      goal_images_speed_label: "Slide change speed",
+      goal_images_speed_seconds: "{s} seconds",
       version_label: "Version"
     },
     pl: {
@@ -2143,6 +2226,17 @@ try {
       overflow_notice_title: "Wyzwanie zresetowane",
       overflow_notice_text: "Zapisane wyzwanie miało nieprawidłową liczbę dni i zostało automatycznie zakończone. Wyzwania są ograniczone do {max} dni.",
       chunk_range: "Dzień {start}–{end}",
+      settings_nav_goals: "Zdjęcia celów",
+      goal_images_toggle_label: "Włącz zdjęcia celów",
+      goal_images_toggle_note: "Pokazuje dodatkowy przycisk na ekranie głównym, który wyświetla Twoje zdjęcia celów jako pokaz slajdów.",
+      goal_images_upload_btn: "Dodaj zdjęcia",
+      goal_images_count: "{count} z {max} zdjęć",
+      goal_images_empty_note: "Nie dodano jeszcze żadnych zdjęć celów.",
+      goal_images_limit_note: "Maksymalnie {max} zdjęć celów.",
+      goal_images_delete_btn: "Usuń",
+      goal_images_btn_title: "Zdjęcia celów",
+      goal_images_speed_label: "Szybkość zmiany zdjęć",
+      goal_images_speed_seconds: "{s} sekund",
       version_label: "Wersja"
     }
   };
@@ -2162,7 +2256,7 @@ try {
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, customTheme: null, customThemeSaved: null })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, customTheme: null, customThemeSaved: null, goalImagesEnabled: false, goalImages: [], goalImagesSlideSeconds: 4 })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -2200,6 +2294,20 @@ try {
   }
   if (typeof state.settings.showDailyMotivation !== 'boolean') {
     state.settings.showDailyMotivation = true;
+  }
+  if (typeof state.settings.goalImagesEnabled !== 'boolean') {
+    state.settings.goalImagesEnabled = false;
+  }
+  if (!Array.isArray(state.settings.goalImages)) {
+    state.settings.goalImages = [];
+  }
+  const GOAL_IMAGES_MAX = 9;
+  if (state.settings.goalImages.length > GOAL_IMAGES_MAX) {
+    state.settings.goalImages = state.settings.goalImages.slice(0, GOAL_IMAGES_MAX);
+  }
+  const GOAL_SLIDE_SECONDS_OPTIONS = [2, 3, 4, 5, 7, 10];
+  if (typeof state.settings.goalImagesSlideSeconds !== 'number' || GOAL_SLIDE_SECONDS_OPTIONS.indexOf(state.settings.goalImagesSlideSeconds) === -1) {
+    state.settings.goalImagesSlideSeconds = 4;
   }
 
   const LEGACY_FONT_SIZES = { small: 16, normal: 18, large: 21 };
@@ -2383,6 +2491,13 @@ try {
       energieLink.setAttribute('title', t('energie_btn'));
       energieLink.setAttribute('aria-label', t('energie_btn'));
     }
+    const goalImagesBtn = document.getElementById('btn-goal-images');
+    if (goalImagesBtn) {
+      goalImagesBtn.setAttribute('title', t('goal_images_btn_title'));
+      goalImagesBtn.setAttribute('aria-label', t('goal_images_btn_title'));
+      const shouldShow = state.settings.goalImagesEnabled && state.settings.goalImages && state.settings.goalImages.length > 0;
+      goalImagesBtn.classList.toggle('hidden', !shouldShow);
+    }
   }
 
   // ---------- Datumshilfen ----------
@@ -2496,6 +2611,38 @@ try {
   function el(html) { const tpl = document.createElement('template'); tpl.innerHTML = html.trim(); return tpl.content.firstElementChild; }
   function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function showError(box, msg) { box.textContent = msg; box.classList.remove('hidden'); }
+
+  // Verkleinert/komprimiert ein hochgeladenes Zielbild clientseitig (max.
+  // 1600px lange Kante, JPEG-Qualität 0.82), damit auch 7 Fotos zusammen mit
+  // den restlichen App-Daten sicher innerhalb des localStorage-Limits bleiben.
+  function resizeImageForGoalGallery(file, maxEdge = 1600, quality = 0.82) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxEdge || height > maxEdge) {
+            if (width >= height) { height = Math.round(height * (maxEdge / width)); width = maxEdge; }
+            else { width = Math.round(width * (maxEdge / height)); height = maxEdge; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          try {
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } catch (err) {
+            reject(err);
+          }
+        };
+        img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('Datei konnte nicht gelesen werden'));
+      reader.readAsDataURL(file);
+    });
+  }
 
   // Verkabelt ein Textfeld mit explizitem Speichern-Button (ersetzt Auto-Save
   // bei Fokusverlust). Der Button ist nur aktiv ("is-dirty"), solange sich der
@@ -3250,6 +3397,101 @@ try {
     modalRoot.appendChild(overlay);
   }
 
+  function showGoalImagesSlideshow() {
+    const images = state.settings.goalImages || [];
+    if (!images.length) return;
+    modalRoot.innerHTML = '';
+
+    const intervalMs = (state.settings.goalImagesSlideSeconds || 4) * 1000;
+    let index = 0;
+    let autoplayId = null;
+
+    const dotsHtml = images.map((_, i) => `<button type="button" class="goal-slideshow-dot ${i === 0 ? 'active' : ''}" data-idx="${i}" aria-label="${i + 1}"></button>`).join('');
+
+    const overlay = el(`
+      <div class="overlay goal-slideshow-overlay">
+        <div class="goal-slideshow">
+          <button type="button" class="icon-only-btn goal-slideshow-close" id="gs-close" title="${escapeHtml(t('settings_done'))}" aria-label="${escapeHtml(t('settings_done'))}">×</button>
+          <div class="goal-slideshow-stage" id="gs-stage">
+            <img src="${images[0]}" alt="" class="goal-slideshow-img" id="gs-img">
+          </div>
+          ${images.length > 1 ? `
+            <div class="goal-slideshow-controls">
+              <button type="button" class="goal-slideshow-arrow" id="gs-prev" aria-label="Zurück">‹</button>
+              <div class="goal-slideshow-dots" id="gs-dots">${dotsHtml}</div>
+              <button type="button" class="goal-slideshow-arrow" id="gs-next" aria-label="Weiter">›</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `);
+
+    const imgEl = overlay.querySelector('#gs-img');
+    const dotsEl = overlay.querySelector('#gs-dots');
+
+    function showIndex(i) {
+      index = (i + images.length) % images.length;
+      imgEl.src = images[index];
+      if (dotsEl) {
+        dotsEl.querySelectorAll('.goal-slideshow-dot').forEach((d, di) => d.classList.toggle('active', di === index));
+      }
+    }
+
+    function stopAutoplay() {
+      if (autoplayId) { clearInterval(autoplayId); autoplayId = null; }
+    }
+
+    function startAutoplay() {
+      if (images.length < 2) return;
+      stopAutoplay();
+      autoplayId = setInterval(() => showIndex(index + 1), intervalMs);
+    }
+
+    function manualNav(next) {
+      stopAutoplay();
+      showIndex(next);
+    }
+
+    overlay.querySelector('#gs-close').addEventListener('click', () => {
+      stopAutoplay();
+      modalRoot.innerHTML = '';
+    });
+
+    const prevBtn = overlay.querySelector('#gs-prev');
+    const nextBtn = overlay.querySelector('#gs-next');
+    if (prevBtn) prevBtn.addEventListener('click', () => manualNav(index - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => manualNav(index + 1));
+
+    if (dotsEl) {
+      dotsEl.querySelectorAll('.goal-slideshow-dot').forEach(dot => {
+        dot.addEventListener('click', () => manualNav(parseInt(dot.getAttribute('data-idx'), 10)));
+      });
+    }
+
+    // Wischen über dem Bild: eigenständige, lokale Touch-Erkennung (die
+    // globale Wisch-Navigation für Einstellungen/Startseite bleibt inaktiv,
+    // solange dieses Overlay offen ist).
+    const stage = overlay.querySelector('#gs-stage');
+    let touchStartX = null, touchStartY = null, touchStartTime = 0;
+    stage.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      touchStartX = touch.clientX; touchStartY = touch.clientY; touchStartTime = Date.now();
+    }, { passive: true });
+    stage.addEventListener('touchend', (e) => {
+      if (touchStartX === null || images.length < 2) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      const dt = Date.now() - touchStartTime;
+      touchStartX = null;
+      if (dt > 600 || Math.abs(dx) < 50 || Math.abs(dy) > 60) return;
+      manualNav(dx < 0 ? index + 1 : index - 1);
+    }, { passive: true });
+
+    modalRoot.appendChild(overlay);
+    startAutoplay();
+  }
+
   function showWelcomeModal() {
     modalRoot.innerHTML = '';
     const overlay = el(`
@@ -3662,7 +3904,7 @@ try {
     launchConfetti('small');
   }
 
-  let settingsExpanded = { general: true, theme: false, challenges: false, messages: false, data: false, info: false };
+  let settingsExpanded = { general: true, theme: false, challenges: false, messages: false, goals: false, data: false, info: false };
   // Ob der Editor für das "Eigene Farben"-Theme innerhalb der Farben-Sektion
   // aufgeklappt ist. Bleibt (wie settingsExpanded) über Re-Renders des
   // Panels hinweg erhalten, damit er beim Live-Anpassen der Farben nicht
@@ -3873,6 +4115,42 @@ try {
       </div>
     `;
 
+    // Zielbilder: Verwaltung (hinzufügen/löschen) ist unabhängig vom Toggle
+    // immer sichtbar, damit Nutzer:innen Bilder schon vorbereiten können,
+    // bevor sie den Startseiten-Button aktivieren.
+    const goalImagesList = state.settings.goalImages || [];
+    const goalImagesItemsHtml = goalImagesList.map((src, idx) => `
+      <div class="goal-image-item">
+        <img src="${src}" alt="" class="goal-image-thumb">
+        <button type="button" class="text-link-btn" data-action="delete-goal-image" data-idx="${idx}">${t('goal_images_delete_btn')}</button>
+      </div>
+    `).join('');
+    const goalImagesLimitReached = goalImagesList.length >= GOAL_IMAGES_MAX;
+    const goalImagesSpeedOptions = GOAL_SLIDE_SECONDS_OPTIONS.map(s =>
+      `<option value="${s}" ${state.settings.goalImagesSlideSeconds === s ? 'selected' : ''}>${escapeHtml(t('goal_images_speed_seconds', { s }))}</option>`
+    ).join('');
+
+    const goalsBody = `
+      <label class="toggle-row" for="s-goal-images-toggle">
+        <span class="toggle-row-text">${t('goal_images_toggle_label')}</span>
+        <span class="switch">
+          <input type="checkbox" id="s-goal-images-toggle" ${state.settings.goalImagesEnabled ? 'checked' : ''} />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="lang-note">${t('goal_images_toggle_note')}</div>
+
+      <label style="margin-top:16px;">${t('goal_images_speed_label')}</label>
+      <select id="s-goal-images-speed">${goalImagesSpeedOptions}</select>
+
+      <div class="goal-images-manage">
+        ${goalImagesList.length ? `<div class="goal-images-grid">${goalImagesItemsHtml}</div>` : `<p class="lang-note" style="margin-top:14px;">${t('goal_images_empty_note')}</p>`}
+        <div class="lang-note" style="margin-top:10px;">${t('goal_images_count', { count: goalImagesList.length, max: GOAL_IMAGES_MAX })}${goalImagesLimitReached ? ' · ' + t('goal_images_limit_note', { max: GOAL_IMAGES_MAX }) : ''}</div>
+        <button type="button" class="btn-secondary" id="s-goal-images-upload-btn" style="margin-top:10px;" ${goalImagesLimitReached ? 'disabled' : ''}>${t('goal_images_upload_btn')}</button>
+        <input type="file" id="s-goal-images-input" class="file-input-hidden" accept="image/*" multiple />
+      </div>
+    `;
+
     const infoBody = `
       <img src="icon-192.png" alt="" class="welcome-icon">
       <p class="info-readonly-text">${escapeHtml(t('welcome_text'))}</p>
@@ -3900,6 +4178,7 @@ try {
           ${sectionCard('theme', t('settings_nav_theme'), themeBody)}
           ${sectionCard('challenges', t('settings_nav_challenges'), challengesBody)}
           ${sectionCard('messages', t('quotes_title'), messagesBody)}
+          ${sectionCard('goals', t('settings_nav_goals'), goalsBody)}
           ${sectionCard('data', t('data_title'), dataBody)}
           ${sectionCard('info', t('settings_nav_info'), infoBody)}
 
@@ -3970,6 +4249,54 @@ try {
     if (dailyMotivationToggle) dailyMotivationToggle.addEventListener('change', (e) => {
       state.settings.showDailyMotivation = e.target.checked;
       persist();
+    });
+
+    const goalImagesToggle = overlay.querySelector('#s-goal-images-toggle');
+    if (goalImagesToggle) goalImagesToggle.addEventListener('change', (e) => {
+      state.settings.goalImagesEnabled = e.target.checked;
+      persist();
+      applyStaticStrings();
+    });
+
+    const goalImagesSpeedInput = overlay.querySelector('#s-goal-images-speed');
+    if (goalImagesSpeedInput) goalImagesSpeedInput.addEventListener('change', (e) => {
+      state.settings.goalImagesSlideSeconds = parseInt(e.target.value, 10);
+      persist();
+    });
+
+    const goalImagesUploadBtn = overlay.querySelector('#s-goal-images-upload-btn');
+    const goalImagesInput = overlay.querySelector('#s-goal-images-input');
+    if (goalImagesUploadBtn && goalImagesInput) {
+      goalImagesUploadBtn.addEventListener('click', () => goalImagesInput.click());
+      goalImagesInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (!files.length) return;
+        const remaining = GOAL_IMAGES_MAX - state.settings.goalImages.length;
+        if (remaining <= 0) return;
+        goalImagesUploadBtn.disabled = true;
+        for (const file of files.slice(0, remaining)) {
+          try {
+            const dataUrl = await resizeImageForGoalGallery(file);
+            state.settings.goalImages.push(dataUrl);
+          } catch (err) {
+            console.warn('Zielbild konnte nicht verarbeitet werden:', err);
+          }
+        }
+        persist();
+        applyStaticStrings();
+        showSettingsPanel();
+      });
+    }
+
+    overlay.querySelectorAll('[data-action="delete-goal-image"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        state.settings.goalImages.splice(idx, 1);
+        persist();
+        applyStaticStrings();
+        showSettingsPanel();
+      });
     });
 
     const fontInput = overlay.querySelector('#s-fontsize');
@@ -4225,6 +4552,21 @@ try {
           }
           state.completionMessagesByLang = data.completionMessagesByLang || state.completionMessagesByLang;
           state.settings = data.settings || state.settings;
+          // Absicherung wie beim normalen Boot: ältere Exporte (vor diesem
+          // Feature) haben kein goalImages-Feld, und ein manipulierter
+          // Export könnte mehr als das Limit enthalten.
+          if (typeof state.settings.goalImagesEnabled !== 'boolean') {
+            state.settings.goalImagesEnabled = false;
+          }
+          if (!Array.isArray(state.settings.goalImages)) {
+            state.settings.goalImages = [];
+          }
+          if (state.settings.goalImages.length > GOAL_IMAGES_MAX) {
+            state.settings.goalImages = state.settings.goalImages.slice(0, GOAL_IMAGES_MAX);
+          }
+          if (typeof state.settings.goalImagesSlideSeconds !== 'number' || GOAL_SLIDE_SECONDS_OPTIONS.indexOf(state.settings.goalImagesSlideSeconds) === -1) {
+            state.settings.goalImagesSlideSeconds = 4;
+          }
           setupMode = false;
           setupPrefill = null;
           persist();
@@ -4243,6 +4585,7 @@ try {
   });
 
   document.getElementById('btn-settings').addEventListener('click', () => showSettingsPanel());
+  document.getElementById('btn-goal-images').addEventListener('click', () => showGoalImagesSlideshow());
 
   // Wisch-Navigation: Egal ob nach links oder rechts gewischt wird - auf dem
   // Hauptbildschirm öffnen sich die Einstellungen, in den Einstellungen

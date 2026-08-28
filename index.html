@@ -208,13 +208,14 @@ try {
   header.top {
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: flex-start;
     margin-bottom: clamp(20px, 4vw, 30px);
     padding: 10px 14px;
     padding-top: max(10px, env(safe-area-inset-top));
     border: 1px solid var(--border);
     border-radius: 12px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    row-gap: 8px;
     gap: 10px;
     position: sticky;
     top: 0;
@@ -230,7 +231,8 @@ try {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 0;
+    flex: 1 1 160px;
+    min-width: 160px;
   }
   header.top .brand-icon {
     width: 32px;
@@ -238,14 +240,15 @@ try {
     border-radius: 8px;
     flex-shrink: 0;
   }
+  header.top .brand-text {
+    min-width: 0;
+  }
   header.top .brand {
     font-family: var(--font-display);
     font-size: clamp(1.35rem, 1.15rem + 1vw, 1.7rem);
     letter-spacing: 0.02em;
     color: var(--gold-soft);
-    min-width: 0;
     overflow-wrap: anywhere;
-    word-break: break-word;
     padding-top: 4px;
     line-height: 1.2;
   }
@@ -274,15 +277,28 @@ try {
   }
   .icon-btn:active { transform: scale(0.97); }
 
-  .toprow-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+  .toprow-actions {
+    display: grid;
+    grid-template-columns: repeat(2, var(--icon-btn-size, 42px));
+    gap: 6px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  /* Feste Positionen unabhängig von DOM-Reihenfolge/Sichtbarkeit:
+     Einstellungen immer oben rechts, Energie immer oben links,
+     Zielbilder (wenn sichtbar) unten rechts, direkt unter Einstellungen. */
+  #link-energietankstelle { grid-column: 1; grid-row: 1; }
+  #btn-settings { grid-column: 2; grid-row: 1; }
+  #btn-goal-images { grid-column: 2; grid-row: 2; }
 
   .icon-only-btn {
     background: var(--gold);
     border: none;
     color: #211505;
     border-radius: 50%;
-    width: 42px;
-    height: 42px;
+    width: var(--icon-btn-size, 42px);
+    height: var(--icon-btn-size, 42px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1042,9 +1058,13 @@ try {
   }
   .goal-slideshow-arrow {
     flex-shrink: 0;
-    width: 42px; height: 42px; border-radius: 50%; border: none;
-    background: rgba(0,0,0,0.06); color: #999999; font-size: 1.6rem; line-height: 1;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #f0f0f0; color: #666666; font-size: 1.6rem; line-height: 1;
     display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .goal-slideshow-arrow:hover { background: #e2e2e2; }
   }
   .goal-slideshow-arrow:active { transform: scale(0.92); }
   .goal-slideshow-dots {
@@ -1128,7 +1148,7 @@ try {
 
   /* --- Sehr schmale Displays --- */
   @media (max-width: 360px) {
-    .icon-only-btn { width: 38px; height: 38px; }
+    header.top { --icon-btn-size: 38px; }
     header.top .brand { font-size: 1.25rem; }
     .modal { padding: 20px 16px; }
   }
@@ -1154,7 +1174,7 @@ try {
   <header class="top">
     <div class="brand-group">
       <img src="icon-192.png" alt="" class="brand-icon">
-      <div>
+      <div class="brand-text">
         <div class="brand" id="brand-title">Challenge App</div>
         <div class="brand-date" id="brand-date"></div>
       </div>
@@ -1193,7 +1213,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.9.1';
+  const APP_VERSION = '5.10.4';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1902,10 +1922,6 @@ try {
       boost_btn_label: "Motivationsschub",
       settings_daily_motivation_label: "Täglichen Motivationsgruß anzeigen",
       settings_daily_motivation_note: "Begrüßt dich einmal am Tag beim Öffnen der App mit einem motivierenden Spruch.",
-      daily_greeting_night: "Hallo", daily_greeting_night_personal: "Hallo, {name}",
-      daily_greeting_morning: "Guten Morgen", daily_greeting_morning_personal: "Guten Morgen, {name}",
-      daily_greeting_day: "Guten Tag", daily_greeting_day_personal: "Guten Tag, {name}",
-      daily_greeting_evening: "Guten Abend", daily_greeting_evening_personal: "Guten Abend, {name}",
       settings_fontsize_label: "Schriftgröße",
       settings_fontsize_current: "Aktuell: {px}px",
       fontsize_small: "Klein", fontsize_normal: "Normal", fontsize_large: "Groß",
@@ -2039,10 +2055,6 @@ try {
       boost_btn_label: "Motivation boost",
       settings_daily_motivation_label: "Show daily motivation greeting",
       settings_daily_motivation_note: "Greets you once a day when you open the app with a motivating message.",
-      daily_greeting_night: "Hello", daily_greeting_night_personal: "Hello, {name}",
-      daily_greeting_morning: "Good morning", daily_greeting_morning_personal: "Good morning, {name}",
-      daily_greeting_day: "Good afternoon", daily_greeting_day_personal: "Good afternoon, {name}",
-      daily_greeting_evening: "Good evening", daily_greeting_evening_personal: "Good evening, {name}",
       settings_fontsize_label: "Font size",
       settings_fontsize_current: "Current: {px}px",
       fontsize_small: "Small", fontsize_normal: "Normal", fontsize_large: "Large",
@@ -3534,18 +3546,6 @@ try {
     try { return localStorage.getItem(KEYS.dailyMotivationLast) === todayStr(); } catch (e) { return false; }
   }
 
-  // Liefert je Tageszeit den passenden Begrüßungs-Schlüssel (Nacht/Morgen/
-  // Tag/Abend). Grenzen bewusst grob gehalten: 0–5 Uhr Nacht ("Hallo" statt
-  // "Guten Abend"/"Guten Morgen", da beides nachts unpassend wirkt), 6–10
-  // Uhr Morgen, 11–17 Uhr Tag, ab 18 Uhr Abend.
-  function dailyGreetingKeys() {
-    const hour = new Date().getHours();
-    if (hour < 6) return { generic: 'daily_greeting_night', personal: 'daily_greeting_night_personal' };
-    if (hour < 11) return { generic: 'daily_greeting_morning', personal: 'daily_greeting_morning_personal' };
-    if (hour < 18) return { generic: 'daily_greeting_day', personal: 'daily_greeting_day_personal' };
-    return { generic: 'daily_greeting_evening', personal: 'daily_greeting_evening_personal' };
-  }
-
   function showDailyMotivationModal() {
     const name = (state.settings.userName || '').trim();
     const rawMessage = pickRandomDailyMotivationMessage(state.settings.lang);
@@ -3557,13 +3557,12 @@ try {
           const cleaned = escaped.replace(/\{name\},\s*/g, '').replace(/\{name\}\s*/g, '');
           return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
         })();
-    const greetingKeys = dailyGreetingKeys();
     modalRoot.innerHTML = '';
     const overlay = el(`
       <div class="overlay">
         <div class="modal quote-modal daily-motivation-modal">
           <img src="icon-192.png" alt="" class="welcome-icon">
-          <div class="badge">${personalBadge(greetingKeys.generic, greetingKeys.personal)}</div>
+          <div class="badge">${escapeHtml(fmtDisplayFull(todayStr()))}</div>
           <p class="quote-text">${messageHtml}</p>
           <button class="btn-primary" style="margin-top:0;" id="daily-motivation-close">${escapeHtml(pickRandomCtaCloseLabel(state.settings.lang))}</button>
         </div>

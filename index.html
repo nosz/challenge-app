@@ -287,7 +287,7 @@ try {
   }
   /* Feste Positionen unabhängig von DOM-Reihenfolge/Sichtbarkeit:
      Einstellungen immer oben rechts, Energie immer oben links,
-     Zielbilder (wenn sichtbar) unten rechts, direkt unter Einstellungen. */
+     Motivationsbilder (wenn sichtbar) unten rechts, direkt unter Einstellungen. */
   #link-energietankstelle { grid-column: 1; grid-row: 1; }
   #btn-settings { grid-column: 2; grid-row: 1; }
   #btn-goal-images { grid-column: 2; grid-row: 2; }
@@ -1014,7 +1014,7 @@ try {
   .hidden { display: none !important; }
   .file-input-hidden { display: none; }
 
-  /* ---------- Zielbilder: Verwaltung in den Einstellungen ---------- */
+  /* ---------- Motivationsbilder: Verwaltung in den Einstellungen ---------- */
   .goal-images-manage { margin-top: 18px; }
   .goal-images-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
@@ -1029,7 +1029,7 @@ try {
   }
   .goal-image-item .text-link-btn { font-size: 0.72rem; }
 
-  /* ---------- Zielbilder: Slideshow ---------- */
+  /* ---------- Motivationsbilder: Slideshow ---------- */
   .goal-slideshow-overlay {
     background: #fff; padding: 0; align-items: stretch; justify-content: stretch;
   }
@@ -1183,7 +1183,7 @@ try {
       <a class="icon-only-btn" id="link-energietankstelle" href="https://nosz.github.io/energietankstelle/" target="energie" rel="noopener" title="Energietankstelle" aria-label="Energietankstelle">
         <img src="img/search-heart.svg" alt="">
       </a>
-      <button class="icon-only-btn hidden" id="btn-goal-images" title="Zielbilder" aria-label="Zielbilder">
+      <button class="icon-only-btn hidden" id="btn-goal-images" title="Motivationsbilder" aria-label="Motivationsbilder">
         <img src="img/images.svg" alt="">
       </button>
       <button class="icon-only-btn" id="btn-settings" title="Einstellungen">
@@ -1213,7 +1213,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.10.4';
+  const APP_VERSION = '5.10.5';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1974,15 +1974,15 @@ try {
       overflow_notice_title: "Challenge zurückgesetzt",
       overflow_notice_text: "Die gespeicherte Challenge hatte eine ungültig hohe Anzahl an Tagen und wurde automatisch beendet. Challenges sind auf maximal {max} Tage begrenzt.",
       chunk_range: "Tag {start}–{end}",
-      settings_nav_goals: "Zielbilder",
-      goal_images_toggle_label: "Zielbilder aktivieren",
-      goal_images_toggle_note: "Zeigt einen zusätzlichen Button auf der Startseite, der deine Zielbilder als Diashow anzeigt.",
+      settings_nav_goals: "Motivationsbilder",
+      goal_images_toggle_label: "Motivationsbilder aktivieren",
+      goal_images_toggle_note: "Deine Motivationsbilder als Diashow – ein Blick auf das, was dir am Herzen liegt und dich antreibt.",
       goal_images_upload_btn: "Bilder hinzufügen",
       goal_images_count: "{count} von {max} Bildern",
-      goal_images_empty_note: "Noch keine Zielbilder hinzugefügt.",
-      goal_images_limit_note: "Maximal {max} Zielbilder möglich.",
+      goal_images_empty_note: "Noch keine Motivationsbilder hinzugefügt.",
+      goal_images_limit_note: "Maximal {max} Motivationsbilder möglich.",
       goal_images_delete_btn: "Entfernen",
-      goal_images_btn_title: "Zielbilder",
+      goal_images_btn_title: "Motivationsbilder",
       goal_images_speed_label: "Geschwindigkeit des Bildwechsels",
       goal_images_speed_seconds: "{s} Sekunden",
       version_label: "Version"
@@ -2107,15 +2107,15 @@ try {
       overflow_notice_title: "Challenge reset",
       overflow_notice_text: "The saved challenge had an invalid number of days and was automatically ended. Challenges are limited to {max} days.",
       chunk_range: "Day {start}–{end}",
-      settings_nav_goals: "Goal images",
-      goal_images_toggle_label: "Enable goal images",
-      goal_images_toggle_note: "Shows an extra button on the home screen that displays your goal images as a slideshow.",
+      settings_nav_goals: "Motivation images",
+      goal_images_toggle_label: "Enable motivation images",
+      goal_images_toggle_note: "Your motivation images as a slideshow – a glance at what's close to your heart and drives you forward.",
       goal_images_upload_btn: "Add images",
       goal_images_count: "{count} of {max} images",
-      goal_images_empty_note: "No goal images added yet.",
-      goal_images_limit_note: "Up to {max} goal images.",
+      goal_images_empty_note: "No motivation images added yet.",
+      goal_images_limit_note: "Up to {max} motivation images.",
       goal_images_delete_btn: "Remove",
-      goal_images_btn_title: "Goal images",
+      goal_images_btn_title: "Motivation images",
       goal_images_speed_label: "Slide change speed",
       goal_images_speed_seconds: "{s} seconds",
       version_label: "Version"
@@ -2238,15 +2238,15 @@ try {
       overflow_notice_title: "Wyzwanie zresetowane",
       overflow_notice_text: "Zapisane wyzwanie miało nieprawidłową liczbę dni i zostało automatycznie zakończone. Wyzwania są ograniczone do {max} dni.",
       chunk_range: "Dzień {start}–{end}",
-      settings_nav_goals: "Zdjęcia celów",
-      goal_images_toggle_label: "Włącz zdjęcia celów",
-      goal_images_toggle_note: "Pokazuje dodatkowy przycisk na ekranie głównym, który wyświetla Twoje zdjęcia celów jako pokaz slajdów.",
+      settings_nav_goals: "Zdjęcia motywacyjne",
+      goal_images_toggle_label: "Włącz zdjęcia motywacyjne",
+      goal_images_toggle_note: "Twoje zdjęcia motywacyjne jako pokaz slajdów – spojrzenie na to, co bliskie twojemu sercu i cię napędza.",
       goal_images_upload_btn: "Dodaj zdjęcia",
       goal_images_count: "{count} z {max} zdjęć",
-      goal_images_empty_note: "Nie dodano jeszcze żadnych zdjęć celów.",
-      goal_images_limit_note: "Maksymalnie {max} zdjęć celów.",
+      goal_images_empty_note: "Nie dodano jeszcze żadnych zdjęć motywacyjnych.",
+      goal_images_limit_note: "Maksymalnie {max} zdjęć motywacyjnych.",
       goal_images_delete_btn: "Usuń",
-      goal_images_btn_title: "Zdjęcia celów",
+      goal_images_btn_title: "Zdjęcia motywacyjne",
       goal_images_speed_label: "Szybkość zmiany zdjęć",
       goal_images_speed_seconds: "{s} sekund",
       version_label: "Wersja"
@@ -2624,7 +2624,7 @@ try {
   function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function showError(box, msg) { box.textContent = msg; box.classList.remove('hidden'); }
 
-  // Verkleinert/komprimiert ein hochgeladenes Zielbild clientseitig (max.
+  // Verkleinert/komprimiert ein hochgeladenes Motivationsbild clientseitig (max.
   // 1600px lange Kante, JPEG-Qualität 0.82), damit auch 7 Fotos zusammen mit
   // den restlichen App-Daten sicher innerhalb des localStorage-Limits bleiben.
   function resizeImageForGoalGallery(file, maxEdge = 1600, quality = 0.82) {
@@ -4114,7 +4114,7 @@ try {
       </div>
     `;
 
-    // Zielbilder: Verwaltung (hinzufügen/löschen) ist unabhängig vom Toggle
+    // Motivationsbilder: Verwaltung (hinzufügen/löschen) ist unabhängig vom Toggle
     // immer sichtbar, damit Nutzer:innen Bilder schon vorbereiten können,
     // bevor sie den Startseiten-Button aktivieren.
     const goalImagesList = state.settings.goalImages || [];
@@ -4279,7 +4279,7 @@ try {
             const dataUrl = await resizeImageForGoalGallery(file);
             state.settings.goalImages.push(dataUrl);
           } catch (err) {
-            console.warn('Zielbild konnte nicht verarbeitet werden:', err);
+            console.warn('Motivationsbild konnte nicht verarbeitet werden:', err);
           }
         }
         persist();

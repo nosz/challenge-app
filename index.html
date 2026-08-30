@@ -435,19 +435,22 @@ try {
   .field-save-row input { flex: 1; min-width: 0; }
   .field-save-btn {
     flex-shrink: 0;
-    width: 44px;
     height: 44px;
+    min-width: 44px;
+    padding: 0 16px;
     border-radius: 8px;
     border: 1px solid var(--border);
     background: var(--ink-2);
     color: var(--text-faint);
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 0.95rem;
+    font-weight: 700;
     line-height: 1;
+    white-space: nowrap;
     cursor: default;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform 0.15s ease;
   }
   .field-save-btn.is-dirty {
@@ -1213,7 +1216,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.10.5';
+  const APP_VERSION = '5.10.10';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1976,7 +1979,7 @@ try {
       chunk_range: "Tag {start}–{end}",
       settings_nav_goals: "Motivationsbilder",
       goal_images_toggle_label: "Motivationsbilder aktivieren",
-      goal_images_toggle_note: "Deine Motivationsbilder als Diashow – ein Blick auf das, was dir am Herzen liegt und dich antreibt.",
+      goal_images_toggle_note: "Aktiviert einen Button auf der Startseite mit deinen Motivationsbildern als Diashow – ein Blick auf das, was dir am Herzen liegt und dich antreibt.",
       goal_images_upload_btn: "Bilder hinzufügen",
       goal_images_count: "{count} von {max} Bildern",
       goal_images_empty_note: "Noch keine Motivationsbilder hinzugefügt.",
@@ -1985,6 +1988,7 @@ try {
       goal_images_btn_title: "Motivationsbilder",
       goal_images_speed_label: "Geschwindigkeit des Bildwechsels",
       goal_images_speed_seconds: "{s} Sekunden",
+      goal_images_no_images_warning: "Lade mindestens ein Bild hoch, damit der Button auf der Startseite erscheint.",
       version_label: "Version"
     },
     en: {
@@ -2109,7 +2113,7 @@ try {
       chunk_range: "Day {start}–{end}",
       settings_nav_goals: "Motivation images",
       goal_images_toggle_label: "Enable motivation images",
-      goal_images_toggle_note: "Your motivation images as a slideshow – a glance at what's close to your heart and drives you forward.",
+      goal_images_toggle_note: "Enables a button on the home screen with your motivation images as a slideshow – a glance at what's close to your heart and drives you forward.",
       goal_images_upload_btn: "Add images",
       goal_images_count: "{count} of {max} images",
       goal_images_empty_note: "No motivation images added yet.",
@@ -2118,6 +2122,7 @@ try {
       goal_images_btn_title: "Motivation images",
       goal_images_speed_label: "Slide change speed",
       goal_images_speed_seconds: "{s} seconds",
+      goal_images_no_images_warning: "Upload at least one image so the button appears on the home screen.",
       version_label: "Version"
     },
     pl: {
@@ -2240,7 +2245,7 @@ try {
       chunk_range: "Dzień {start}–{end}",
       settings_nav_goals: "Zdjęcia motywacyjne",
       goal_images_toggle_label: "Włącz zdjęcia motywacyjne",
-      goal_images_toggle_note: "Twoje zdjęcia motywacyjne jako pokaz slajdów – spojrzenie na to, co bliskie twojemu sercu i cię napędza.",
+      goal_images_toggle_note: "Włącza przycisk na ekranie głównym z Twoimi zdjęciami motywacyjnymi jako pokazem slajdów – spojrzenie na to, co bliskie twojemu sercu i cię napędza.",
       goal_images_upload_btn: "Dodaj zdjęcia",
       goal_images_count: "{count} z {max} zdjęć",
       goal_images_empty_note: "Nie dodano jeszcze żadnych zdjęć motywacyjnych.",
@@ -2249,6 +2254,7 @@ try {
       goal_images_btn_title: "Zdjęcia motywacyjne",
       goal_images_speed_label: "Szybkość zmiany zdjęć",
       goal_images_speed_seconds: "{s} sekund",
+      goal_images_no_images_warning: "Dodaj co najmniej jedno zdjęcie, aby przycisk pojawił się na ekranie głównym.",
       version_label: "Wersja"
     }
   };
@@ -3980,13 +3986,13 @@ try {
       <label>${t('settings_appname_label')}</label>
       <div class="field-save-row">
         <input type="text" id="s-appname" value="${escapeHtml(state.settings.appName || 'Challenge')}" />
-        <button type="button" class="field-save-btn" id="s-appname-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">✓</button>
+        <button type="button" class="field-save-btn" id="s-appname-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">${escapeHtml(t('field_save_label'))}</button>
       </div>
 
       <label>${t('settings_username_label')}</label>
       <div class="field-save-row">
         <input type="text" id="s-username" placeholder="${escapeHtml(t('settings_username_placeholder'))}" value="${escapeHtml(state.settings.userName || '')}" />
-        <button type="button" class="field-save-btn" id="s-username-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">✓</button>
+        <button type="button" class="field-save-btn" id="s-username-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">${escapeHtml(t('field_save_label'))}</button>
       </div>
       <div class="lang-note">${t('settings_username_note')}</div>
 
@@ -4138,6 +4144,7 @@ try {
         </span>
       </label>
       <div class="lang-note">${t('goal_images_toggle_note')}</div>
+      ${(state.settings.goalImagesEnabled && goalImagesList.length === 0) ? `<div class="lang-note" style="color:var(--rust); margin-top:6px;">${t('goal_images_no_images_warning')}</div>` : ''}
 
       <label style="margin-top:16px;">${t('goal_images_speed_label')}</label>
       <select id="s-goal-images-speed">${goalImagesSpeedOptions}</select>
@@ -4174,10 +4181,10 @@ try {
           </div>
 
           ${sectionCard('general', t('settings_nav_general'), generalBody)}
+          ${sectionCard('goals', t('settings_nav_goals'), goalsBody)}
+          ${sectionCard('messages', t('quotes_title'), messagesBody)}
           ${sectionCard('theme', t('settings_nav_theme'), themeBody)}
           ${sectionCard('challenges', t('settings_nav_challenges'), challengesBody)}
-          ${sectionCard('messages', t('quotes_title'), messagesBody)}
-          ${sectionCard('goals', t('settings_nav_goals'), goalsBody)}
           ${sectionCard('data', t('data_title'), dataBody)}
           ${sectionCard('info', t('settings_nav_info'), infoBody)}
 
@@ -4255,6 +4262,7 @@ try {
       state.settings.goalImagesEnabled = e.target.checked;
       persist();
       applyStaticStrings();
+      showSettingsPanel();
     });
 
     const goalImagesSpeedInput = overlay.querySelector('#s-goal-images-speed');

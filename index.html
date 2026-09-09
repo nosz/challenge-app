@@ -797,6 +797,34 @@ try {
     .add-challenge-card:hover .add-challenge-icon { transform: rotate(90deg); }
   }
 
+  .template-category { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+  .template-category-toggle {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    background: none; border: none; cursor: pointer; text-align: left; color: var(--text);
+    font-family: var(--font-ui); font-size: 0.94rem; font-weight: 700;
+  }
+  .template-category-toggle .template-category-icon {
+    width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%;
+    background: var(--gold); color: #211505; display: flex; align-items: center; justify-content: center;
+  }
+  .template-category-toggle .template-category-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
+  .template-category-toggle .chevron { margin-left: auto; transition: transform var(--transition-fast); flex-shrink: 0; }
+  .template-category-toggle .chevron svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+  .template-category.open .template-category-toggle .chevron { transform: rotate(180deg); }
+  .template-category-body { padding: 0 14px 14px; }
+  .template-item {
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 10px;
+  }
+  .template-item:first-child { margin-top: 0; }
+  .template-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .template-item-title { font-weight: 700; font-size: 0.92rem; }
+  .template-item-days { color: var(--gold-soft); font-size: 0.76rem; font-weight: 700; white-space: nowrap; }
+  .template-item-desc { color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; line-height: 1.4; }
+  .template-item-tasks { list-style: none; padding: 0; margin: 8px 0 0; }
+  .template-item-tasks li { color: var(--text-faint); font-size: 0.78rem; padding-left: 14px; position: relative; margin-top: 2px; }
+  .template-item-tasks li::before { content: "·"; position: absolute; left: 2px; }
+  .template-item-use-btn { margin-top: 10px; width: 100%; }
+
   .max-note {
     text-align: center; color: var(--text-faint); font-size: 0.8rem;
     padding: 10px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 10px;
@@ -1216,7 +1244,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.10.16';
+  const APP_VERSION = '5.11.2';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1856,6 +1884,71 @@ try {
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  // ---------- Challenge-Vorlagen ----------
+  // Reihenfolge der Kategorien in der Vorlagen-Übersicht und den Einstellungen.
+  const TEMPLATE_CATEGORY_ORDER = ['health', 'relationships', 'finance', 'partnership'];
+
+  // Kleine Kategorie-Icons im Stil der übrigen App-Icons (Stroke, currentColor).
+  const TEMPLATE_CATEGORY_ICONS = {
+    health: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 12h4l2 6 4-14 2 8h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    relationships: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 20c0-3 2.5-5 6-5s6 2 6 5M12 20c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    finance: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" stroke-width="2"/><path d="M12 7.5v9M14.5 9.7c0-1-1-1.7-2.5-1.7s-2.5.8-2.5 1.8.9 1.5 2.5 1.9c1.6.4 2.5 1 2.5 2s-1 1.8-2.5 1.8-2.5-.7-2.5-1.7" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    partnership: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 20.5s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7.3 4.5 4.5 0 0 1 19.5 10.5c0 5.4-7.5 10-7.5 10Z" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 10.2h1.6l1-1.7 1.6 3.4 1-1.7h1.7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  // Vorlagen aktuell nur auf Deutsch und Englisch gepflegt (t()/CHALLENGE_TEMPLATES
+  // fallen für alle anderen Sprachen auf Englisch zurück, siehe getTemplatesForLang()).
+  const CHALLENGE_TEMPLATES = {
+    de: {
+      health: [
+        { id: 'health-10', days: 10, title: 'Frischer Start', desc: 'Ein kurzer, knackiger Kickstart mit einfachen Gewohnheiten, die sofort spürbar sind.', tasks: ['Ich bewege meinen Körper heute mindestens 15 Minuten.', 'Ich trinke heute 2 Liter Wasser.', 'Ich schaue heute kein Fernsehen.'] },
+        { id: 'health-21', days: 21, title: 'Bunter Teller, gute Laune', desc: 'Drei Wochen mehr Farbe, Frische und Genuss auf den Teller bringen – ganz ohne Verzichtsgefühl.', tasks: ['Ich packe heute zu jeder Mahlzeit eine Portion Gemüse oder Obst dazu.', 'Ich plane meine Mahlzeiten heute bewusst, statt spontan zu Fast Food zu greifen.'] },
+        { id: 'health-30', days: 30, title: 'Erholt aufwachen', desc: 'Einen Monat lang eine Abendroutine aufbauen, die dir erholsamen Schlaf und mehr Energie am Tag schenkt.', tasks: ['Ich liege heute spätestens um 23 Uhr im Bett.', 'Ich schalte heute 30 Minuten vor dem Einschlafen alle Bildschirme aus.', 'Ich strecke und dehne mich heute morgens für 5 Minuten.'] }
+      ],
+      relationships: [
+        { id: 'relationships-10', days: 10, title: 'Ein Lachen ins Gesicht zaubern', desc: 'Zehn Tage lang mit einer einzigen, wirkungsvollen Geste jeden Tag Nähe schaffen – zu anderen und zu dir selbst.', tasks: ['Ich zaubere heute mindestens 2 Menschen ein Lächeln ins Gesicht. Einer davon bin ich.'] },
+        { id: 'relationships-21', days: 21, title: 'Bei mir ankommen', desc: 'Drei Wochen, um wieder mehr bei dir selbst zu sein – mit kleinen Momenten der Achtsamkeit im Alltag.', tasks: ['Ich schreibe heute 5 Minuten auf, wie es mir wirklich geht.', 'Ich benenne heute eine Sache, für die ich dankbar bin.'] },
+        { id: 'relationships-30', days: 30, title: 'Näher dran', desc: 'Einen Monat Stück für Stück eine tiefere Verbindung zu den Menschen aufbauen, die dir wichtig sind.', tasks: ['Ich schreibe heute einer Person eine ehrliche, persönliche Nachricht.', 'Ich höre heute mindestens einem Menschen ohne Ablenkung wirklich zu.'] }
+      ],
+      finance: [
+        { id: 'finance-10', days: 10, title: 'Geld-Detektiv', desc: 'Zehn Tage lang jede Ausgabe unter die Lupe nehmen – für einen glasklaren Blick auf deine Finanzen.', tasks: ['Ich notiere mir heute jede einzige Ausgabe, die ich mache.', 'Ich kaufe heute nichts Spontanes über 20€.'] },
+        { id: 'finance-21', days: 21, title: '5-Euro-Challenge', desc: 'Drei Wochen täglich ein kleines Sümmchen zurücklegen und spüren, wie schnell sich das summiert.', tasks: ['Ich lege heute mindestens 5€ zur Seite.', 'Ich frage mich heute vor jedem Kauf: Brauche ich das wirklich?'] },
+        { id: 'finance-30', days: 30, title: 'Finanziell frei werden', desc: 'Einen Monat dein Geld-Mindset und deine Gewohnheiten so verändern, dass finanzielle Freiheit greifbar wird.', tasks: ['Ich halte mich heute an mein Tagesbudget.', 'Ich werfe heute einen bewussten Blick auf meinen Kontostand.'] }
+      ],
+      partnership: [
+        { id: 'partnership-10', days: 10, title: 'Funken neu entfachen', desc: 'Kleine, tägliche Gesten, die eurer Beziehung in zehn Tagen wieder mehr Prickeln geben.', tasks: ['Ich mache meinem Partner/meiner Partnerin heute ein ehrliches, unerwartetes Kompliment.', 'Ich schenke ihm/ihr heute 10 Minuten ungeteilte Aufmerksamkeit – ohne Handy.'] },
+        { id: 'partnership-21', days: 21, title: 'Wir-Zeit', desc: 'Drei Wochen, in denen ihr bewusst gemeinsame Momente und echte Gespräche in euren Alltag holt.', tasks: ['Ich zeige meinem Partner/meiner Partnerin heute eine kleine liebevolle Aufmerksamkeit.', 'Ich spreche heute offen über einen Wunsch oder ein Bedürfnis von mir.'] },
+        { id: 'partnership-30', days: 30, title: 'Tief verbunden', desc: 'Einen Monat Vertrauen, Nähe und Kommunikation als Paar auf ein neues Level heben.', tasks: ['Ich höre meinem Partner/meiner Partnerin heute wirklich aktiv zu, ohne zu unterbrechen.', 'Ich spreche eine Unstimmigkeit heute direkt an, statt sie aufzuschieben.'] }
+      ]
+    },
+    en: {
+      health: [
+        { id: 'health-10', days: 10, title: 'Fresh Start', desc: 'A short, punchy kickstart with simple habits that make a difference right away.', tasks: ['I move my body for at least 15 minutes today.', 'I drink 2 liters of water today.', 'I watch no TV today.'] },
+        { id: 'health-21', days: 21, title: 'Colorful Plate, Good Mood', desc: 'Three weeks of adding more color, freshness, and joy to your plate – without any sense of restriction.', tasks: ['I add a serving of vegetables or fruit to every meal today.', 'I plan my meals mindfully today instead of grabbing fast food on the go.'] },
+        { id: 'health-30', days: 30, title: 'Waking Up Refreshed', desc: 'A month of building an evening routine that gives you restful sleep and more energy during the day.', tasks: ["I'm in bed by 11pm today.", 'I switch off all screens 30 minutes before sleep today.', 'I stretch for 5 minutes this morning.'] }
+      ],
+      relationships: [
+        { id: 'relationships-10', days: 10, title: "Put a Smile on Someone's Face", desc: 'Ten days, one simple but powerful gesture, creating connection every single day – with others and with yourself.', tasks: ["Today I put a smile on at least 2 people's faces. One of them is me."] },
+        { id: 'relationships-21', days: 21, title: 'Arriving at Myself', desc: 'Three weeks of coming back to yourself – with small moments of mindfulness woven into everyday life.', tasks: ["I write for 5 minutes today about how I'm really doing.", "I name one thing I'm grateful for today."] },
+        { id: 'relationships-30', days: 30, title: 'Growing Closer', desc: 'A month of building deeper connection, step by step, with the people who matter to you.', tasks: ['I write an honest, personal message to someone today.', 'I truly listen to at least one person today, without distraction.'] }
+      ],
+      finance: [
+        { id: 'finance-10', days: 10, title: 'Money Detective', desc: 'Ten days of tracking every expense under a magnifying glass – for a crystal-clear view of your finances.', tasks: ['I write down every single expense I make today.', "I don't make any spontaneous purchase over €20 today."] },
+        { id: 'finance-21', days: 21, title: '€5 Challenge', desc: 'Three weeks of setting aside a small amount every day – and feeling how quickly it adds up.', tasks: ['I set aside at least €5 today.', 'Before every purchase today, I ask myself: Do I really need this?'] },
+        { id: 'finance-30', days: 30, title: 'Becoming Financially Free', desc: 'A month of shifting your money mindset and habits so financial freedom feels within reach.', tasks: ['I stick to my daily budget today.', 'I take a conscious look at my account balance today.'] }
+      ],
+      partnership: [
+        { id: 'partnership-10', days: 10, title: 'Reignite the Spark', desc: 'Small daily gestures that bring more spark back into your relationship in ten days.', tasks: ['I give my partner an honest, unexpected compliment today.', 'I give them 10 minutes of undivided attention today – no phone.'] },
+        { id: 'partnership-21', days: 21, title: 'Us Time', desc: 'Three weeks of consciously bringing shared moments and real conversations into your everyday life.', tasks: ['I show my partner a small, loving gesture today.', 'I openly talk about one of my wishes or needs today.'] },
+        { id: 'partnership-30', days: 30, title: 'Deeply Connected', desc: 'A month of taking trust, closeness, and communication as a couple to a new level.', tasks: ['I truly, actively listen to my partner today, without interrupting.', 'I address one point of friction today, instead of putting it off.'] }
+      ]
+    }
+  };
+
+  function getTemplatesForLang(lang) {
+    return CHALLENGE_TEMPLATES[lang] || CHALLENGE_TEMPLATES.en;
+  }
+
   const STRINGS = {
     de: {
       settings_btn: "Einstellungen", quotes_btn: "Sprüche", data_btn: "Daten",
@@ -1989,7 +2082,24 @@ try {
       goal_images_speed_label: "Geschwindigkeit des Bildwechsels",
       goal_images_speed_seconds: "{s} Sekunden",
       goal_images_no_images_warning: "Lade mindestens ein Bild hoch, damit der Button auf der Startseite erscheint.",
-      version_label: "Version"
+      version_label: "Version",
+      templates_btn: "Vorlage verwenden",
+      templates_modal_title: "Vorlagen",
+      templates_modal_lead: "Wähle eine Kategorie und starte mit einer fertigen Vorlage – du kannst danach noch alles anpassen.",
+      templates_cat_health: "Gesundheit",
+      templates_cat_relationships: "Beziehungen",
+      templates_cat_finance: "Finanzen",
+      templates_cat_partnership: "Partnerschaft",
+      templates_days_badge: "{days} Tage",
+      templates_use_btn: "Übernehmen",
+      templates_empty_note: "Keine Vorlagen-Kategorien aktiviert. Du kannst sie in den {settingsLink} wieder einschalten.",
+      settings_templates_label: "Vorlagen anzeigen",
+      settings_templates_note: "Zeigt auf der Startseite einen Button, mit dem du Challenges aus fertigen Vorlagen starten kannst.",
+      settings_templates_cats_label: "Sichtbare Kategorien",
+      settings_templates_cat_health: "Gesundheit",
+      settings_templates_cat_relationships: "Beziehungen",
+      settings_templates_cat_finance: "Finanzen",
+      settings_templates_cat_partnership: "Partnerschaft"
     },
     en: {
       settings_btn: "Settings", quotes_btn: "Quotes", data_btn: "Data",
@@ -2123,7 +2233,24 @@ try {
       goal_images_speed_label: "Slide change speed",
       goal_images_speed_seconds: "{s} seconds",
       goal_images_no_images_warning: "Upload at least one image so the button appears on the home screen.",
-      version_label: "Version"
+      version_label: "Version",
+      templates_btn: "Use template",
+      templates_modal_title: "Templates",
+      templates_modal_lead: "Pick a category and start with a ready-made template – you can still adjust everything afterwards.",
+      templates_cat_health: "Health",
+      templates_cat_relationships: "Relationships",
+      templates_cat_finance: "Finance",
+      templates_cat_partnership: "Partnership",
+      templates_days_badge: "{days} days",
+      templates_use_btn: "Use",
+      templates_empty_note: "No template categories enabled. You can turn them back on in {settingsLink}.",
+      settings_templates_label: "Show templates",
+      settings_templates_note: "Shows a button on the home screen that lets you start challenges from ready-made templates.",
+      settings_templates_cats_label: "Visible categories",
+      settings_templates_cat_health: "Health",
+      settings_templates_cat_relationships: "Relationships",
+      settings_templates_cat_finance: "Finance",
+      settings_templates_cat_partnership: "Partnership"
     },
     pl: {
       settings_btn: "Ustawienia", quotes_btn: "Cytaty", data_btn: "Dane",
@@ -2274,7 +2401,7 @@ try {
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, customTheme: null, customThemeSaved: null, goalImagesEnabled: false, goalImages: [], goalImagesSlideSeconds: 4 })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, customTheme: null, customThemeSaved: null, goalImagesEnabled: false, goalImages: [], goalImagesSlideSeconds: 4, templatesEnabled: true, templatesCategoriesEnabled: { health: true, relationships: true, finance: true, partnership: true } })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -2326,6 +2453,20 @@ try {
   const GOAL_SLIDE_SECONDS_OPTIONS = [2, 3, 4, 5, 7, 10];
   if (typeof state.settings.goalImagesSlideSeconds !== 'number' || GOAL_SLIDE_SECONDS_OPTIONS.indexOf(state.settings.goalImagesSlideSeconds) === -1) {
     state.settings.goalImagesSlideSeconds = 4;
+  }
+
+  if (typeof state.settings.templatesEnabled !== 'boolean') {
+    state.settings.templatesEnabled = true;
+  }
+  if (!state.settings.templatesCategoriesEnabled || typeof state.settings.templatesCategoriesEnabled !== 'object') {
+    state.settings.templatesCategoriesEnabled = { health: true, relationships: true, finance: true, partnership: true };
+  } else {
+    // Fehlende Kategorien (z.B. nach künftigen Erweiterungen) standardmäßig aktivieren.
+    ['health', 'relationships', 'finance', 'partnership'].forEach((cat) => {
+      if (typeof state.settings.templatesCategoriesEnabled[cat] !== 'boolean') {
+        state.settings.templatesCategoriesEnabled[cat] = true;
+      }
+    });
   }
 
   const LEGACY_FONT_SIZES = { small: 16, normal: 18, large: 21 };
@@ -2863,12 +3004,19 @@ try {
     return btn;
   }
 
+  function templatesAvailable() {
+    if (!state.settings.templatesEnabled) return false;
+    const cats = state.settings.templatesCategoriesEnabled || {};
+    return TEMPLATE_CATEGORY_ORDER.some((cat) => cats[cat]);
+  }
+
   function renderSetup(prefill, canGoBack) {
     const pf = prefill || {};
     const card = el(`
       <div class="card">
         <h1>${t('setup_title')}</h1>
         <p class="lead">${t('setup_lead')}</p>
+        ${templatesAvailable() ? `<button type="button" class="text-link-btn" id="f-open-templates" style="margin-top:0; margin-bottom:16px;">${t('templates_btn')}</button>` : ''}
         <label>${t('label_title')}</label>
         <input type="text" id="f-title" value="${pf.title ? escapeHtml(pf.title) : ''}" />
         <label>${t('label_days')}</label>
@@ -2884,6 +3032,11 @@ try {
         ${canGoBack ? `<button type="button" class="btn-secondary" style="margin-top:10px;" id="f-cancel">${t('setup_cancel')}</button>` : ''}
       </div>
     `);
+
+    const openTemplatesBtn = card.querySelector('#f-open-templates');
+    if (openTemplatesBtn) openTemplatesBtn.addEventListener('click', () => {
+      showTemplatesPanel();
+    });
 
     if (canGoBack) {
       card.querySelector('#f-cancel').addEventListener('click', () => {
@@ -3909,6 +4062,87 @@ try {
     launchConfetti('small');
   }
 
+  // Welche Vorlagen-Kategorie im Vorlagen-Modal aufgeklappt ist (Akkordeon,
+  // wie bei den Einstellungen: immer nur eine Kategorie gleichzeitig offen).
+  let templatesModalExpanded = { health: false, relationships: false, finance: false, partnership: false };
+
+  function showTemplatesPanel() {
+    modalRoot.innerHTML = '';
+    const cats = state.settings.templatesCategoriesEnabled || {};
+    const visibleCats = TEMPLATE_CATEGORY_ORDER.filter((cat) => cats[cat]);
+    const templatesByCat = getTemplatesForLang(state.settings.lang);
+
+    let bodyHtml;
+    if (!visibleCats.length) {
+      bodyHtml = `<p class="lang-note">${t('templates_empty_note', { settingsLink: t('settings_link_word') })}</p>`;
+    } else {
+      bodyHtml = visibleCats.map((cat) => {
+        const isOpen = !!templatesModalExpanded[cat];
+        const items = (templatesByCat[cat] || []).map((tpl) => `
+          <div class="template-item">
+            <div class="template-item-head">
+              <span class="template-item-title">${escapeHtml(tpl.title)}</span>
+              <span class="template-item-days">${escapeHtml(t('templates_days_badge', { days: tpl.days }))}</span>
+            </div>
+            <div class="template-item-desc">${escapeHtml(tpl.desc)}</div>
+            <ul class="template-item-tasks">${tpl.tasks.map((task) => `<li>${escapeHtml(task)}</li>`).join('')}</ul>
+            <button type="button" class="btn-primary template-item-use-btn" data-template-id="${tpl.id}" data-template-cat="${cat}">${t('templates_use_btn')}</button>
+          </div>
+        `).join('');
+        return `
+          <div class="template-category${isOpen ? ' open' : ''}">
+            <button type="button" class="template-category-toggle" data-cat="${cat}">
+              <span class="template-category-icon">${TEMPLATE_CATEGORY_ICONS[cat]}</span>
+              <span>${t('templates_cat_' + cat)}</span>
+              <span class="chevron"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            </button>
+            ${isOpen ? `<div class="template-category-body">${items}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    const overlay = el(`
+      <div class="overlay settings-overlay">
+        <div class="modal settings-modal" style="text-align:left; max-width:520px;">
+          <div class="settings-top-bar">
+            <div><h1 style="margin:0; padding-bottom:0;">${t('templates_modal_title')}</h1></div>
+            <button type="button" class="icon-only-btn" id="tpl-close-top" title="${escapeHtml(t('settings_done'))}">×</button>
+          </div>
+          <p class="lang-note" style="margin-bottom:16px;">${t('templates_modal_lead')}</p>
+          ${bodyHtml}
+        </div>
+      </div>
+    `);
+
+    overlay.querySelector('#tpl-close-top').addEventListener('click', () => { modalRoot.innerHTML = ''; });
+
+    overlay.querySelectorAll('.template-category-toggle[data-cat]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-cat');
+        const willExpand = !templatesModalExpanded[key];
+        Object.keys(templatesModalExpanded).forEach((k) => templatesModalExpanded[k] = false);
+        templatesModalExpanded[key] = willExpand;
+        showTemplatesPanel();
+      });
+    });
+
+    overlay.querySelectorAll('.template-item-use-btn[data-template-id]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-template-cat');
+        const tplId = btn.getAttribute('data-template-id');
+        const tpl = (templatesByCat[cat] || []).find((x) => x.id === tplId);
+        if (!tpl) return;
+        setupPrefill = { title: tpl.title, days: tpl.days, tasks: tpl.tasks.map((taskName) => ({ name: taskName })) };
+        setupMode = true;
+        modalRoot.innerHTML = '';
+        render();
+      });
+    });
+
+    modalRoot.appendChild(overlay);
+  }
+
   let settingsExpanded = { general: true, theme: false, challenges: false, messages: false, goals: false, data: false, info: false };
   // Ob der Editor für das "Eigene Farben"-Theme innerhalb der Farben-Sektion
   // aufgeklappt ist. Bleibt (wie settingsExpanded) über Re-Renders des
@@ -4103,6 +4337,29 @@ try {
         </span>
       </label>
       <div class="lang-note">${t('settings_daily_motivation_note')}</div>
+
+      <label class="toggle-row" for="s-templates-toggle">
+        <span class="toggle-row-text">${t('settings_templates_label')}</span>
+        <span class="switch">
+          <input type="checkbox" id="s-templates-toggle" ${state.settings.templatesEnabled ? 'checked' : ''} />
+          <span class="slider"></span>
+        </span>
+      </label>
+      <div class="lang-note">${t('settings_templates_note')}</div>
+      ${state.settings.templatesEnabled ? `
+      <div class="settings-subsection" style="margin-top:12px;">
+        <div class="lang-note" style="margin-top:10px; font-weight:700; color:var(--text-muted);">${t('settings_templates_cats_label')}</div>
+        ${TEMPLATE_CATEGORY_ORDER.map((cat) => `
+          <label class="toggle-row" for="s-templates-cat-${cat}" style="padding-top:10px;">
+            <span class="toggle-row-text">${t('settings_templates_cat_' + cat)}</span>
+            <span class="switch">
+              <input type="checkbox" id="s-templates-cat-${cat}" data-cat="${cat}" ${state.settings.templatesCategoriesEnabled[cat] ? 'checked' : ''} />
+              <span class="slider"></span>
+            </span>
+          </label>
+        `).join('')}
+      </div>
+      ` : ''}
     `;
 
     const messagesBody = `
@@ -4257,6 +4514,21 @@ try {
     if (dailyMotivationToggle) dailyMotivationToggle.addEventListener('change', (e) => {
       state.settings.showDailyMotivation = e.target.checked;
       persist();
+    });
+
+    const templatesToggle = overlay.querySelector('#s-templates-toggle');
+    if (templatesToggle) templatesToggle.addEventListener('change', (e) => {
+      state.settings.templatesEnabled = e.target.checked;
+      persist();
+      showSettingsPanel();
+    });
+
+    overlay.querySelectorAll('input[id^="s-templates-cat-"]').forEach((input) => {
+      input.addEventListener('change', (e) => {
+        const cat = input.getAttribute('data-cat');
+        state.settings.templatesCategoriesEnabled[cat] = e.target.checked;
+        persist();
+      });
     });
 
     const goalImagesToggle = overlay.querySelector('#s-goal-images-toggle');

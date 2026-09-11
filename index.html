@@ -934,6 +934,45 @@ try {
   .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .modal-actions > * { flex: 1; min-width: 120px; }
 
+  /* ---- Datensicherung: Öffner-Button im Daten-Tab ---- */
+  .backup-open-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; box-sizing: border-box; padding: 12px 16px; margin-top: 0;
+    font-size: 0.92rem; font-weight: 600; color: var(--gold-soft);
+    background: none; border: 1px solid var(--gold); border-radius: 9px;
+    cursor: pointer; min-height: 48px;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .backup-open-btn:hover, .backup-open-btn:focus { background: var(--gold); color: #211505; }
+  }
+  .backup-open-btn:active { transform: scale(0.985); }
+  .backup-open-btn-icon { font-size: 1.05rem; }
+
+  /* ---- Datensicherung: eigenes Modal mit Export-/Import-Karten ---- */
+  .backup-modal { max-width: 380px; text-align: left; }
+  .backup-intro { margin: 0 0 18px; font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); text-align: center; }
+  .backup-last-info { margin: -8px 0 18px; font-size: 0.78rem; color: var(--text-faint); text-align: center; }
+
+  .backup-card {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 16px; margin-bottom: 14px;
+    background: var(--surface-2); border-radius: 14px;
+  }
+  .backup-card:last-of-type { margin-bottom: 0; }
+  .backup-card-icon {
+    flex-shrink: 0; width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; background: var(--surface); border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+  .backup-card-body { flex: 1; min-width: 0; }
+  .backup-card-title { margin: 0 0 4px; font-size: 0.95rem; font-weight: 700; color: var(--text); }
+  .backup-card-text { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.5; color: var(--text-muted); }
+  .backup-card .btn-secondary { margin-top: 0; min-height: 42px; padding: 10px 16px; }
+  .backup-feedback { margin: 4px 0 0; min-height: 1.3em; font-size: 0.85rem; color: var(--gold-soft); text-align: center; }
+  .backup-back-btn { margin-top: 18px; }
+
   .quote-item { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
   .quote-item .qtxt { font-size: 0.88rem; color: var(--text); line-height: 1.45; flex: 1; text-align: left; }
   .quote-item .qtag { font-size: 0.65rem; color: var(--text-faint); text-transform: uppercase; margin-top: 3px; }
@@ -1279,7 +1318,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.11.8';
+  const APP_VERSION = '5.12.1';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -1293,7 +1332,8 @@ try {
     completionMessagesByLang: 'motiv_completionMessagesByLang',
     seededQuoteTexts: 'motiv_seededQuoteTexts',
     settings: 'motiv_settings',
-    dailyMotivationLast: 'motiv_dailyMotivationLast'
+    dailyMotivationLast: 'motiv_dailyMotivationLast',
+    lastBackup: 'motiv_lastBackup'
   };
 
   const AVAILABLE_LANGS = [
@@ -2011,8 +2051,21 @@ try {
       quotes_add_btn: "Hinzufügen", quotes_edit_btn: "Bearbeiten", quotes_delete_btn: "Löschen",
       quotes_save_btn: "Speichern", quotes_close_btn: "Schließen",
       quotes_tag_default: "Standard", quotes_tag_custom: "Eigene",
+      quotes_empty_own: "Noch keine eigenen Meldungen. Füge oben eine hinzu.",
       data_title: "Daten sichern",
       data_desc: "Deine Daten liegen nur in diesem Browser. Exportiere sie regelmäßig, um sie zu sichern oder auf ein anderes Gerät zu übertragen.",
+      data_backup_link: "Backup & Übertragen",
+      backup_modal_title: "Sichern & Wiederherstellen",
+      backup_intro: "Deine Daten liegen nur auf diesem Gerät. Sichere sie als Datei, um sie auf ein anderes Gerät zu übertragen oder ein Backup zu behalten.",
+      backup_export_text: "Speichert alle deine Daten als Datei auf deinem Gerät.",
+      backup_export_btn: "Als Datei sichern",
+      backup_import_text: "Ersetzt alle aktuell gespeicherten Daten durch den Inhalt einer gesicherten Datei.",
+      backup_import_btn: "Datei auswählen",
+      backup_last_none: "Noch kein Backup erstellt.",
+      backup_last_info: "Letztes Backup am {datum}",
+      backup_feedback_export: "Datei heruntergeladen.",
+      backup_feedback_import_success: "Import erfolgreich.",
+      backup_back_btn: "← Zurück",
       settings_nav_info: "Info zur App",
       welcome_title: "Willkommen!",
       welcome_text: "Challenge App\nDein täglicher Begleiter, um persönliche Herausforderungen zu meistern und neue Gewohnheiten aufzubauen. Mit Erfolgsmeldungen, die wirklich guttun.\n✓ Kostenlos\n✓ Keine Anmeldung\n✓ Sicher, da Daten nur lokal auf deinem Gerät gespeichert werden.",
@@ -2163,6 +2216,7 @@ try {
       quotes_add_btn: "Add", quotes_edit_btn: "Edit", quotes_delete_btn: "Delete",
       quotes_save_btn: "Save", quotes_close_btn: "Close",
       quotes_tag_default: "Default", quotes_tag_custom: "Custom",
+      quotes_empty_own: "No custom messages yet. Add one above.",
       data_title: "Back up your data",
       settings_nav_info: "About the app",
       welcome_title: "Welcome!",
@@ -2174,6 +2228,18 @@ try {
       share_copied: "Link copied!",
       info_signoff: "Enjoy this app and have great success with it.\nThe challenges are designed to support you in developing new habits and simply trying out new things. Participation in each challenge is voluntary and undertaken at your own responsibility. Always listen to your body and decide for yourself what is right for you. If you have any health concerns or are unsure whether a challenge is suitable for you, please seek professional advice beforehand.\nIf you have ideas to make the app even better, feel free to reach out.\n{email}\n\nBest regards\nNorbert",
       data_desc: "Your data lives only in this browser. Export it regularly to back it up or move it to another device.",
+      data_backup_link: "Backup & Transfer",
+      backup_modal_title: "Backup & Restore",
+      backup_intro: "Your data lives only on this device. Save it as a file to move it to another device or keep a backup.",
+      backup_export_text: "Saves all your data as a file on your device.",
+      backup_export_btn: "Save as file",
+      backup_import_text: "Replaces all currently stored data with the contents of a backup file.",
+      backup_import_btn: "Choose file",
+      backup_last_none: "No backup created yet.",
+      backup_last_info: "Last backup on {datum}",
+      backup_feedback_export: "File downloaded.",
+      backup_feedback_import_success: "Import successful.",
+      backup_back_btn: "← Back",
       data_export_btn: "Export", data_import_btn: "Import", data_close_btn: "Close",
       import_confirm_title: "Confirm import",
       import_confirm_text: "This will overwrite all data currently stored in this app. Continue?",
@@ -2315,6 +2381,7 @@ try {
       quotes_add_btn: "Dodaj", quotes_edit_btn: "Edytuj", quotes_delete_btn: "Usuń",
       quotes_save_btn: "Zapisz", quotes_close_btn: "Zamknij",
       quotes_tag_default: "Domyślny", quotes_tag_custom: "Własny",
+      quotes_empty_own: "Brak jeszcze własnych wiadomości. Dodaj jedną powyżej.",
       data_title: "Kopia zapasowa danych",
       settings_nav_info: "O aplikacji",
       welcome_title: "Witaj!",
@@ -2326,6 +2393,18 @@ try {
       share_copied: "Link skopiowany!",
       info_signoff: "Życzę wiele radości i sukcesów z tą aplikacją.\nJeśli masz pomysły, jak ulepszyć aplikację, śmiało napisz do mnie.\n{email}\n\nPozdrawiam\nNorbert",
       data_desc: "Twoje dane znajdują się tylko w tej przeglądarce. Eksportuj je regularnie, aby je zabezpieczyć lub przenieść na inne urządzenie.",
+      data_backup_link: "Kopia zapasowa i przenoszenie",
+      backup_modal_title: "Kopia zapasowa i przywracanie",
+      backup_intro: "Twoje dane znajdują się tylko na tym urządzeniu. Zapisz je jako plik, aby przenieść je na inne urządzenie lub zachować kopię zapasową.",
+      backup_export_text: "Zapisuje wszystkie Twoje dane jako plik na Twoim urządzeniu.",
+      backup_export_btn: "Zapisz jako plik",
+      backup_import_text: "Zastępuje wszystkie obecnie zapisane dane zawartością pliku kopii zapasowej.",
+      backup_import_btn: "Wybierz plik",
+      backup_last_none: "Nie utworzono jeszcze kopii zapasowej.",
+      backup_last_info: "Ostatnia kopia zapasowa: {datum}",
+      backup_feedback_export: "Plik pobrany.",
+      backup_feedback_import_success: "Import zakończony sukcesem.",
+      backup_back_btn: "← Wstecz",
       data_export_btn: "Eksportuj", data_import_btn: "Importuj", data_close_btn: "Zamknij",
       import_confirm_title: "Potwierdź import",
       import_confirm_text: "To nadpisze wszystkie dane obecnie zapisane w tej aplikacji. Kontynuować?",
@@ -3572,7 +3651,7 @@ try {
   }
 
   // ---------- Modale ----------
-  function confirmModal(title, text, onConfirm) {
+  function confirmModal(title, text, onConfirm, onCancel) {
     modalRoot.innerHTML = '';
     const overlay = el(`
       <div class="overlay">
@@ -3586,7 +3665,7 @@ try {
         </div>
       </div>
     `);
-    overlay.querySelector('#c-cancel').addEventListener('click', () => modalRoot.innerHTML = '');
+    overlay.querySelector('#c-cancel').addEventListener('click', () => { modalRoot.innerHTML = ''; if (onCancel) onCancel(); });
     overlay.querySelector('#c-ok').addEventListener('click', () => { modalRoot.innerHTML = ''; onConfirm(); });
     modalRoot.appendChild(overlay);
   }
@@ -4376,7 +4455,14 @@ try {
       `).join('');
     }
 
-    const dayMsgItemsHtml = messageItemsHtml(getQuotes(state.settings.lang), 'day');
+    // Standardmeldungen bleiben vollständig in state.quotesByLang erhalten (sie
+    // fließen weiter in die zufällige Auswahl beim Erledigen ein), werden in
+    // dieser Liste aber bewusst ausgeblendet - hier sollen nur eigene Einträge
+    // erscheinen, damit die Liste übersichtlich bleibt.
+    const ownDayQuotes = getQuotes(state.settings.lang).filter(q => !q.isDefault);
+    const dayMsgItemsHtml = ownDayQuotes.length
+      ? messageItemsHtml(ownDayQuotes, 'day')
+      : `<p class="lang-note" style="margin-top:0;">${t('quotes_empty_own')}</p>`;
 
     function sectionCard(key, title, bodyHtml) {
       const expanded = !!settingsExpanded[key];
@@ -4546,10 +4632,10 @@ try {
 
     const dataBody = `
       <p class="confirm-text" style="text-align:left; margin-bottom:16px; margin-top:0;">${t('data_desc')}</p>
-      <div class="modal-actions">
-        <button class="btn-secondary" id="d-export">${t('data_export_btn')}</button>
-        <button class="btn-secondary" id="d-import">${t('data_import_btn')}</button>
-      </div>
+      <button type="button" class="backup-open-btn" id="d-open-backup">
+        <span class="backup-open-btn-icon">📤</span>
+        <span>${t('data_backup_link')}</span>
+      </button>
     `;
 
     const goalsBody = `
@@ -4910,17 +4996,67 @@ try {
       }
     });
 
-    const exportBtn = overlay.querySelector('#d-export');
-    if (exportBtn) exportBtn.addEventListener('click', () => {
+    const openBackupBtn = overlay.querySelector('#d-open-backup');
+    if (openBackupBtn) openBackupBtn.addEventListener('click', () => showBackupModal());
+
+    modalRoot.appendChild(overlay);
+  }
+
+  // ---------- Datensicherung: eigenes "Sichern & Wiederherstellen"-Modal ----------
+  // Wird aus dem Daten-Tab der Einstellungen geöffnet (d-open-backup) und ersetzt
+  // dort die frühere schlichte Export/Import-Button-Reihe durch zwei Karten mit
+  // Icon, Titel und Beschreibungstext - analog zum Muster aus der Energietankstelle.
+  function showBackupModal(feedback) {
+    modalRoot.innerHTML = '';
+    const lastIso = localStorage.getItem(KEYS.lastBackup);
+    let lastInfo;
+    if (!lastIso) {
+      lastInfo = t('backup_last_none');
+    } else {
+      const d = new Date(lastIso);
+      lastInfo = t('backup_last_info', { datum: isNaN(d.getTime()) ? lastIso : d.toLocaleDateString() });
+    }
+    const overlay = el(`
+      <div class="overlay">
+        <div class="modal backup-modal">
+          <h2>${escapeHtml(t('backup_modal_title'))}</h2>
+          <p class="backup-intro">${escapeHtml(t('backup_intro'))}</p>
+          <p class="backup-last-info">${escapeHtml(lastInfo)}</p>
+          <div class="backup-card">
+            <div class="backup-card-icon">⬇️</div>
+            <div class="backup-card-body">
+              <h3 class="backup-card-title">${escapeHtml(t('data_export_btn'))}</h3>
+              <p class="backup-card-text">${escapeHtml(t('backup_export_text'))}</p>
+              <button type="button" class="btn-secondary" id="d-export">${escapeHtml(t('backup_export_btn'))}</button>
+            </div>
+          </div>
+          <div class="backup-card">
+            <div class="backup-card-icon">⬆️</div>
+            <div class="backup-card-body">
+              <h3 class="backup-card-title">${escapeHtml(t('data_import_btn'))}</h3>
+              <p class="backup-card-text">${escapeHtml(t('backup_import_text'))}</p>
+              <button type="button" class="btn-secondary" id="d-import">${escapeHtml(t('backup_import_btn'))}</button>
+            </div>
+          </div>
+          <p class="backup-feedback">${escapeHtml(feedback || '')}</p>
+          <button type="button" class="btn-secondary backup-back-btn" id="d-backup-back">${escapeHtml(t('backup_back_btn'))}</button>
+        </div>
+      </div>
+    `);
+
+    overlay.querySelector('#d-export').addEventListener('click', () => {
       const data = { challenges: state.challenges, history: state.history, quotesByLang: state.quotesByLang, completionMessagesByLang: state.completionMessagesByLang, settings: state.settings, exportedOn: todayStr() };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = 'challenge-daten-' + todayStr() + '.json'; a.click();
       URL.revokeObjectURL(url);
+      localStorage.setItem(KEYS.lastBackup, new Date().toISOString());
+      showBackupModal(t('backup_feedback_export'));
     });
-    const importBtn = overlay.querySelector('#d-import');
-    if (importBtn) importBtn.addEventListener('click', () => document.getElementById('import-file-input').click());
+
+    overlay.querySelector('#d-import').addEventListener('click', () => document.getElementById('import-file-input').click());
+    overlay.querySelector('#d-backup-back').addEventListener('click', () => showSettingsPanel());
 
     modalRoot.appendChild(overlay);
   }
@@ -4965,10 +5101,10 @@ try {
           applyFontSize(state.settings.fontSize);
           applyBranding();
           render();
-          showSettingsPanel();
-        });
+          showBackupModal(t('backup_feedback_import_success'));
+        }, () => showBackupModal());
       } catch (err) {
-        confirmModal(t('import_fail_title'), t('import_fail_text'), () => {});
+        showBackupModal(t('import_fail_text'));
       }
     };
     reader.readAsText(file);

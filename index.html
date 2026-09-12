@@ -1335,9 +1335,20 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.5';
+  const APP_VERSION = '5.12.6';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
+  // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
+  // (z.B. in Karten-Überschriften) und schützt vor einem vollgelaufenen
+  // localStorage, falls jemand versehentlich (oder absichtlich) riesige
+  // Textmengen einfügt. Gelten als maxlength im HTML UND werden zusätzlich
+  // beim Speichern per .slice() erzwungen, falls jemand das HTML-Limit
+  // umgeht (z.B. über die DevTools).
+  const MAX_LEN_TITLE = 80;
+  const MAX_LEN_TASK = 120;
+  const MAX_LEN_MESSAGE = 300;
+  const MAX_LEN_APPNAME = 40;
+  const MAX_LEN_USERNAME = 40;
 
   // ---------- Speicherung ----------
   const KEYS = {
@@ -2070,6 +2081,7 @@ try {
       quotes_tag_default: "Standard", quotes_tag_custom: "Eigene",
       quotes_empty_own: "Noch keine eigenen Meldungen. Füge oben eine hinzu.",
       quotes_delete_confirm_text: "Wirklich löschen?",
+      storage_full_error: "Speicher voll: Die Änderung konnte nicht gespeichert werden. Bitte kürze deine Eingaben oder lösche alte Einträge und versuche es erneut.",
       data_title: "Daten sichern",
       data_desc: "Deine Daten liegen nur in diesem Browser. Exportiere sie regelmäßig, um sie zu sichern oder auf ein anderes Gerät zu übertragen.",
       data_backup_link: "Backup & Übertragen",
@@ -2236,6 +2248,7 @@ try {
       quotes_tag_default: "Default", quotes_tag_custom: "Custom",
       quotes_empty_own: "No custom messages yet. Add one above.",
       quotes_delete_confirm_text: "Really delete?",
+      storage_full_error: "Storage full: your change could not be saved. Please shorten your input or delete old entries and try again.",
       data_title: "Back up your data",
       settings_nav_info: "About the app",
       welcome_title: "Welcome!",
@@ -2402,6 +2415,7 @@ try {
       quotes_tag_default: "Domyślny", quotes_tag_custom: "Własny",
       quotes_empty_own: "Brak jeszcze własnych wiadomości. Dodaj jedną powyżej.",
       quotes_delete_confirm_text: "Na pewno usunąć?",
+      storage_full_error: "Brak miejsca w pamięci: nie udało się zapisać zmiany. Skróć wpis lub usuń stare pozycje i spróbuj ponownie.",
       data_title: "Kopia zapasowa danych",
       settings_nav_info: "O aplikacji",
       welcome_title: "Witaj!",
@@ -2527,7 +2541,19 @@ try {
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
     catch (e) { return fallback; }
   }
-  function save(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  // Gibt true zurück, wenn das Speichern geklappt hat. localStorage kann eine
+  // QuotaExceededError werfen (z.B. wenn der Speicher voll ist oder jemand
+  // extrem lange Texte einfügt) - ohne dieses try/catch würde ein einzelner
+  // fehlgeschlagener persist()-Aufruf die ganze App zum Absturz bringen.
+  function save(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (e) {
+      console.warn('Konnte nicht speichern:', key, e);
+      return false;
+    }
+  }
 
   let pendingOverflowNotice = false;
 
@@ -2726,13 +2752,19 @@ try {
   }
 
   function persist() {
-    save(KEYS.challenges, state.challenges);
-    save(KEYS.history, state.history);
-    save(KEYS.quotes, state.customQuotes);
-    save(KEYS.quotesByLang, state.quotesByLang);
-    save(KEYS.completionMessagesByLang, state.completionMessagesByLang);
-    save(KEYS.seededQuoteTexts, state.seededQuoteTexts);
-    save(KEYS.settings, state.settings);
+    // save() gibt pro Key true/false zurück; wenn irgendeiner scheitert (z.B.
+    // Speicher voll), bekommt der Nutzer einmalig eine verständliche Meldung
+    // statt eines stillen Datenverlusts oder eines JS-Fehlers.
+    let allOk = true;
+    allOk = save(KEYS.challenges, state.challenges) && allOk;
+    allOk = save(KEYS.history, state.history) && allOk;
+    allOk = save(KEYS.quotes, state.customQuotes) && allOk;
+    allOk = save(KEYS.quotesByLang, state.quotesByLang) && allOk;
+    allOk = save(KEYS.completionMessagesByLang, state.completionMessagesByLang) && allOk;
+    allOk = save(KEYS.seededQuoteTexts, state.seededQuoteTexts) && allOk;
+    allOk = save(KEYS.settings, state.settings) && allOk;
+    if (!allOk) alert(t('storage_full_error'));
+    return allOk;
   }
 
   function t(key, vars) {
@@ -3155,7 +3187,7 @@ try {
         <p class="lead">${t('setup_lead')}</p>
         ${templatesAvailable() ? `<button type="button" class="text-link-btn" id="f-open-templates" style="margin-top:0; margin-bottom:16px;">${t('templates_btn')}</button>` : ''}
         <label>${t('label_title')}</label>
-        <input type="text" id="f-title" value="${pf.title ? escapeHtml(pf.title) : ''}" />
+        <input type="text" id="f-title" maxlength="${MAX_LEN_TITLE}" value="${pf.title ? escapeHtml(pf.title) : ''}" />
         <label>${t('label_days')}</label>
         <input type="number" id="f-days" min="1" max="${MAX_DAYS}" value="${pf.days || 30}" />
         <div id="f-days-error" class="error-msg-inline hidden"></div>
@@ -3190,7 +3222,7 @@ try {
       const placeholder = value ? '' : TASK_EXAMPLES[(idx || 0) % TASK_EXAMPLES.length];
       const row = el(`
         <div class="task-row">
-          <input type="text" placeholder="${escapeHtml(placeholder)}" value="${value ? escapeHtml(value) : ''}" />
+          <input type="text" maxlength="${MAX_LEN_TASK}" placeholder="${escapeHtml(placeholder)}" value="${value ? escapeHtml(value) : ''}" />
           <button type="button" class="remove" title="${escapeHtml(t('quotes_delete_btn'))}">×</button>
         </div>
       `);
@@ -3223,11 +3255,13 @@ try {
     });
 
     card.querySelector('#f-submit').addEventListener('click', () => {
-      const title = card.querySelector('#f-title').value.trim();
+      // .slice() greift zusätzlich zum maxlength-HTML-Attribut, falls jemand
+      // dieses z.B. über die DevTools umgeht.
+      const title = card.querySelector('#f-title').value.trim().slice(0, MAX_LEN_TITLE);
       const days = parseInt(card.querySelector('#f-days').value, 10);
       const start = card.querySelector('#f-start').value;
       const taskInputs = Array.from(taskRows.querySelectorAll('input'));
-      const taskNames = taskInputs.map(i => i.value.trim()).filter(v => v.length > 0);
+      const taskNames = taskInputs.map(i => i.value.trim().slice(0, MAX_LEN_TASK)).filter(v => v.length > 0);
       const errBox = card.querySelector('#f-error');
       if (!title) return showError(errBox, t('err_title'));
       if (!days || days < 1 || days > MAX_DAYS) {
@@ -3898,7 +3932,7 @@ try {
           <h2>${t('edit_title')}</h2>
 
           <label>${t('label_title')}</label>
-          <input type="text" id="e-title" value="${escapeHtml(c.title)}" />
+          <input type="text" id="e-title" maxlength="${MAX_LEN_TITLE}" value="${escapeHtml(c.title)}" />
 
           ${isStarted ? `<div class="meta-line" style="margin:2px 0 14px;">${t('active_dates', { start: fmtDisplay(c.startDate), end: fmtDisplay(addDays(c.startDate, c.days - 1)) })}</div>` : ''}
 
@@ -3928,7 +3962,7 @@ try {
     function addEditTaskRow(name, taskId) {
       const row = el(`
         <div class="task-row" ${taskId ? `data-task-id="${taskId}"` : ''}>
-          <input type="text" placeholder="${escapeHtml(t('task_placeholder'))}" value="${escapeHtml(name || '')}" />
+          <input type="text" maxlength="${MAX_LEN_TASK}" placeholder="${escapeHtml(t('task_placeholder'))}" value="${escapeHtml(name || '')}" />
           <button type="button" class="remove" title="${escapeHtml(t('quotes_delete_btn'))}">×</button>
         </div>
       `);
@@ -3974,11 +4008,11 @@ try {
 
     overlay.querySelector('#e-save').addEventListener('click', () => {
       const errBox = overlay.querySelector('#e-error');
-      const title = overlay.querySelector('#e-title').value.trim();
+      const title = overlay.querySelector('#e-title').value.trim().slice(0, MAX_LEN_TITLE);
       const days = parseInt(daysInput.value, 10);
       const rows = Array.from(taskRows.querySelectorAll('.task-row'));
       const newTasks = rows.map(row => {
-        const name = row.querySelector('input').value.trim();
+        const name = row.querySelector('input').value.trim().slice(0, MAX_LEN_TASK);
         const existingId = row.getAttribute('data-task-id');
         return name ? { id: existingId || uid(), name } : null;
       }).filter(Boolean);
@@ -4500,13 +4534,13 @@ try {
     const generalBody = `
       <label>${t('settings_appname_label')}</label>
       <div class="field-save-row">
-        <input type="text" id="s-appname" value="${escapeHtml(state.settings.appName || 'Challenge')}" />
+        <input type="text" id="s-appname" maxlength="${MAX_LEN_APPNAME}" value="${escapeHtml(state.settings.appName || 'Challenge')}" />
         <button type="button" class="field-save-btn" id="s-appname-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">${escapeHtml(t('field_save_label'))}</button>
       </div>
 
       <label>${t('settings_username_label')}</label>
       <div class="field-save-row">
-        <input type="text" id="s-username" placeholder="${escapeHtml(t('settings_username_placeholder'))}" value="${escapeHtml(state.settings.userName || '')}" />
+        <input type="text" id="s-username" maxlength="${MAX_LEN_USERNAME}" placeholder="${escapeHtml(t('settings_username_placeholder'))}" value="${escapeHtml(state.settings.userName || '')}" />
         <button type="button" class="field-save-btn" id="s-username-save" title="${escapeHtml(t('field_save_label'))}" aria-label="${escapeHtml(t('field_save_label'))}">${escapeHtml(t('field_save_label'))}</button>
       </div>
       <div class="lang-note">${t('settings_username_note')}</div>
@@ -4645,7 +4679,7 @@ try {
 
     const messagesBody = `
       <label>${t('quotes_new_label')}</label>
-      <textarea id="new-quote-day" rows="4"></textarea>
+      <textarea id="new-quote-day" rows="4" maxlength="${MAX_LEN_MESSAGE}"></textarea>
       <button type="button" class="btn-primary" id="add-quote-day-btn">${t('quotes_add_btn')}</button>
       <div style="margin-top:18px;">${dayMsgItemsHtml}</div>
     `;
@@ -4727,7 +4761,7 @@ try {
     const appNameInput = overlay.querySelector('#s-appname');
     const appNameSaveBtn = overlay.querySelector('#s-appname-save');
     if (appNameInput && appNameSaveBtn) wireSaveField(appNameInput, appNameSaveBtn, (value) => {
-      state.settings.appName = value || 'Challenge';
+      state.settings.appName = value.slice(0, MAX_LEN_APPNAME) || 'Challenge';
       persist();
       applyBranding();
     });
@@ -4735,7 +4769,7 @@ try {
     const usernameInput = overlay.querySelector('#s-username');
     const usernameSaveBtn = overlay.querySelector('#s-username-save');
     if (usernameInput && usernameSaveBtn) wireSaveField(usernameInput, usernameSaveBtn, (value) => {
-      state.settings.userName = value;
+      state.settings.userName = value.slice(0, MAX_LEN_USERNAME);
       persist();
     });
 
@@ -4917,7 +4951,7 @@ try {
     const addQuoteDayBtn = overlay.querySelector('#add-quote-day-btn');
     if (addQuoteDayBtn) addQuoteDayBtn.addEventListener('click', () => {
       const ta = overlay.querySelector('#new-quote-day');
-      const val = ta.value.trim();
+      const val = ta.value.trim().slice(0, MAX_LEN_MESSAGE);
       if (!val) return;
       ensureQuotesForLang(state.settings.lang);
       const newQuote = { id: uid(), text: val, isDefault: false };
@@ -4973,7 +5007,7 @@ try {
         const itemDiv = overlay.querySelector(`.quote-item[data-quote-id="${id}"]`);
         const viewDiv = itemDiv.querySelector('[data-view]');
         viewDiv.innerHTML = `
-          <textarea class="quote-edit-textarea" rows="6">${escapeHtml(q.text)}</textarea>
+          <textarea class="quote-edit-textarea" rows="6" maxlength="${MAX_LEN_MESSAGE}">${escapeHtml(q.text)}</textarea>
           <div class="quote-edit-actions">
             <button type="button" class="btn-primary" data-save="${id}">${t('quotes_save_btn')}</button>
             <button type="button" class="btn-secondary" data-cancel="${id}">${t('quotes_close_btn')}</button>
@@ -4983,7 +5017,7 @@ try {
         ta.focus();
         ta.setSelectionRange(ta.value.length, ta.value.length);
         viewDiv.querySelector('[data-save]').addEventListener('click', () => {
-          const newVal = viewDiv.querySelector('textarea').value.trim();
+          const newVal = viewDiv.querySelector('textarea').value.trim().slice(0, MAX_LEN_MESSAGE);
           // Ein bearbeiteter Eintrag weicht vom Original-Standardtext ab und muss
           // deshalb als eigener (isDefault:false) Eintrag markiert werden. Sonst
           // erkennt ensureQuotesForLang() den geänderten Text als "veraltet" und

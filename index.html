@@ -979,6 +979,21 @@ try {
   .quote-item .qtxt { font-size: 0.88rem; color: var(--text); line-height: 1.45; flex: 1; text-align: left; }
   .quote-item .qtag { font-size: 0.65rem; color: var(--text-faint); text-transform: uppercase; margin-top: 3px; }
   .quote-item .qactions { display: flex; gap: 8px; flex-direction: column; }
+  /* Beim Löschen-Bestätigen wird der Eintrag auf eine Spalte umgeschaltet,
+     damit die eigentliche Meldung (qtxt) weiterhin sichtbar bleibt und nicht
+     durch die Ja/Nein-Zeile verdeckt/ersetzt wird. */
+  .quote-item.confirming-delete { flex-direction: column; align-items: stretch; }
+  .quote-item.confirming-delete .qtxt { margin-bottom: 8px; }
+  .quote-delete-confirm {
+    flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    font-size: 0.82rem; color: var(--text);
+  }
+  .quote-delete-confirm .btn-mini {
+    flex-shrink: 0; padding: 6px 13px; font-size: 0.75rem; border-radius: 7px;
+    cursor: pointer; min-height: 0; width: auto; margin-top: 0;
+  }
+  .quote-delete-confirm .btn-mini.btn-mini-danger { background: var(--rust); color: #fff; border: none; }
+  .quote-delete-confirm .btn-mini.btn-mini-secondary { background: none; border: 1px solid var(--border); color: var(--text); }
   .quote-edit-textarea {
     width: 100%;
     min-height: 130px;
@@ -1320,7 +1335,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.3';
+  const APP_VERSION = '5.12.5';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
 
@@ -2054,6 +2069,7 @@ try {
       quotes_save_btn: "Speichern", quotes_close_btn: "Schließen",
       quotes_tag_default: "Standard", quotes_tag_custom: "Eigene",
       quotes_empty_own: "Noch keine eigenen Meldungen. Füge oben eine hinzu.",
+      quotes_delete_confirm_text: "Wirklich löschen?",
       data_title: "Daten sichern",
       data_desc: "Deine Daten liegen nur in diesem Browser. Exportiere sie regelmäßig, um sie zu sichern oder auf ein anderes Gerät zu übertragen.",
       data_backup_link: "Backup & Übertragen",
@@ -2219,6 +2235,7 @@ try {
       quotes_save_btn: "Save", quotes_close_btn: "Close",
       quotes_tag_default: "Default", quotes_tag_custom: "Custom",
       quotes_empty_own: "No custom messages yet. Add one above.",
+      quotes_delete_confirm_text: "Really delete?",
       data_title: "Back up your data",
       settings_nav_info: "About the app",
       welcome_title: "Welcome!",
@@ -2384,6 +2401,7 @@ try {
       quotes_save_btn: "Zapisz", quotes_close_btn: "Zamknij",
       quotes_tag_default: "Domyślny", quotes_tag_custom: "Własny",
       quotes_empty_own: "Brak jeszcze własnych wiadomości. Dodaj jedną powyżej.",
+      quotes_delete_confirm_text: "Na pewno usunąć?",
       data_title: "Kopia zapasowa danych",
       settings_nav_info: "O aplikacji",
       welcome_title: "Witaj!",
@@ -4912,12 +4930,38 @@ try {
       showSettingsPanel();
     });
 
+    // Löschen läuft zweistufig, direkt inline im Listeneintrag (kein Modal,
+    // kein grobes window.confirm()): der erste Klick auf "Löschen" ersetzt die
+    // Zeile durch "Wirklich löschen? Ja/Nein" - erst ein Klick auf "Ja"
+    // entfernt die Meldung wirklich. So kann eine eigene Meldung nicht mehr
+    // versehentlich mit einem einzigen Klick verloren gehen.
     overlay.querySelectorAll('.quote-item [data-action="delete"]').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
-        state.quotesByLang[state.settings.lang] = state.quotesByLang[state.settings.lang].filter(q => q.id !== id);
-        persist();
-        showSettingsPanel();
+        const itemDiv = overlay.querySelector(`.quote-item[data-quote-id="${id}"]`);
+        if (!itemDiv) return;
+        const q = state.quotesByLang[state.settings.lang].find(x => x.id === id);
+        if (!q) return;
+        // Die Meldung (qtxt) bleibt sichtbar stehen - nur die Aktionen (qactions)
+        // werden durch die Ja/Nein-Bestätigung ersetzt. So sieht man auch beim
+        // Bestätigen weiterhin, welche Meldung gerade gelöscht werden soll.
+        itemDiv.classList.add('confirming-delete');
+        itemDiv.innerHTML = `
+          <div class="qtxt" data-view>${escapeHtml(q.text)}<div class="qtag">${q.isDefault ? t('quotes_tag_default') : t('quotes_tag_custom')}</div></div>
+          <div class="quote-delete-confirm">
+            <span>${escapeHtml(t('quotes_delete_confirm_text'))}</span>
+            <button type="button" class="btn-mini btn-mini-danger" data-confirm-delete-yes>${t('confirm_ok')}</button>
+            <button type="button" class="btn-mini btn-mini-secondary" data-confirm-delete-no>${t('confirm_cancel')}</button>
+          </div>
+        `;
+        itemDiv.querySelector('[data-confirm-delete-yes]').addEventListener('click', () => {
+          state.quotesByLang[state.settings.lang] = state.quotesByLang[state.settings.lang].filter(q => q.id !== id);
+          persist();
+          showSettingsPanel();
+        });
+        itemDiv.querySelector('[data-confirm-delete-no]').addEventListener('click', () => {
+          showSettingsPanel();
+        });
       });
     });
 

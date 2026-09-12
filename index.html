@@ -1335,7 +1335,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.6';
+  const APP_VERSION = '5.12.8';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -2202,7 +2202,7 @@ try {
       goal_images_speed_seconds: "{s} Sekunden",
       goal_images_no_images_warning: "Lade mindestens ein Bild hoch, damit der Button auf der Startseite erscheint.",
       version_label: "Version",
-      templates_btn: "Vorlage verwenden",
+      templates_btn: "Aus Vorlagen auswählen",
       templates_modal_title: "Vorlagen",
       templates_modal_lead: "Wähle eine Kategorie und starte mit einer fertigen Vorlage – du kannst danach noch alles anpassen.",
       templates_cat_health: "Gesundheit",
@@ -2369,7 +2369,7 @@ try {
       goal_images_speed_seconds: "{s} seconds",
       goal_images_no_images_warning: "Upload at least one image so the button appears on the home screen.",
       version_label: "Version",
-      templates_btn: "Use template",
+      templates_btn: "Choose from templates",
       templates_modal_title: "Templates",
       templates_modal_lead: "Pick a category and start with a ready-made template – you can still adjust everything afterwards.",
       templates_cat_health: "Health",
@@ -3216,6 +3216,7 @@ try {
       });
     }
 
+    const titleInput = card.querySelector('#f-title');
     const taskRows = card.querySelector('#task-rows');
     const TASK_EXAMPLES = t('task_examples').split('|');
     function addTaskRow(value, idx) {
@@ -3226,6 +3227,13 @@ try {
           <button type="button" class="remove" title="${escapeHtml(t('quotes_delete_btn'))}">×</button>
         </div>
       `);
+      // Sobald hier getippt wird, war der vorherige "kein Tagesziel"-Fehler
+      // (falls einer angezeigt wurde) hinfällig - Fehlermarkierung wieder
+      // entfernen, statt sie stehen zu lassen, obwohl der Nutzer schon reagiert.
+      row.querySelector('input').addEventListener('input', () => {
+        taskRows.querySelectorAll('input').forEach(i => i.classList.remove('input-error'));
+        errBoxLive.classList.add('hidden');
+      });
       row.querySelector('.remove').addEventListener('click', () => row.remove());
       taskRows.appendChild(row);
     }
@@ -3254,16 +3262,30 @@ try {
       }
     });
 
+    titleInput.addEventListener('input', () => {
+      titleInput.classList.remove('input-error');
+      errBoxLive.classList.add('hidden');
+    });
+
     card.querySelector('#f-submit').addEventListener('click', () => {
       // .slice() greift zusätzlich zum maxlength-HTML-Attribut, falls jemand
       // dieses z.B. über die DevTools umgeht.
-      const title = card.querySelector('#f-title').value.trim().slice(0, MAX_LEN_TITLE);
+      const title = titleInput.value.trim().slice(0, MAX_LEN_TITLE);
       const days = parseInt(card.querySelector('#f-days').value, 10);
       const start = card.querySelector('#f-start').value;
       const taskInputs = Array.from(taskRows.querySelectorAll('input'));
       const taskNames = taskInputs.map(i => i.value.trim().slice(0, MAX_LEN_TASK)).filter(v => v.length > 0);
       const errBox = card.querySelector('#f-error');
-      if (!title) return showError(errBox, t('err_title'));
+      if (!title) {
+        // Wie beim Tage-Feld: Eingabefeld selbst rot markieren und ins
+        // Sichtfeld scrollen, statt nur unten am Formular eine Fehlermeldung
+        // zu zeigen, die der Nutzer beim Titel oben leicht übersieht.
+        showError(errBox, t('err_title'));
+        titleInput.classList.add('input-error');
+        titleInput.focus();
+        titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       if (!days || days < 1 || days > MAX_DAYS) {
         daysErrBox.textContent = t('err_days_inline', { max: MAX_DAYS });
         daysErrBox.classList.remove('hidden');
@@ -3273,7 +3295,17 @@ try {
       }
       if (!start) return showError(errBox, t('err_start'));
       if (start < todayStr()) return showError(errBox, t('err_start_past'));
-      if (taskNames.length === 0) return showError(errBox, t('err_tasks'));
+      if (taskNames.length === 0) {
+        // Gleiches Prinzip für die Tagesziele: alle (leeren) Aufgaben-Felder
+        // markieren und zum ersten davon scrollen/fokussieren.
+        showError(errBox, t('err_tasks'));
+        taskInputs.forEach(i => i.classList.add('input-error'));
+        if (taskInputs[0]) {
+          taskInputs[0].focus();
+          taskInputs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
       if (state.challenges.length >= state.settings.maxChallenges) {
         return showError(errBox, t('max_challenges_note', { max: state.settings.maxChallenges, settingsLink: t('settings_link_word') }));
       }
@@ -3958,6 +3990,8 @@ try {
       </div>
     `);
 
+    const titleInput = overlay.querySelector('#e-title');
+    const errBoxLive = overlay.querySelector('#e-error');
     const taskRows = overlay.querySelector('#e-task-rows');
     function addEditTaskRow(name, taskId) {
       const row = el(`
@@ -3966,6 +4000,12 @@ try {
           <button type="button" class="remove" title="${escapeHtml(t('quotes_delete_btn'))}">×</button>
         </div>
       `);
+      // Wie im Anlegen-Formular: Fehlermarkierung verschwindet, sobald der
+      // Nutzer wieder in ein Tagesziel-Feld tippt.
+      row.querySelector('input').addEventListener('input', () => {
+        taskRows.querySelectorAll('input').forEach(i => i.classList.remove('input-error'));
+        errBoxLive.classList.add('hidden');
+      });
       row.querySelector('.remove').addEventListener('click', () => row.remove());
       taskRows.appendChild(row);
     }
@@ -3975,6 +4015,11 @@ try {
       const inputs = taskRows.querySelectorAll('.task-row input');
       const last = inputs[inputs.length - 1];
       if (last) last.focus();
+    });
+
+    titleInput.addEventListener('input', () => {
+      titleInput.classList.remove('input-error');
+      errBoxLive.classList.add('hidden');
     });
 
     const daysInput = overlay.querySelector('#e-days');
@@ -4017,7 +4062,13 @@ try {
         return name ? { id: existingId || uid(), name } : null;
       }).filter(Boolean);
 
-      if (!title) return showError(errBox, t('err_title'));
+      if (!title) {
+        showError(errBox, t('err_title'));
+        titleInput.classList.add('input-error');
+        titleInput.focus();
+        titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       if (!days || days < minDays || days > MAX_DAYS) {
         daysErrBox.textContent = t('edit_err_days', { min: minDays, max: MAX_DAYS });
         daysErrBox.classList.remove('hidden');
@@ -4025,7 +4076,16 @@ try {
         daysInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
-      if (newTasks.length === 0) return showError(errBox, t('err_tasks'));
+      if (newTasks.length === 0) {
+        showError(errBox, t('err_tasks'));
+        const taskInputs = Array.from(taskRows.querySelectorAll('input'));
+        taskInputs.forEach(i => i.classList.add('input-error'));
+        if (taskInputs[0]) {
+          taskInputs[0].focus();
+          taskInputs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
 
       let newStart = c.startDate;
       if (!isStarted) {

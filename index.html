@@ -1343,7 +1343,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.10';
+  const APP_VERSION = '5.12.11';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -4211,7 +4211,11 @@ try {
     if (quoteText === null) quoteText = pickRandomQuote(state.settings.lang);
     dayCompletionCache[key] = {
       badge: personalBadge('quote_modal_badge', 'quote_modal_badge_personal'),
-      quote: quoteText
+      quote: quoteText,
+      // Bild wird genau wie der Spruch EINMALIG pro Challenge+Tag gezogen und
+      // dann im Cache fixiert — beim erneuten Ab-/Anhaken am selben Tag soll
+      // wieder dasselbe Bild erscheinen, nicht ein neu ausgewürfeltes.
+      image: randomGoalImageHtml()
     };
     return dayCompletionCache[key];
   }
@@ -4226,7 +4230,8 @@ try {
     if (!dayCompletionCache[key]) {
       dayCompletionCache[key] = {
         badge: personalBadge('quote_modal_badge', 'quote_modal_badge_personal'),
-        quote: pickRandomQuote(state.settings.lang)
+        quote: pickRandomQuote(state.settings.lang),
+        image: randomGoalImageHtml()
       };
     }
     return dayCompletionCache[key];
@@ -4238,7 +4243,7 @@ try {
     const overlay = el(`
       <div class="overlay">
         <div class="modal quote-modal">
-          ${randomGoalImageHtml()}
+          ${msg.image}
           <div class="badge">${escapeHtml(msg.badge)}</div>
           <p class="quote-text">${escapeHtml(msg.quote)}</p>
           <button class="btn-primary" style="margin-top:0;" id="q-close">${t('quote_modal_btn')}</button>

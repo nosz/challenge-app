@@ -915,6 +915,14 @@ try {
     background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface) 100%);
     border-color: var(--gold);
   }
+  /* Zufälliges eigenes Bild oben in Erfolgs-/Motivations-Modalen (siehe
+     randomGoalImageHtml()) — großzügig und über die volle Breite, damit es
+     als echtes "Ziel vor Augen"-Foto wirkt statt als kleines Icon. */
+  .modal-goal-image { margin: 0 0 16px; }
+  .modal-goal-image img {
+    display: block; width: 100%; height: 150px; object-fit: cover;
+    border-radius: var(--radius);
+  }
   .modal .badge {
     display: inline-block; color: var(--gold-soft); font-size: 0.72rem;
     text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;
@@ -1335,7 +1343,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.9';
+  const APP_VERSION = '5.12.10';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -3866,6 +3874,20 @@ try {
     startAutoplay();
   }
 
+  // Liefert HTML für ein zufällig gezogenes eigenes Bild, das oben im
+  // Tages-Erfolgs-, Tagesgruß-, Abschluss- und Blitzmodal eingeblendet wird
+  // — nur wenn die Funktion aktiviert ist UND mindestens ein Bild gespeichert
+  // wurde. Bewusst OHNE Cache: bei jedem Öffnen eines der Modale wird neu
+  // zufällig gezogen (kein inhaltlicher Bezug wie beim Tages-Spruch, rein
+  // dekorativ/motivierend), daher reicht ein einfacher Math.random()-Pick.
+  function randomGoalImageHtml() {
+    if (!state.settings.goalImagesEnabled) return '';
+    const images = state.settings.goalImages || [];
+    if (!images.length) return '';
+    const src = images[Math.floor(Math.random() * images.length)];
+    return `<div class="modal-goal-image"><img src="${src}" alt=""></div>`;
+  }
+
   function showWelcomeModal() {
     modalRoot.innerHTML = '';
     const overlay = el(`
@@ -3923,6 +3945,7 @@ try {
     const overlay = el(`
       <div class="overlay">
         <div class="modal quote-modal daily-motivation-modal">
+          ${randomGoalImageHtml()}
           <img src="icon-192.png" alt="" class="welcome-icon">
           <div class="badge">${escapeHtml(fmtDisplayFull(todayStr()))}</div>
           <p class="quote-text">${messageHtml}</p>
@@ -4215,6 +4238,7 @@ try {
     const overlay = el(`
       <div class="overlay">
         <div class="modal quote-modal">
+          ${randomGoalImageHtml()}
           <div class="badge">${escapeHtml(msg.badge)}</div>
           <p class="quote-text">${escapeHtml(msg.quote)}</p>
           <button class="btn-primary" style="margin-top:0;" id="q-close">${t('quote_modal_btn')}</button>
@@ -4241,6 +4265,7 @@ try {
     const overlay = el(`
       <div class="overlay">
         <div class="modal quote-modal completion-modal">
+          ${randomGoalImageHtml()}
           <div class="badge">${personalBadge('completion_modal_badge', 'completion_modal_badge_personal')}</div>
           <h2 style="margin-bottom:14px;">${escapeHtml(c.title)}</h2>
           <div class="stats-row" style="margin-bottom:20px;">
@@ -4281,6 +4306,7 @@ try {
     const overlay = el(`
       <div class="overlay">
         <div class="modal quote-modal boost-modal">
+          ${randomGoalImageHtml()}
           <div class="boost-modal-icon">${BOOST_ICON_HTML}</div>
           <div class="badge">${personalBadge('boost_modal_badge', 'boost_modal_badge_personal')}</div>
           <p class="quote-text">${messageHtml}</p>

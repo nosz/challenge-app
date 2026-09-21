@@ -385,6 +385,19 @@ try {
   @media (hover: hover) and (pointer: fine) {
     .card-collapse-zone:hover { background-color: var(--surface-2); }
   }
+  /* Tagesbild auf der aktiven Karte: aufgeklappt groß (wie in den Modalen),
+     eingeklappt als kleines Vorschaubild links neben der Statuszeile. */
+  .card-day-image { margin: 12px 0 4px; }
+  .card-day-image img {
+    display: block; width: 100%; height: 150px; object-fit: cover;
+    border-radius: var(--radius);
+  }
+  .card-collapsed-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .card-collapsed-row .card-collapsed-status { margin-top: 0; flex: 1; min-width: 0; }
+  .card-day-thumb {
+    display: block; width: 56px; height: 56px; flex-shrink: 0;
+    object-fit: cover; border-radius: 10px;
+  }
   .card-collapsed-status {
     margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.3;
     display: flex; align-items: center; gap: 8px;
@@ -1343,7 +1356,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.11';
+  const APP_VERSION = '5.12.12';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -3494,7 +3507,30 @@ try {
     }).join('');
   }
 
+  // Tagesbild für eine aktive Challenge-Karte: zufällig, aber stabil pro Tag
+  // und Challenge (Seed aus Datum + ID), und am selben Tag für verschiedene
+  // aktive Karten unterschiedlich, solange genug Bilder hinterlegt sind.
+  // Gibt null zurück, wenn Motivationsbilder aus sind oder keine existieren.
+  function dailyCardImageSrc(c) {
+    if (!state.settings.goalImagesEnabled) return null;
+    const images = state.settings.goalImages || [];
+    if (!images.length) return null;
+    const today = todayStr();
+    // Reihenfolge der Bilder für heute (deterministisch gemischt)
+    const order = images.map((_, i) => i)
+      .sort((a, b) => hashStr(today + '|img|' + a) - hashStr(today + '|img|' + b) || a - b);
+    // Rang dieser Karte unter allen heute aktiven Karten (unabhängig von der
+    // Anzeigereihenfolge, damit Umsortieren das Bild nicht ändert)
+    const activeIds = state.challenges
+      .filter(x => today >= x.startDate)
+      .map(x => String(x.id))
+      .sort((a, b) => hashStr(today + '|card|' + a) - hashStr(today + '|card|' + b) || (a < b ? -1 : 1));
+    const rank = Math.max(0, activeIds.indexOf(String(c.id)));
+    return images[order[rank % order.length]];
+  }
+
   function renderActive(c) {
+    const dayImageSrc = dailyCardImageSrc(c);
     const list = dayStatusList(c);
     const stats = computeStats(c);
     const today = todayStr();
@@ -3547,6 +3583,10 @@ try {
         : `<div class="card-collapsed-status">${escapeHtml(collapsedMsg)}</div>`;
     }
 
+    if (isCollapsed && dayImageSrc) {
+      collapsedInfoHtml = `<div class="card-collapsed-row"><img class="card-day-thumb" src="${dayImageSrc}" alt="">${collapsedInfoHtml}</div>`;
+    }
+
     const card = el(`
       <div class="card">
         <div class="card-title-row">
@@ -3558,6 +3598,7 @@ try {
         </div>
         ${collapsedInfoHtml}
         ${!isCollapsed ? `
+          ${dayImageSrc ? `<div class="card-day-image"><img src="${dayImageSrc}" alt=""></div>` : ''}
           <div class="card-subtitle">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days, date: fmtDisplayWeekdayShort(todayStr()) })}</div>
           <div class="task-highlight">
             <div class="task-list compact">${taskHtml}</div>

@@ -1356,7 +1356,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.13';
+  const APP_VERSION = '5.12.15';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -1366,7 +1366,7 @@ try {
   // beim Speichern per .slice() erzwungen, falls jemand das HTML-Limit
   // umgeht (z.B. über die DevTools).
   const MAX_LEN_TITLE = 80;
-  const MAX_LEN_TASK = 120;
+  const MAX_LEN_TASK = 164;
   const MAX_LEN_MESSAGE = 300;
   const MAX_LEN_APPNAME = 40;
   const MAX_LEN_USERNAME = 40;
@@ -2173,6 +2173,7 @@ try {
       custom_theme_bookmark_note_empty: "Tipp: Wenn dir eine Farbkombination gefällt, speichere sie – dann kommst du beim Herumprobieren immer wieder dorthin zurück.",
       err_title: "Bitte gib einen Titel ein.", err_days: "Bitte gib eine gültige Anzahl Tage ein (1 bis {max}).",
       err_days_inline: "Maximal {max} Tage möglich. Bitte gib einen Wert zwischen 1 und {max} ein.",
+      char_limit_warning: "Maximal {max} Zeichen möglich.",
       err_start: "Bitte wähle ein Startdatum.", err_tasks: "Bitte lege mindestens ein Tagesziel & Challenge an.",
       err_start_past: "Das Startdatum darf nicht in der Vergangenheit liegen. Frühestens heute.",
       waiting_lead: "Deine Challenge startet am {date} — noch {daysPhrase}.",
@@ -2340,6 +2341,7 @@ try {
       custom_theme_bookmark_note_empty: "Tip: once you like a combination, save it — then you can always return to it while trying other colors.",
       err_title: "Please enter a title.", err_days: "Please enter a valid number of days (1 to {max}).",
       err_days_inline: "Maximum {max} days. Please enter a value between 1 and {max}.",
+      char_limit_warning: "Maximum {max} characters.",
       err_start: "Please choose a start date.", err_tasks: "Please add at least one task.",
       err_start_past: "The start date can't be in the past. Earliest is today.",
       waiting_lead: "Your challenge starts on {date} — {daysPhrase} to go.",
@@ -2505,6 +2507,7 @@ try {
       custom_theme_bookmark_note_empty: "Wskazówka: gdy podoba ci się kombinacja, zapisz ją — wtedy zawsze możesz do niej wrócić.",
       err_title: "Podaj tytuł.", err_days: "Podaj prawidłową liczbę dni (1 do {max}).",
       err_days_inline: "Maksymalnie {max} dni. Podaj wartość od 1 do {max}.",
+      char_limit_warning: "Maksymalnie {max} znaków.",
       err_start: "Wybierz datę rozpoczęcia.", err_tasks: "Dodaj co najmniej jedno zadanie.",
       err_start_past: "Data rozpoczęcia nie może być w przeszłości. Najwcześniej dzisiaj.",
       waiting_lead: "Twoje wyzwanie zaczyna się {date} — zostało {daysPhrase}.",
@@ -2961,6 +2964,42 @@ try {
   function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function showError(box, msg) { box.textContent = msg; box.classList.remove('hidden'); }
 
+  // Kleiner Warnhinweis für zeichenbegrenzte Felder (maxlength): erscheint,
+  // sobald der Nutzer mehr Text eintippt oder einfügt, als das Feld noch
+  // aufnehmen kann - statt den überschüssigen Text wie bisher kommentarlos
+  // abzuschneiden. beforeinput liefert sowohl bei Tastatureingaben als auch
+  // beim Einfügen (Paste) die ungekürzte Länge, bevor der Browser selbst
+  // anhand von maxlength kürzt.
+  function attachCharLimitWarning(fieldEl) {
+    if (!fieldEl) return;
+    const maxLen = fieldEl.maxLength;
+    if (!maxLen || maxLen < 0) return;
+    const note = el(`<div class="error-msg-inline hidden">${escapeHtml(t('char_limit_warning', { max: maxLen }))}</div>`);
+    // Bei Feldern in einer .field-save-row (z.B. App-Name/Nutzername samt
+    // Speichern-Button) den Hinweis hinter die ganze Zeile setzen, sonst
+    // würde er als weiteres Flex-Element neben den Button rutschen.
+    const anchor = fieldEl.closest('.field-save-row') || fieldEl;
+    anchor.insertAdjacentElement('afterend', note);
+    let hideTimer = null;
+    const showNote = () => {
+      note.classList.remove('hidden');
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => note.classList.add('hidden'), 2500);
+    };
+    fieldEl.addEventListener('beforeinput', (e) => {
+      const selStart = fieldEl.selectionStart ?? fieldEl.value.length;
+      const selEnd = fieldEl.selectionEnd ?? fieldEl.value.length;
+      const remaining = maxLen - (fieldEl.value.length - (selEnd - selStart));
+      let insertLen = 0;
+      if (typeof e.data === 'string') insertLen = e.data.length;
+      else if (e.dataTransfer) insertLen = (e.dataTransfer.getData('text') || '').length;
+      if (insertLen > remaining) showNote();
+    });
+    fieldEl.addEventListener('input', () => {
+      if (fieldEl.value.length < maxLen) note.classList.add('hidden');
+    });
+  }
+
   // Verkleinert/komprimiert ein hochgeladenes Motivationsbild clientseitig (max.
   // 1400px lange Kante, JPEG-Qualität 0.78), damit auch 12 Fotos zusammen mit
   // den restlichen App-Daten sicher innerhalb des localStorage-Limits bleiben.
@@ -3238,6 +3277,7 @@ try {
     }
 
     const titleInput = card.querySelector('#f-title');
+    attachCharLimitWarning(titleInput);
     const taskRows = card.querySelector('#task-rows');
     const TASK_EXAMPLES = t('task_examples').split('|');
     function addTaskRow(value, idx) {
@@ -3255,6 +3295,7 @@ try {
         taskRows.querySelectorAll('input').forEach(i => i.classList.remove('input-error'));
         errBoxLive.classList.add('hidden');
       });
+      attachCharLimitWarning(row.querySelector('input'));
       row.querySelector('.remove').addEventListener('click', () => row.remove());
       taskRows.appendChild(row);
     }
@@ -4055,6 +4096,7 @@ try {
     `);
 
     const titleInput = overlay.querySelector('#e-title');
+    attachCharLimitWarning(titleInput);
     const errBoxLive = overlay.querySelector('#e-error');
     const taskRows = overlay.querySelector('#e-task-rows');
     function addEditTaskRow(name, taskId) {
@@ -4070,6 +4112,7 @@ try {
         taskRows.querySelectorAll('input').forEach(i => i.classList.remove('input-error'));
         errBoxLive.classList.add('hidden');
       });
+      attachCharLimitWarning(row.querySelector('input'));
       row.querySelector('.remove').addEventListener('click', () => row.remove());
       taskRows.appendChild(row);
     }
@@ -4901,6 +4944,7 @@ try {
     overlay.querySelector('#s-close-top').addEventListener('click', () => { modalRoot.innerHTML = ''; render(); });
 
     const appNameInput = overlay.querySelector('#s-appname');
+    attachCharLimitWarning(appNameInput);
     const appNameSaveBtn = overlay.querySelector('#s-appname-save');
     if (appNameInput && appNameSaveBtn) wireSaveField(appNameInput, appNameSaveBtn, (value) => {
       state.settings.appName = value.slice(0, MAX_LEN_APPNAME) || 'Challenge';
@@ -4909,11 +4953,14 @@ try {
     });
 
     const usernameInput = overlay.querySelector('#s-username');
+    attachCharLimitWarning(usernameInput);
     const usernameSaveBtn = overlay.querySelector('#s-username-save');
     if (usernameInput && usernameSaveBtn) wireSaveField(usernameInput, usernameSaveBtn, (value) => {
       state.settings.userName = value.slice(0, MAX_LEN_USERNAME);
       persist();
     });
+
+    attachCharLimitWarning(overlay.querySelector('#new-quote-day'));
 
     const maxChInput = overlay.querySelector('#s-max-challenges');
     if (maxChInput) maxChInput.addEventListener('change', (e) => {
@@ -5158,6 +5205,7 @@ try {
         const ta = viewDiv.querySelector('textarea');
         ta.focus();
         ta.setSelectionRange(ta.value.length, ta.value.length);
+        attachCharLimitWarning(ta);
         viewDiv.querySelector('[data-save]').addEventListener('click', () => {
           const newVal = viewDiv.querySelector('textarea').value.trim().slice(0, MAX_LEN_MESSAGE);
           // Ein bearbeiteter Eintrag weicht vom Original-Standardtext ab und muss

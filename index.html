@@ -1356,7 +1356,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.15';
+  const APP_VERSION = '5.12.18';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -2103,6 +2103,7 @@ try {
       quotes_empty_own: "Noch keine eigenen Meldungen. Füge oben eine hinzu.",
       quotes_delete_confirm_text: "Wirklich löschen?",
       storage_full_error: "Speicher voll: Die Änderung konnte nicht gespeichert werden. Bitte kürze deine Eingaben oder lösche alte Einträge und versuche es erneut.",
+      goal_images_storage_full_error: "Speicher voll: Das Bild konnte nicht gespeichert werden. Bitte lösche ein vorhandenes Motivationsbild und versuche es erneut.",
       data_title: "Daten sichern",
       data_desc: "Deine Daten liegen nur in diesem Browser. Exportiere sie regelmäßig, um sie zu sichern oder auf ein anderes Gerät zu übertragen.",
       data_backup_link: "Backup & Übertragen",
@@ -2271,6 +2272,7 @@ try {
       quotes_empty_own: "No custom messages yet. Add one above.",
       quotes_delete_confirm_text: "Really delete?",
       storage_full_error: "Storage full: your change could not be saved. Please shorten your input or delete old entries and try again.",
+      goal_images_storage_full_error: "Storage full: the image could not be saved. Please delete an existing motivation image and try again.",
       data_title: "Back up your data",
       settings_nav_info: "About the app",
       welcome_title: "Welcome!",
@@ -2439,6 +2441,7 @@ try {
       quotes_empty_own: "Brak jeszcze własnych wiadomości. Dodaj jedną powyżej.",
       quotes_delete_confirm_text: "Na pewno usunąć?",
       storage_full_error: "Brak miejsca w pamięci: nie udało się zapisać zmiany. Skróć wpis lub usuń stare pozycje i spróbuj ponownie.",
+      goal_images_storage_full_error: "Brak miejsca w pamięci: nie udało się zapisać zdjęcia. Usuń istniejące zdjęcie motywacyjne i spróbuj ponownie.",
       data_title: "Kopia zapasowa danych",
       settings_nav_info: "O aplikacji",
       welcome_title: "Witaj!",
@@ -2633,7 +2636,7 @@ try {
   if (!Array.isArray(state.settings.goalImages)) {
     state.settings.goalImages = [];
   }
-  const GOAL_IMAGES_MAX = 12;
+  const GOAL_IMAGES_MAX = 24;
   if (state.settings.goalImages.length > GOAL_IMAGES_MAX) {
     state.settings.goalImages = state.settings.goalImages.slice(0, GOAL_IMAGES_MAX);
   }
@@ -2775,10 +2778,12 @@ try {
     return list.filter(q => !q.isDefault).concat(list.filter(q => q.isDefault));
   }
 
-  function persist() {
+  function persist(errorKey) {
     // save() gibt pro Key true/false zurück; wenn irgendeiner scheitert (z.B.
     // Speicher voll), bekommt der Nutzer einmalig eine verständliche Meldung
-    // statt eines stillen Datenverlusts oder eines JS-Fehlers.
+    // statt eines stillen Datenverlusts oder eines JS-Fehlers. errorKey
+    // erlaubt Aufrufern (z.B. Motivationsbild-Upload) eine gezieltere Meldung
+    // statt der generischen storage_full_error.
     let allOk = true;
     allOk = save(KEYS.challenges, state.challenges) && allOk;
     allOk = save(KEYS.history, state.history) && allOk;
@@ -2787,7 +2792,7 @@ try {
     allOk = save(KEYS.completionMessagesByLang, state.completionMessagesByLang) && allOk;
     allOk = save(KEYS.seededQuoteTexts, state.seededQuoteTexts) && allOk;
     allOk = save(KEYS.settings, state.settings) && allOk;
-    if (!allOk) alert(t('storage_full_error'));
+    if (!allOk) alert(t(errorKey || 'storage_full_error'));
     return allOk;
   }
 
@@ -3003,7 +3008,7 @@ try {
   // Verkleinert/komprimiert ein hochgeladenes Motivationsbild clientseitig (max.
   // 1400px lange Kante, JPEG-Qualität 0.78), damit auch 12 Fotos zusammen mit
   // den restlichen App-Daten sicher innerhalb des localStorage-Limits bleiben.
-  function resizeImageForGoalGallery(file, maxEdge = 1400, quality = 0.78) {
+  function resizeImageForGoalGallery(file, maxEdge = 1200, quality = 0.78) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -4489,7 +4494,15 @@ try {
     modalRoot.appendChild(overlay);
   }
 
-  let settingsExpanded = { general: true, theme: false, challenges: false, messages: false, goals: false, data: false, info: false };
+  // "Allgemein" soll nur beim allerersten Start automatisch aufgeklappt
+  // sein, damit Neu-Nutzer direkt App-Name/Dein Name eintragen. Sobald
+  // mindestens eines davon vom Standard abweicht, geht die App davon aus,
+  // dass "Allgemein" schon einmal ausgefüllt wurde, und startet stattdessen
+  // eingeklappt.
+  const hasCustomGeneralSettings =
+    (state.settings.appName && state.settings.appName !== 'Challenge') ||
+    !!(state.settings.userName && state.settings.userName.trim());
+  let settingsExpanded = { general: !hasCustomGeneralSettings, theme: false, challenges: false, messages: false, goals: false, data: false, info: false };
   // Ob der Editor für das "Eigene Farben"-Theme innerhalb der Farben-Sektion
   // aufgeklappt ist. Bleibt (wie settingsExpanded) über Re-Renders des
   // Panels hinweg erhalten, damit er beim Live-Anpassen der Farben nicht
@@ -4520,6 +4533,15 @@ try {
   // Settings-Panels.
   function goalImagesDynamicHtml() {
     const goalImagesList = state.settings.goalImages || [];
+    // Bei deaktiviertem Schalter wird die komplette Verwaltung (Grid,
+    // "+"-Kachel, "Bilder hinzufügen"-Button) ausgeblendet, da die Bilder
+    // ohnehin nirgends im Programm verwendet werden, solange das Feature aus
+    // ist. Zum Löschen einzelner Bilder muss der Schalter kurz wieder
+    // eingeschaltet werden.
+    if (!state.settings.goalImagesEnabled) {
+      goalImageDeleteConfirmIdx = null;
+      return '';
+    }
     if (goalImageDeleteConfirmIdx !== null && goalImageDeleteConfirmIdx >= goalImagesList.length) {
       goalImageDeleteConfirmIdx = null;
     }
@@ -4551,7 +4573,7 @@ try {
     ).join('');
 
     return `
-      ${(state.settings.goalImagesEnabled && goalImagesList.length === 0) ? `<div class="lang-note" style="color:var(--rust); margin-top:6px;">${t('goal_images_no_images_warning')}</div>` : ''}
+      ${goalImagesList.length === 0 ? `<div class="lang-note" style="color:var(--rust); margin-top:6px;">${t('goal_images_no_images_warning')}</div>` : ''}
 
       <div class="goal-images-manage">
         ${goalImagesList.length ? `<div class="goal-images-grid">${goalImagesItemsHtml}${goalImagesAddTileHtml}</div>` : `<p class="lang-note" style="margin-top:14px;">${t('goal_images_empty_note')}</p>`}
@@ -4560,7 +4582,7 @@ try {
         <input type="file" id="s-goal-images-input" class="file-input-hidden" accept="image/*" multiple />
       </div>
 
-      ${(state.settings.goalImagesEnabled && goalImagesList.length > 1) ? `
+      ${goalImagesList.length > 1 ? `
       <label style="margin-top:16px;">${t('goal_images_speed_label')}</label>
       <select id="s-goal-images-speed">${goalImagesSpeedOptions}</select>
       ` : ''}
@@ -4611,7 +4633,13 @@ try {
           const goalImagesToggleEl = document.getElementById('s-goal-images-toggle');
           if (goalImagesToggleEl) goalImagesToggleEl.checked = true;
         }
-        persist();
+        const persistedOk = persist(addedCount > 0 ? 'goal_images_storage_full_error' : undefined);
+        if (!persistedOk && addedCount > 0) {
+          // Bilder, die zwar verarbeitet aber nicht gespeichert werden konnten,
+          // wieder aus dem Laufzeit-State entfernen - sonst würden sie in der
+          // Vorschau auftauchen, aber nach einem Reload wieder verschwinden.
+          state.settings.goalImages.splice(state.settings.goalImages.length - addedCount, addedCount);
+        }
         applyStaticStrings();
         refreshGoalImagesDynamic(container);
       });

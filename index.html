@@ -994,6 +994,9 @@ try {
   .backup-card-text { margin: 0 0 12px; font-size: 0.8rem; line-height: 1.5; color: var(--text-muted); }
   .backup-card .btn-secondary { margin-top: 0; min-height: 42px; padding: 10px 16px; }
   .backup-feedback { margin: 4px 0 0; min-height: 1.3em; font-size: 0.85rem; color: var(--gold-soft); text-align: center; }
+  .backup-feedback:not(:empty) { margin: 12px 0 0; padding: 10px 14px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; }
+  .backup-feedback.is-success { color: #10241a; background: var(--sage); }
+  .backup-feedback.is-error { color: #fff; background: var(--rust); }
   .backup-back-btn { margin-top: 18px; }
 
   .quote-item { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
@@ -1171,6 +1174,15 @@ try {
     transition: border-color var(--transition-fast), color var(--transition-fast);
   }
   .goal-image-add-tile:hover { border-color: var(--gold-soft); color: var(--gold-soft); }
+  .goal-image-add-tile:disabled { opacity: 0.4; cursor: default; }
+
+  .goal-images-spinner {
+    display: inline-block; width: 1em; height: 1em; margin-right: 7px;
+    border: 2px solid currentColor; border-right-color: transparent;
+    border-radius: 50%; vertical-align: -0.15em;
+    animation: goalImagesSpin 0.7s linear infinite;
+  }
+  @keyframes goalImagesSpin { to { transform: rotate(360deg); } }
 
   /* ---------- Motivationsbilder: Slideshow ---------- */
   .goal-slideshow-overlay {
@@ -1356,7 +1368,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.12.22';
+  const APP_VERSION = '5.12.23';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -2218,6 +2230,7 @@ try {
       goal_images_toggle_label: "Motivationsbilder aktivieren",
       goal_images_toggle_note: "Aktiviert einen Button auf der Startseite mit deinen Motivationsbildern als Diashow – ein Blick auf das, was dir am Herzen liegt und dich antreibt.",
       goal_images_upload_btn: "Bilder hinzufügen",
+      goal_images_processing: "Bild {current} von {total} wird verarbeitet…",
       goal_images_count: "{count} von {max} Bildern",
       goal_images_empty_note: "Noch keine Motivationsbilder hinzugefügt.",
       goal_images_limit_note: "Maximal {max} Motivationsbilder möglich.",
@@ -2390,6 +2403,7 @@ try {
       goal_images_toggle_label: "Enable motivation images",
       goal_images_toggle_note: "Enables a button on the home screen with your motivation images as a slideshow – a glance at what's close to your heart and drives you forward.",
       goal_images_upload_btn: "Add images",
+      goal_images_processing: "Processing image {current} of {total}…",
       goal_images_count: "{count} of {max} images",
       goal_images_empty_note: "No motivation images added yet.",
       goal_images_limit_note: "Up to {max} motivation images.",
@@ -2560,6 +2574,7 @@ try {
       goal_images_toggle_label: "Włącz zdjęcia motywacyjne",
       goal_images_toggle_note: "Włącza przycisk na ekranie głównym z Twoimi zdjęciami motywacyjnymi jako pokazem slajdów – spojrzenie na to, co bliskie twojemu sercu i cię napędza.",
       goal_images_upload_btn: "Dodaj zdjęcia",
+      goal_images_processing: "Przetwarzanie zdjęcia {current} z {total}…",
       goal_images_count: "{count} z {max} zdjęć",
       goal_images_empty_note: "Nie dodano jeszcze żadnych zdjęć motywacyjnych.",
       goal_images_limit_note: "Maksymalnie {max} zdjęć motywacyjnych.",
@@ -4674,17 +4689,27 @@ try {
         if (!files.length) return;
         const remaining = GOAL_IMAGES_MAX - state.settings.goalImages.length;
         if (remaining <= 0) return;
+        const filesToProcess = files.slice(0, remaining);
+        // Während der Verarbeitung beide Auslöser sperren (Button + "+"-Kachel),
+        // damit kein zweiter, überlappender Upload gestartet werden kann, und
+        // per Spinner + Fortschrittszähler sichtbar machen, dass im Hintergrund
+        // etwas passiert - sonst sieht es bei mehreren Bildern (Resize/Encode
+        // pro Bild) so aus, als würde nichts geschehen.
+        const originalBtnLabel = goalImagesUploadBtn.innerHTML;
         goalImagesUploadBtn.disabled = true;
+        if (goalImagesAddTile) goalImagesAddTile.disabled = true;
         let addedCount = 0;
-        for (const file of files.slice(0, remaining)) {
+        for (let i = 0; i < filesToProcess.length; i++) {
+          goalImagesUploadBtn.innerHTML = `<span class="goal-images-spinner" aria-hidden="true"></span>${escapeHtml(t('goal_images_processing', { current: i + 1, total: filesToProcess.length }))}`;
           try {
-            const dataUrl = await resizeImageForGoalGallery(file);
+            const dataUrl = await resizeImageForGoalGallery(filesToProcess[i]);
             state.settings.goalImages.push(dataUrl);
             addedCount++;
           } catch (err) {
             console.warn('Motivationsbild konnte nicht verarbeitet werden:', err);
           }
         }
+        goalImagesUploadBtn.innerHTML = originalBtnLabel;
         // Sobald mindestens ein Bild hochgeladen wurde, wird "Motivationsbilder
         // aktivieren" automatisch eingeschaltet (Schalter liegt außerhalb des
         // dynamischen Bereichs und wird deshalb hier direkt synchronisiert).
@@ -5370,7 +5395,7 @@ try {
   // Wird aus dem Daten-Tab der Einstellungen geöffnet (d-open-backup) und ersetzt
   // dort die frühere schlichte Export/Import-Button-Reihe durch zwei Karten mit
   // Icon, Titel und Beschreibungstext - analog zum Muster aus der Energietankstelle.
-  function showBackupModal(feedback) {
+  function showBackupModal(feedback, feedbackType) {
     modalRoot.innerHTML = '';
     const lastIso = localStorage.getItem(KEYS.lastBackup);
     let lastInfo;
@@ -5405,7 +5430,7 @@ try {
               <button type="button" class="btn-secondary" id="d-import">${escapeHtml(t('backup_import_btn'))}</button>
             </div>
           </div>
-          <p class="backup-feedback">${escapeHtml(feedback || '')}</p>
+          <p class="backup-feedback${feedbackType ? ' is-' + feedbackType : ''}">${feedback ? (feedbackType === 'success' ? '✅ ' : feedbackType === 'error' ? '⚠️ ' : '') + escapeHtml(feedback) : ''}</p>
           <button type="button" class="btn-secondary backup-back-btn" id="d-backup-back">${escapeHtml(t('backup_back_btn'))}</button>
         </div>
       </div>
@@ -5420,7 +5445,7 @@ try {
       a.href = url; a.download = 'challenge-daten-' + todayStr() + '.json'; a.click();
       URL.revokeObjectURL(url);
       localStorage.setItem(KEYS.lastBackup, new Date().toISOString());
-      showBackupModal(t('backup_feedback_export'));
+      showBackupModal(t('backup_feedback_export'), 'success');
     });
 
     overlay.querySelector('#d-import').addEventListener('click', () => document.getElementById('import-file-input').click());
@@ -5469,10 +5494,10 @@ try {
           applyFontSize(state.settings.fontSize);
           applyBranding();
           render();
-          showBackupModal(t('backup_feedback_import_success'));
+          showBackupModal(t('backup_feedback_import_success'), 'success');
         }, () => showBackupModal());
       } catch (err) {
-        showBackupModal(t('import_fail_text'));
+        showBackupModal(t('import_fail_text'), 'error');
       }
     };
     reader.readAsText(file);

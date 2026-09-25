@@ -589,7 +589,6 @@ try {
   .day-node.missed { border-color: var(--rust); color: var(--rust); background: transparent; }
   .day-node.today { border-color: var(--gold); color: var(--gold-soft); font-weight: 700; }
   .day-node.future { border-style: dashed; }
-  .day-node.joker { background: var(--gold); border-color: var(--gold); color: #2b1c02; font-weight: 700; box-shadow: 0 0 10px -1px var(--gold); font-size: 0.85em; }
   .day-node.is-today { box-shadow: 0 0 0 4px rgba(227,168,59,0.22); }
 
   .stats-row { display: flex; gap: 12px; margin: 18px 0 4px; }
@@ -620,8 +619,6 @@ try {
   }
   .stat-box .num { font-family: var(--font-display); font-size: clamp(1.25rem, 1.1rem + .6vw, 1.5rem); color: var(--gold-soft); display: block; }
   .stat-box .lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-  .joker-used-note { font-size: 0.78rem; color: var(--text-muted); text-align: center; margin: 2px 0 10px; }
-  .joker-modal-icon { font-size: 2.6rem; text-align: center; margin-bottom: 6px; line-height: 1; }
 
   .task-list { margin-top: 8px; }
   .task-check {
@@ -644,11 +641,6 @@ try {
   .task-check.checked .box { background: var(--sage); border-color: var(--sage); color: #10241a; animation: checkPop .28s cubic-bezier(.34,1.56,.64,1); }
   .task-check .name { font-size: 0.98rem; overflow-wrap: anywhere; }
   .task-check.checked .name { color: var(--text-muted); text-decoration: line-through; }
-
-  .task-check.joker-offer .box { border-color: var(--gold); }
-  .task-check.joker-used { cursor: default; }
-  .task-check.joker-used .box { background: var(--gold); border-color: var(--gold); }
-  .joker-revoke-btn { margin-left: auto; flex-shrink: 0; }
 
   .meta-line { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; line-height: 1.5; }
   .meta-line-primary { color: var(--text); font-weight: 600; }
@@ -1376,7 +1368,7 @@ try {
 (function () {
   "use strict";
 
-  const APP_VERSION = '5.13.3';
+  const APP_VERSION = '5.12.25';
   const APP_SHARE_URL = 'https://nosz.github.io/challenge-app/';
   const MAX_DAYS = 365;
   // Zeichenobergrenzen für frei eingebbare Texte. Verhindert Layout-Brüche
@@ -2070,7 +2062,7 @@ try {
     de: {
       health: [
         { id: 'health-10', days: 10, title: 'Frischer Start', desc: 'Ein kurzer, knackiger Kickstart mit einfachen Gewohnheiten, die sofort spürbar sind.', tasks: ['Ich bewege meinen Körper heute mindestens 15 Minuten.', 'Ich trinke heute 2 Liter Wasser.', 'Ich schaue heute kein Fernsehen.', 'Ich spüre heute, wie viel Kraft und Energie in mir steckt.'] },
-{ id: 'health-21', days: 21, title: '16/8: Fasten & Entgiftung', desc: 'Drei Wochen lang täglich 16 Stunden fasten und nur im 8-Stunden-Fenster von 12 bis 20 Uhr essen. Unterstütze deinen Körper dabei, seine natürlichen Prozesse zu nutzen und gönne ihm eine bewusste Pause. Während der gesamten Fastenzeit darf und soll ausreichend getrunken werden – besonders Wasser und ungesüßter Tee.', tasks: ['Ich esse heute nur zwischen 12.00 und 20.00 Uhr.', 'Ab 20.00 Uhr esse ich nichts mehr bis 12.00 Uhr am folgenden Tag.', 'Ich trinke über den ganzen Tag ausreichend Wasser oder ungesüßten Tee und unterstütze damit meinen Körper während der Fastenzeit.'] },
+{ id: 'health-21', days: 21, title: '16/8: Fasten & Entgiftung', desc: 'Drei Wochen lang täglich 16 Stunden fasten und nur im 8-Stunden-Fenster von 12 bis 20 Uhr essen. Unterstütze deinen Körper dabei, seine natürlichen Prozesse zu nutzen und gönne ihm eine bewusste Pause. Während der gesamten Fastenzeit darf und soll ausreichend getrunken werden – besonders Wasser und ungesüßter Tee.', tasks: ['Ich esse heute nur zwischen 12.00 und 20.00 Uhr.', 'Ich trinke über den ganzen Tag ausreichend Wasser oder ungesüßten Tee und unterstütze damit meinen Körper während der Fastenzeit.'] },
         { id: 'health-30', days: 30, title: 'Erholt aufwachen', desc: 'Einen Monat lang eine Abendroutine aufbauen, die dir erholsamen Schlaf und mehr Energie am Tag schenkt.', tasks: ['Ich liege heute spätestens um 23 Uhr im Bett.', 'Ich schalte heute 30 Minuten vor dem Einschlafen alle Bildschirme aus.', 'Ich strecke und dehne mich heute morgens für 5 Minuten.', 'Ich vertraue darauf, dass mein Körper sich heute Nacht vollständig erholt.'] }
       ],
       relationships: [
@@ -2236,15 +2228,6 @@ try {
       day_label_done: "{date} · Tag {current} von {total} {word}!",
       stat_streak: "Serie", stat_rate: "Fortschritt", stat_best_streak: "Beste Serie",
       today_tasks_title: "Heutige Tagesziele & Challenges",
-      joker_pull_btn: "Joker für heute einlösen",
-      joker_pull_title: "Joker einlösen?",
-      joker_pull_text: "Der Joker kann nur einmal während der gesamten Challenge eingesetzt werden. Der heutige Tag zählt dann als ausgesetzt, ohne deine Erfolgsquote oder Serie zu unterbrechen. Bis Mitternacht kannst du das noch rückgängig machen.",
-      joker_used_today_label: "Joker für heute eingelöst",
-      joker_revoke_btn: "Zurücknehmen",
-      joker_day_tooltip: "Joker eingelöst",
-      joker_used_note: "Joker eingesetzt am {date}",
-      settings_joker_label: "Joker-Tag",
-      settings_joker_note: "Erlaubt bei Challenges ab 4 Tagen einen einmaligen Joker: ein Tag kann ausgesetzt werden, ohne die Challenge zu unterbrechen.",
       abort_active_title: "Challenge vorzeitig beenden?",
       abort_active_text: "Dein bisheriger Fortschritt wird in die Historie verschoben, die Challenge endet vorzeitig.",
       completion_title: "Geschafft: {title}",
@@ -2418,15 +2401,6 @@ try {
       day_label_done: "{date} · Day {current} of {total}, done!",
       stat_streak: "Streak", stat_rate: "Progress", stat_best_streak: "Best streak",
       today_tasks_title: "Today's tasks",
-      joker_pull_btn: "Use joker for today",
-      joker_pull_title: "Use your joker?",
-      joker_pull_text: "The joker can only be used once during the entire challenge. Today will then count as skipped, without breaking your success rate or streak. You can still undo this until midnight.",
-      joker_used_today_label: "Joker used for today",
-      joker_revoke_btn: "Undo",
-      joker_day_tooltip: "Joker used",
-      joker_used_note: "Joker used on {date}",
-      settings_joker_label: "Joker day",
-      settings_joker_note: "Allows a one-time joker for challenges of 4+ days: one day can be skipped without breaking the challenge.",
       abort_active_title: "Cancel this challenge?",
       abort_active_text: "Your progress so far will be moved to your history and the challenge will end early.",
       completion_title: "Completed: {title}",
@@ -2693,7 +2667,7 @@ try {
     quotesByLang: load(KEYS.quotesByLang, {}),
     completionMessagesByLang: load(KEYS.completionMessagesByLang, {}),
     seededQuoteTexts: load(KEYS.seededQuoteTexts, {}),
-    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, jokerEnabled: false, customTheme: null, customThemeSaved: null, goalImagesEnabled: true, goalImages: [], goalImagesSlideSeconds: 4, templatesEnabled: true, templatesCategoriesEnabled: { health: true, relationships: true, finance: true, partnership: true } })
+    settings: load(KEYS.settings, { appName: 'Challenge', themeKey: 'chahell', lang: 'de', userName: '', maxChallenges: 2, fontSize: 20, showWelcomeOnStart: true, forcedDayQuoteId: null, accordionChallengeCards: true, collapseChallengesOnStart: true, showBoostButton: true, boostDefaultMigratedV2: true, showDailyMotivation: true, customTheme: null, customThemeSaved: null, goalImagesEnabled: true, goalImages: [], goalImagesSlideSeconds: 4, templatesEnabled: true, templatesCategoriesEnabled: { health: true, relationships: true, finance: true, partnership: true } })
   };
 
   // Migration: früher gab es nur eine einzelne aktive Challenge
@@ -2731,9 +2705,6 @@ try {
   }
   if (typeof state.settings.showDailyMotivation !== 'boolean') {
     state.settings.showDailyMotivation = true;
-  }
-  if (typeof state.settings.jokerEnabled !== 'boolean') {
-    state.settings.jokerEnabled = false;
   }
   if (typeof state.settings.goalImagesEnabled !== 'boolean') {
     state.settings.goalImagesEnabled = true;
@@ -3000,8 +2971,7 @@ try {
       const checks = challenge.checks[dateStr];
       const allDone = checks && challenge.tasks.every(tk => checks[tk.id]);
       let status;
-      if (challenge.jokerDate && dateStr === challenge.jokerDate) status = 'joker';
-      else if (dateStr > today) status = 'future';
+      if (dateStr > today) status = 'future';
       else if (allDone) status = 'done';
       else if (dateStr === today) status = 'today';
       else status = 'missed';
@@ -3018,15 +2988,10 @@ try {
     // Die Prozentzahl berücksichtigt jede einzelne erledigte Aufgabe, nicht nur
     // komplett abgeschlossene Tage — ein Tag mit 3 von 5 erledigten Aufgaben
     // zählt entsprechend anteilig mit.
-    // Ein Joker-Tag zählt weder als erledigt noch als verpasst: er fällt aus
-    // dem Nenner (totalTaskSlots) und aus der Serie komplett raus, statt sie
-    // zu unterbrechen — daher effectiveDays = Challenge-Länge minus Joker-Tag.
     const taskCount = challenge.tasks.length;
-    const effectiveDays = challenge.days - (challenge.jokerDate ? 1 : 0);
-    const totalTaskSlots = effectiveDays * taskCount;
+    const totalTaskSlots = challenge.days * taskCount;
     let completedTaskSlots = 0;
     list.forEach(d => {
-      if (d.status === 'joker') return;
       const checks = challenge.checks[d.dateStr];
       if (checks) {
         completedTaskSlots += challenge.tasks.filter(tk => checks[tk.id]).length;
@@ -3041,7 +3006,7 @@ try {
     for (let i = list.length - 1; i >= 0; i--) {
       const d = list[i];
       if (d.status === 'done') streak++;
-      else if (d.status === 'today' || d.status === 'future' || d.status === 'joker') continue;
+      else if (d.status === 'today' || d.status === 'future') continue;
       else break;
     }
     let longest = 0, cur = 0;
@@ -3049,7 +3014,7 @@ try {
       if (d.status === 'done') { cur++; longest = Math.max(longest, cur); }
       else if (d.status === 'missed') { cur = 0; }
     }
-    return { rate, streak, longest, pastCount: pastDays.length, doneCount: doneDays.length, effectiveDays };
+    return { rate, streak, longest, pastCount: pastDays.length, doneCount: doneDays.length };
   }
 
   function archiveChallenge(challenge, aborted) {
@@ -3057,7 +3022,6 @@ try {
     state.history.unshift({
       id: challenge.id, title: challenge.title, startDate: challenge.startDate,
       days: challenge.days, tasks: challenge.tasks, checks: challenge.checks,
-      jokerDate: challenge.jokerDate || null,
       aborted: !!aborted, rate: stats.rate, doneCount: stats.doneCount,
       pastCount: stats.pastCount, archivedOn: todayStr()
     });
@@ -3501,7 +3465,7 @@ try {
 
       state.challenges.push({
         id: uid(), title, days, startDate: start,
-        tasks: taskNames.map(n => ({ id: uid(), name: n })), checks: {}, jokerDate: null
+        tasks: taskNames.map(n => ({ id: uid(), name: n })), checks: {}
       });
       setupMode = false;
       setupPrefill = null;
@@ -3667,9 +3631,8 @@ try {
   function dayNodesHtml(list, notes) {
     return list.map(d => {
       const cls = d.status + (d.isToday ? ' is-today' : '');
-      const content = d.status === 'done' ? '✓' : (d.status === 'joker' ? '🃏' : d.dayNum);
+      const content = d.status === 'done' ? '✓' : d.dayNum;
       let titleText = fmtDisplay(d.dateStr);
-      if (d.status === 'joker') titleText += ' — ' + t('joker_day_tooltip');
       const note = notes && notes[d.dateStr];
       if (note) titleText += ' — ' + note;
       return `<div class="day-node ${cls}" title="${escapeHtml(titleText)}">${content}</div>`;
@@ -3711,12 +3674,7 @@ try {
     const pathHtml = dayNodesHtml(weekList);
     const showRangeNote = c.days > WEEK_SIZE;
 
-    // Joker-Status vorab bestimmen, da er entscheidet, ob die Tagesziele
-    // überhaupt anklickbar angezeigt werden (Überschneidung sonst: Joker
-    // gezogen UND trotzdem Aufgaben abhakbar).
-    const jokerUsedToday = c.jokerDate === today;
-
-    const taskHtml = jokerUsedToday ? '' : c.tasks.map(tk => {
+    const taskHtml = c.tasks.map(tk => {
       const checked = !!todayChecks[tk.id];
       return `
         <div class="task-check ${checked ? 'checked' : ''}" data-task-id="${tk.id}">
@@ -3726,38 +3684,10 @@ try {
       `;
     }).join('');
 
-    // Joker-Zeile: nur anbieten, solange das Feature aktiv ist, die Challenge
-    // >3 Tage hat, noch kein Joker verbraucht wurde und der heutige Tag noch
-    // nicht ohnehin komplett erledigt ist. Wurde der Joker bereits heute
-    // gezogen, erscheint stattdessen die (nur heute mögliche) Rücknahme-Zeile.
     const endDate = addDays(c.startDate, c.days - 1);
     const doneToday = c.tasks.filter(tk => todayChecks[tk.id]).length;
-    const jokerAvailable = state.settings.jokerEnabled && c.days > 3;
-    const todayAlreadyDone = c.tasks.length > 0 && doneToday === c.tasks.length;
-    const jokerOfferable = jokerAvailable && !c.jokerDate && !todayAlreadyDone;
-    let jokerRowHtml = '';
-    if (jokerUsedToday) {
-      jokerRowHtml = `
-        <div class="task-check joker-row joker-used">
-          <div class="box">🃏</div>
-          <div class="name">${escapeHtml(t('joker_used_today_label'))}</div>
-          <button type="button" class="text-link-btn joker-revoke-btn" id="btn-joker-revoke">${escapeHtml(t('joker_revoke_btn'))}</button>
-        </div>
-      `;
-    } else if (jokerOfferable) {
-      jokerRowHtml = `
-        <div class="task-check joker-row joker-offer" id="btn-joker-pull">
-          <div class="box">🃏</div>
-          <div class="name">${escapeHtml(t('joker_pull_btn'))}</div>
-        </div>
-      `;
-    }
-
     let cardStatusHtml = '';
-    if (jokerUsedToday) {
-      // Kein Fortschrittstext auf Basis alter Task-Checks, sobald der Joker
-      // den heutigen Tag ersetzt — die Joker-Zeile ist der einzige Status.
-    } else if (doneToday > 0 && doneToday < c.tasks.length) {
+    if (doneToday > 0 && doneToday < c.tasks.length) {
       cardStatusHtml = `<div class="card-progress-status">${cardProgressText(doneToday, c.tasks.length)}</div>`;
     } else if (doneToday > 0 && doneToday === c.tasks.length) {
       const msg = getDayCompletionMessage(c, today);
@@ -3766,9 +3696,7 @@ try {
     const isCollapsed = collapsedCards[c.id] === true;
 
     let collapsedInfoHtml = '';
-    if (isCollapsed && jokerUsedToday) {
-      collapsedInfoHtml = `<div class="card-collapsed-status card-collapsed-complete"><span class="card-collapsed-check">🃏</span>${escapeHtml(t('joker_used_today_label'))}</div>`;
-    } else if (isCollapsed && c.tasks.length > 0) {
+    if (isCollapsed && c.tasks.length > 0) {
       const totalToday = c.tasks.length;
       const remainingToday = totalToday - doneToday;
       const isDayComplete = doneToday === totalToday;
@@ -3806,7 +3734,7 @@ try {
           ${dayImageSrc ? `<div class="card-day-image"><img src="${dayImageSrc}" alt=""></div>` : ''}
           <div class="card-subtitle">${doneToday === c.tasks.length && c.tasks.length > 0 ? dayDoneLabel(c.id, dayIndex, dayIndex, c.days) : t('day_label', { current: dayIndex, total: c.days, date: fmtDisplayWeekdayShort(todayStr()) })}</div>
           <div class="task-highlight">
-            <div class="task-list compact">${taskHtml}${jokerRowHtml}</div>
+            <div class="task-list compact">${taskHtml}</div>
           </div>
           ${cardStatusHtml}
           <div class="card-collapse-zone">
@@ -3864,7 +3792,7 @@ try {
     const boostBtn = card.querySelector('#btn-boost');
     if (boostBtn) boostBtn.addEventListener('click', () => showBoostModal());
 
-    card.querySelectorAll('.task-check[data-task-id]').forEach(row => {
+    card.querySelectorAll('.task-check').forEach(row => {
       row.addEventListener('click', () => {
         const taskId = row.getAttribute('data-task-id');
         if (!c.checks[today]) c.checks[today] = {};
@@ -3897,21 +3825,6 @@ try {
     });
 
     bindReorderButtons(card, c);
-
-    const jokerPullEl = card.querySelector('#btn-joker-pull');
-    if (jokerPullEl) jokerPullEl.addEventListener('click', () => {
-      showJokerConfirmModal(() => {
-        c.jokerDate = today;
-        persist();
-        render();
-      });
-    });
-    const jokerRevokeBtn = card.querySelector('#btn-joker-revoke');
-    if (jokerRevokeBtn) jokerRevokeBtn.addEventListener('click', () => {
-      c.jokerDate = null;
-      persist();
-      render();
-    });
 
     return card;
   }
@@ -4021,29 +3934,6 @@ try {
       </div>
     `);
     overlay.querySelector('#c-cancel').addEventListener('click', () => { modalRoot.innerHTML = ''; if (onCancel) onCancel(); });
-    overlay.querySelector('#c-ok').addEventListener('click', () => { modalRoot.innerHTML = ''; onConfirm(); });
-    modalRoot.appendChild(overlay);
-  }
-
-  // Eigenes Bestätigungsmodal fürs Einlösen des Jokers: zeigt das Joker-Icon
-  // an, bewusst ohne Konfetti (kein "Erfolgs"-Moment, sondern das Aussetzen
-  // eines Tages).
-  function showJokerConfirmModal(onConfirm) {
-    modalRoot.innerHTML = '';
-    const overlay = el(`
-      <div class="overlay">
-        <div class="modal">
-          <div class="joker-modal-icon">🃏</div>
-          <h2>${escapeHtml(t('joker_pull_title'))}</h2>
-          <p class="confirm-text">${escapeHtml(t('joker_pull_text'))}</p>
-          <div class="modal-actions">
-            <button class="btn-secondary" id="c-cancel">${t('confirm_cancel')}</button>
-            <button class="btn-primary" style="margin-top:0;" id="c-ok">${t('confirm_ok')}</button>
-          </div>
-        </div>
-      </div>
-    `);
-    overlay.querySelector('#c-cancel').addEventListener('click', () => { modalRoot.innerHTML = ''; });
     overlay.querySelector('#c-ok').addEventListener('click', () => { modalRoot.innerHTML = ''; onConfirm(); });
     modalRoot.appendChild(overlay);
   }
@@ -4267,8 +4157,7 @@ try {
       const dateStr = addDays(h.startDate, i - 1);
       const checks = h.checks && h.checks[dateStr];
       const allDone = checks && h.tasks.every(tk => checks[tk.id]);
-      const status = (h.jokerDate && dateStr === h.jokerDate) ? 'joker' : (allDone ? 'done' : 'missed');
-      list.push({ dayNum: i, dateStr, status, isToday: false });
+      list.push({ dayNum: i, dateStr, status: allDone ? 'done' : 'missed', isToday: false });
     }
     return list;
   }
@@ -4436,15 +4325,13 @@ try {
 
     const endDate = addDays(h.startDate, h.days - 1);
     const tasksHtml = h.tasks.map(tk => `<div class="detail-task">${escapeHtml(tk.name)}</div>`).join('');
-    const effDays = h.days - (h.jokerDate ? 1 : 0);
 
     return `
       <div class="meta-line">${t('active_dates', { start: fmtDisplay(h.startDate), end: fmtDisplay(endDate) })}</div>
       <div class="stats-row" style="margin-top:14px;">
-        <div class="stat-box"><span class="num">${h.doneCount}/${effDays}</span><span class="lbl">${t('stat_days_done')}</span></div>
+        <div class="stat-box"><span class="num">${h.doneCount}/${h.days}</span><span class="lbl">${t('stat_days_done')}</span></div>
         <div class="stat-box"><span class="num">${h.rate}%</span><span class="lbl">${t('stat_rate')}</span></div>
       </div>
-      ${h.jokerDate ? `<div class="joker-used-note">🃏 ${t('joker_used_note', { date: fmtDisplay(h.jokerDate) })}</div>` : ''}
       <label style="margin-top:20px;">${t('history_detail_path')}</label>
       <div class="path">${pathHtml}</div>
       <label style="margin-top:20px;">${t('label_tasks')}</label>
@@ -4576,10 +4463,9 @@ try {
           <div class="badge">${personalBadge('completion_modal_badge', 'completion_modal_badge_personal')}</div>
           <h2 style="margin-bottom:14px;">${escapeHtml(c.title)}</h2>
           <div class="stats-row" style="margin-bottom:20px;">
-            <div class="stat-box"><span class="num">${stats.doneCount}/${stats.effectiveDays}</span><span class="lbl">${t('stat_days_done')}</span></div>
+            <div class="stat-box"><span class="num">${stats.doneCount}/${c.days}</span><span class="lbl">${t('stat_days_done')}</span></div>
             <div class="stat-box"><span class="num">${stats.rate}%</span><span class="lbl">${t('stat_rate')}</span></div>
           </div>
-          ${c.jokerDate ? `<div class="joker-used-note">🃏 ${t('joker_used_note', { date: fmtDisplay(c.jokerDate) })}</div>` : ''}
           <p class="quote-text completion-message">${messageHtml}</p>
           <button class="btn-primary" style="margin-top:0;" id="cc-close">OK</button>
         </div>
@@ -5090,15 +4976,6 @@ try {
       </label>
       <div class="lang-note">${t('settings_daily_motivation_note')}</div>
 
-      <label class="toggle-row" for="s-joker-toggle">
-        <span class="toggle-row-text">${t('settings_joker_label')}</span>
-        <span class="switch">
-          <input type="checkbox" id="s-joker-toggle" ${state.settings.jokerEnabled ? 'checked' : ''} />
-          <span class="slider"></span>
-        </span>
-      </label>
-      <div class="lang-note">${t('settings_joker_note')}</div>
-
       <label class="toggle-row" for="s-templates-toggle">
         <span class="toggle-row-text">${t('settings_templates_label')}</span>
         <span class="switch">
@@ -5257,12 +5134,6 @@ try {
     const dailyMotivationToggle = overlay.querySelector('#s-daily-motivation-toggle');
     if (dailyMotivationToggle) dailyMotivationToggle.addEventListener('change', (e) => {
       state.settings.showDailyMotivation = e.target.checked;
-      persist();
-    });
-
-    const jokerToggle = overlay.querySelector('#s-joker-toggle');
-    if (jokerToggle) jokerToggle.addEventListener('change', (e) => {
-      state.settings.jokerEnabled = e.target.checked;
       persist();
     });
 
